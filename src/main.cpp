@@ -1,21 +1,10 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ivanderw <marvin@42.fr>                    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/11/20 13:53:20 by ivanderw          #+#    #+#             */
-/*   Updated: 2023/11/20 13:55:36 by ivanderw         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "webserv.hpp"
 #include <iostream>
 
-int main(void)
-{
-	std::cout << "Winner!" << std::endl;
-		
-	return (0);
+int main(int argc, char** argv) {
+  (void)argc;
+  (void)argv;
+
+  std::cout << "Hello world" << std::endl;
+
+  return (0);
 }

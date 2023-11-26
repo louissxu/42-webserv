@@ -89,6 +89,14 @@ int main(int argc, char** argv) {
   std::cout << "received data: " << buff << std::endl;
   std::cout << "bytes received: " << bytes_received << std::endl;
 
+  char sent_message[] = "hello world, this is the message being sent";
+  int sent_message_length = strlen(sent_message);
+  int bytes_sent = send(newfd, sent_message, sent_message_length, 0);
+  std::cout << "message sent" << std::endl;
+  std::cout << "sent_message_length: " << sent_message_length << std::endl;
+  std::cout << "bytes sent: " << bytes_sent << std::endl;
+
+
   freeaddrinfo(servinfo);
 
   std::cout << "all done" << std::endl;

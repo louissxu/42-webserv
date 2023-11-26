@@ -79,14 +79,19 @@ int main(int argc, char** argv) {
   // check return value (-1 is error)
 
 
-struct sockaddr_storage their_addr;
-socklen_t addr_size;
-int newfd = accept(sockfd, (struct sockaddr * )&their_addr, &addr_size);
+  struct sockaddr_storage their_addr;
+  socklen_t addr_size;
+  int newfd = accept(sockfd, (struct sockaddr * )&their_addr, &addr_size);
 
+  char buff[1024];
 
-
+  int bytes_received = recv(newfd, &buff, 1024, 0);
+  std::cout << "received data: " << buff << std::endl;
+  std::cout << "bytes received: " << bytes_received << std::endl;
 
   freeaddrinfo(servinfo);
+
+  std::cout << "all done" << std::endl;
 
   return (0);
 

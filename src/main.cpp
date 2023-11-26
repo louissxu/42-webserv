@@ -28,6 +28,7 @@ int main(int argc, char** argv) {
   // hints.ai_flags = AI_PASSIVE; // fill in my IP for me
 
   error_return = getaddrinfo(NULL, "1234", &hints, &servinfo);
+  // check return value
 
   std::cout << "ai family is: " << servinfo->ai_family << std::endl;
 
@@ -48,11 +49,11 @@ int main(int argc, char** argv) {
 
   std::cout << "ai_addr->sin_family " << sai->sin_family << std::endl;
   std::cout << "ai_addr->sin_port " << ntohs(sai->sin_port) << std::endl;
-  std::cout << "ai_addr->sin_addr->s_addr " << sai->sin_addr.s_addr << std::endl;
+  std::cout << "ai_addr->sin_addr->sin_addr " << sai->sin_addr.s_addr << std::endl;
 
   char ipstr[INET6_ADDRSTRLEN];
   inet_ntop(servinfo->ai_family, &sai->sin_addr, ipstr, sizeof ipstr);
-  std::cout << "ai_addr->sin_addr->s_addr ntop (printable) " << ipstr << std::endl;
+  std::cout << "ai_addr->sin_addr->sin_addr ntop (printable) " << ipstr << std::endl;
 
 
   std::cout << "ai_addr->sin_zero " << sai->sin_zero << std::endl;
@@ -61,6 +62,28 @@ int main(int argc, char** argv) {
   // std::cout << "ai_canonname " << servinfo->ai_canonname << std::endl;
 
   std::cout << "end printing stuff" << std::endl;
+
+
+  // int sockfd = socket(PF_INET, SOCK_STREAM, getprotobyname("TCP")); // hard coded values. Note PF_INET rather than AF_INET. strictly speakign htis is correct (protocol family vs address family; even though the actual values are the same and therefore some people use AF_INET here)
+  // int sockfd = socket(PF_INET, SOCK_STREAM, 0); // hard coded values, but allow protocol to be set by given type
+  int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol); // use values from getaddrinfo() call
+  // check return value > 0 (-1 is error)
+
+  std::cout << "sock fd is: " << sockfd << std::endl;
+
+
+  error_return = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
+  // check return value (-1 is error)
+
+  error_return = listen(sockfd, 20);
+  // check return value (-1 is error)
+
+
+struct sockaddr_storage their_addr;
+socklen_t addr_size;
+int newfd = accept(sockfd, (struct sockaddr * )&their_addr, &addr_size);
+
+
 
 
   freeaddrinfo(servinfo);

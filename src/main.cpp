@@ -9,6 +9,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#include "HTTPRequest.hpp"
+
 // Ref: https://beej.us/guide/bgnet/html/#structs
 
 int main(int argc, char** argv) {
@@ -71,6 +73,9 @@ int main(int argc, char** argv) {
 
   std::cout << "sock fd is: " << sockfd << std::endl;
 
+  int yes = 1;
+  setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes);
+
 
   error_return = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
   // check return value (-1 is error)
@@ -86,10 +91,15 @@ int main(int argc, char** argv) {
   char buff[1024];
 
   int bytes_received = recv(newfd, &buff, 1024, 0);
-  std::cout << "received data: " << buff << std::endl;
+
+  std::string input_string = buff;
+  HTTPRequest http_request(input_string);
+  http_request.print();
+
+  // std::cout << "received data: " << buff << std::endl;
   std::cout << "bytes received: " << bytes_received << std::endl;
 
-  char sent_message[] = "hello world, this is the message being sent";
+  char sent_message[] = "HTTP/1.1 200 OK\n\n<html><body><h1>It works!</h1></body></html>";
   int sent_message_length = strlen(sent_message);
   int bytes_sent = send(newfd, sent_message, sent_message_length, 0);
   std::cout << "message sent" << std::endl;
@@ -100,6 +110,7 @@ int main(int argc, char** argv) {
   freeaddrinfo(servinfo);
 
   std::cout << "all done" << std::endl;
+  error_return = shutdown(newfd, 2);
 
   return (0);
 
@@ -116,3 +127,9 @@ int main(int argc, char** argv) {
 
   return (0);
 }
+
+// Socket manager
+  // has fds
+  // when fd is updated
+  // create http request
+  // do thing, and reply with http response

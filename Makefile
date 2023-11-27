@@ -16,7 +16,9 @@ INC = inc
 #	|     SOURCES     |
 #	o-----------------o
 
-SRC_FILES = main.cpp
+SRC_FILES = \
+	HTTPRequest.cpp \
+	main.cpp
 
 SRC_DIR = src
 

@@ -8,22 +8,24 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h> // for perror
+#include <unistd.h> // for dup
 
 #include <string>
 #include <iostream>
 
 class Server {
   public:
-    Server();
-    Server(Server& other);
+    Server(const Server& other);
+    Server& operator=(const Server& other);
     Server(std::string port);
-    Server& operator=(Server& other);
     ~Server();
+    Server();
 
     int getSockFd();
 
   private:
     int _sockfd;
+    
 };
 
 

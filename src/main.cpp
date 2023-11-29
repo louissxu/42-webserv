@@ -10,6 +10,9 @@
 #include <netinet/in.h>
 
 #include "HTTPRequest.hpp"
+#include "Server.hpp"
+
+#include <vector>
 
 // Ref: https://beej.us/guide/bgnet/html/#structs
 
@@ -18,6 +21,39 @@ int main(int argc, char** argv) {
   (void)argv;
 
   std::cout << "Hello world" << std::endl;
+
+  std::string port1 = "2345";
+  std::string port2 = "3456";
+
+  Server a(port1);
+  
+  // a = Server(port1);
+  // Server b(port1);
+  Server c(port2);
+  Server d("5678");
+
+  // std::vector<Server> vec_of_servers;
+  // vec_of_servers.push_back(a);
+  // vec_of_servers.push_back(c);
+  // vec_of_servers.push_back(d);
+
+  std::vector<Server> blah;
+  blah.push_back(a);
+  blah.push_back(c);
+
+  return(0);
+
+  std::cout << "Made 3 (2?) servers" << std::endl;
+
+
+
+
+
+
+
+
+
+
 
   int error_return;
   struct addrinfo hints;
@@ -111,6 +147,7 @@ int main(int argc, char** argv) {
 
   std::cout << "all done" << std::endl;
   error_return = shutdown(newfd, 2);
+
 
   return (0);
 

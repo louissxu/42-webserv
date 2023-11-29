@@ -1,13 +1,12 @@
 #include "Server.hpp"
 
-Server::Server() {
+// Ref: https://stackoverflow.com/questions/41104320/c-copy-constructor-of-object-owning-a-posix-file-descriptor
+// Ref: https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom
+// Ref: https://stackoverflow.com/questions/5481539/what-does-t-double-ampersand-mean-in-c11
 
-}
-
-Server::Server(Server& other) {
-  //TODO
-  (void)other;
-}
+// Also
+// Ref: https://stackoverflow.com/questions/56369138/moving-an-object-with-a-file-descriptor
+// Ref: https://stackoverflow.com/questions/4172722/what-is-the-rule-of-three#:~:text=The%20rule%20of%203%2F5,functions%20when%20creating%20your%20class.
 
 Server::Server(std::string port) {
   struct addrinfo hints;
@@ -60,16 +59,38 @@ Server::Server(std::string port) {
   freeaddrinfo(servinfo);
 }
 
-Server& Server::operator=(Server& other) {
-  (void)other;
+static int safe_dup(int fd) {
+  int copy = dup(fd);
+  if (copy < 0) {
+    throw std::runtime_error(strerror(errno));
+  }
+  return copy;
+}
+
+Server::Server(const Server& other) {
+  _sockfd = safe_dup(other._sockfd);
+}
+
+Server& Server::operator=(const Server& other) {
+  int new_fd = safe_dup(other._sockfd);
+  close(_sockfd);
+  _sockfd = new_fd;
   return *this;
 }
 
 Server::~Server() {
   // TODO. Do teardown stuff
-  shutdown(_sockfd, 2);
+  std::cout << "Destructor running" << std::endl;
+  if (_sockfd != -1) {
+    shutdown(_sockfd, 2); // WHICH ONE?!
+    // close(_sockfd);
+  }
 }
 
 int Server::getSockFd() {
   return _sockfd;
+}
+
+Server::Server() {
+  _sockfd = -1;
 }

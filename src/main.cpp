@@ -11,6 +11,7 @@
 
 #include "HTTPRequest.hpp"
 #include "Server.hpp"
+#include "SocketManager.hpp"
 
 #include <vector>
 
@@ -25,8 +26,23 @@ int main(int argc, char** argv) {
   std::string port1 = "2345";
   std::string port2 = "3456";
 
-  Server a(port1);
-  
+  // std::cout << "starting server constructor" << std::endl;
+  // Server a(port1);
+  // std::cout << "finished constructing first server" << std::endl;
+
+  Server a = Server(port1);
+
+  std::cout << "adding socket manager" << std::endl;
+  SocketManager sm;
+
+  sm.addServer(a);
+
+
+  sm.runPoll();
+  std::cout << "all done!" << std::endl;
+
+  return (0);
+
   // a = Server(port1);
   // Server b(port1);
   Server c(port2);

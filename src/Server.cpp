@@ -55,6 +55,10 @@ Server::Server(std::string port) {
   }
 
   _sockfd = sockfd;
+  _port = port;
+  _ip = ipstr;
+
+  std::cout << "parameterised constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
 
   freeaddrinfo(servinfo);
 }
@@ -69,18 +73,24 @@ static int safe_dup(int fd) {
 
 Server::Server(const Server& other) {
   _sockfd = safe_dup(other._sockfd);
+  _ip = other._ip;
+  _port = other._port;
+  std::cout << "copy constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
 }
 
 Server& Server::operator=(const Server& other) {
   int new_fd = safe_dup(other._sockfd);
   close(_sockfd);
   _sockfd = new_fd;
+  _ip = other._ip;
+  _port = other._port;
+  std::cout << "assignment constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
   return *this;
 }
 
 Server::~Server() {
   // TODO. Do teardown stuff
-  std::cout << "Destructor running" << std::endl;
+  std::cout << "destructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
   if (_sockfd != -1) {
     shutdown(_sockfd, 2); // WHICH ONE?!
     // close(_sockfd);
@@ -93,4 +103,7 @@ int Server::getSockFd() {
 
 Server::Server() {
   _sockfd = -1;
+  _ip = "";
+  _port = "";
+  std::cout << "default constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
 }

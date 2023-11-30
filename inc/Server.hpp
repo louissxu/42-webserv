@@ -25,6 +25,8 @@ class Server {
 
   private:
     int _sockfd;
+    std::string _port;
+    std::string _ip;
     
 };
 

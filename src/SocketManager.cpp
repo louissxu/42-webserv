@@ -16,9 +16,10 @@ SocketManager::SocketManager() {
 // }
 
 SocketManager::~SocketManager() {
-  delete[] _pfds;
+  // delete[] _pfds;
   // _pfds_count = 0;
   // _pfds_array_size = 0;
+  std::cout << "SocketManager destructor" << std::endl;
 }
 
 void SocketManager::extendPfdArray(int amount) {
@@ -31,13 +32,33 @@ void SocketManager::extendPfdArray(int amount) {
   _pfds_array_size = _pfds_array_size + amount;
 }
 
-void SocketManager::addServer(Server& server) {
-  if (_pfds_count >= _pfds_array_size) {
-    extendPfdArray(10);
+void SocketManager::addServer(const Server& server) {
+  _servers.push_back(server);
+  
+  return;
+
+  // if (_pfds_count >= _pfds_array_size) {
+  //   extendPfdArray(10);
+  // }
+  // _pfds[_pfds_count].fd = server.getSockFd();
+  // _pfds[_pfds_count].events = POLLIN;
+  // _servers[_pfds_count] = server;
+  // _type[_pfds_count] = 1;
+  // _pfds_count += 1;
+}
+
+void SocketManager::runPoll() {
+  size_t pfd_count = _servers.size() + _connections.size();
+  struct pollfd *pfds = new struct pollfd[pfd_count];
+  for (size_t i = 0; i < _servers.size(); i++) {
+    pfds[i].fd = _servers[i].getSockFd();
+    pfds[i].events = POLLIN;
   }
-  _pfds[_pfds_count].fd = server.getSockFd();
-  _pfds[_pfds_count].events = POLLIN;
-  _servers[_pfds_count] = server;
-  _type[_pfds_count] = 1;
-  _pfds_count += 1;
+  
+  std::cout << "Hit RETURN or wait 2.5 seconds for timeout" << std::endl;
+  size_t num_events = poll(pfds, pfd_count, 2500);
+
+  std::cout << "number of ready events is: " << num_events << std::endl;
+
+  delete[] pfds;
 }

@@ -14,10 +14,10 @@ class SocketManager {
     SocketManager();
     ~SocketManager();
 
-    void addServer(Server& server);
+    void addServer(const Server& server);
     void addConnection(Connection& connection);
 
-    void checkPoll();
+    void runPoll();
 
   private:
     struct pollfd *_pfds;

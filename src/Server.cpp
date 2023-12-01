@@ -64,6 +64,10 @@ Server::Server(std::string port) {
 }
 
 static int safe_dup(int fd) {
+  if (fd == -1) {
+    return -1;
+  }
+
   int copy = dup(fd);
   if (copy < 0) {
     throw std::runtime_error(strerror(errno));
@@ -80,7 +84,9 @@ Server::Server(const Server& other) {
 
 Server& Server::operator=(const Server& other) {
   int new_fd = safe_dup(other._sockfd);
-  close(_sockfd);
+  if (_sockfd != -1) {
+    close(_sockfd);
+  }
   _sockfd = new_fd;
   _ip = other._ip;
   _port = other._port;
@@ -106,4 +112,14 @@ Server::Server() {
   _ip = "";
   _port = "";
   std::cout << "default constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
+}
+
+void Server::acceptNewConnection() {
+  Connection newConnection = Connection(_sockfd);
+  _connections.push_back(newConnection);
+  std::cout << "connection accepted" << std::endl;
+}
+
+std::vector<Connection>& Server::getConnections() const {
+  return _connections;
 }

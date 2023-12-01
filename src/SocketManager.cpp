@@ -1,9 +1,9 @@
 #include "SocketManager.hpp"
 
 SocketManager::SocketManager() {
-  _pfds = new struct pollfd[10];
-  _pfds_count = 0;
-  _pfds_array_size = 10;
+  // _pfds = new struct pollfd[10];
+  // _pfds_count = 0;
+  // _pfds_array_size = 10;
 
 }
 
@@ -22,15 +22,15 @@ SocketManager::~SocketManager() {
   std::cout << "SocketManager destructor" << std::endl;
 }
 
-void SocketManager::extendPfdArray(int amount) {
-  struct pollfd *new_pfds = new struct pollfd[_pfds_array_size + amount];
-  for (size_t i = 0; i < _pfds_array_size; i++) {
-    new_pfds[i] = _pfds[i];
-  }
-  delete[] _pfds;
-  _pfds = new_pfds;
-  _pfds_array_size = _pfds_array_size + amount;
-}
+// void SocketManager::extendPfdArray(int amount) {
+//   struct pollfd *new_pfds = new struct pollfd[_pfds_array_size + amount];
+//   for (size_t i = 0; i < _pfds_array_size; i++) {
+//     new_pfds[i] = _pfds[i];
+//   }
+//   delete[] _pfds;
+//   _pfds = new_pfds;
+//   _pfds_array_size = _pfds_array_size + amount;
+// }
 
 void SocketManager::addServer(const Server& server) {
   _servers.push_back(server);
@@ -48,7 +48,7 @@ void SocketManager::addServer(const Server& server) {
 }
 
 void SocketManager::runPoll() {
-  size_t pfd_count = _servers.size() + _connections.size();
+  size_t pfd_count = _servers.size(); // + connections
   struct pollfd *pfds = new struct pollfd[pfd_count];
   for (size_t i = 0; i < _servers.size(); i++) {
     pfds[i].fd = _servers[i].getSockFd();
@@ -59,6 +59,12 @@ void SocketManager::runPoll() {
   size_t num_events = poll(pfds, pfd_count, 2500);
 
   std::cout << "number of ready events is: " << num_events << std::endl;
+
+  for (size_t i = 0; i < _servers.size(); i++) {
+    if (pfds[i].revents & POLLIN) {
+      _servers[i].acceptNewConnection();
+    }
+  }
 
   delete[] pfds;
 }

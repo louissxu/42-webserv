@@ -11,7 +11,7 @@
 
 #include "HTTPRequest.hpp"
 #include "Server.hpp"
-#include "SocketManager.hpp"
+#include "ServerManager.hpp"
 
 #include <vector>
 
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   Server a = Server(port1);
 
   std::cout << "adding socket manager" << std::endl;
-  SocketManager sm;
+  ServerManager sm;
 
   sm.addServer(a);
 

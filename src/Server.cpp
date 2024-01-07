@@ -120,6 +120,6 @@ void Server::acceptNewConnection() {
   std::cout << "connection accepted" << std::endl;
 }
 
-std::vector<Connection>& Server::getConnections() const {
+std::vector<Connection>& Server::getConnections() {
   return _connections;
 }

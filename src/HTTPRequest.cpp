@@ -31,14 +31,18 @@ HTTPRequest::~HTTPRequest() {
 }
 
 void HTTPRequest::print() {
+  std::cout << "---- Parsed HTTP Request Contents (rest was discarded) ----" << std::endl;
   std::cout << "HTTP Request" << std::endl;
   std::cout << "  Method name:  " << _request_method_name << std::endl;
   std::cout << "  URI:          " << _request_uri << std::endl;
   std::cout << "  HTTP version: " << _HTTP_version << std::endl;
+  std::cout << "---- end of request ----" << std::endl;
 }
 
 void HTTPRequest::parseString(std::string str) {
+  std::cout << std::endl << "---- Full Request Data is: ----" << std::endl;
   std::cout << str << std::endl;
+  std::cout << std::endl << "---- End of request ----" << std::endl;
 
   std::stringstream ss(str);
   std::string line;

@@ -18,8 +18,9 @@ INC = inc
 
 SRC_FILES = \
 	HTTPRequest.cpp \
-	SocketManager.cpp \
+	ServerManager.cpp \
 	Server.cpp \
+	Connection.cpp \
 	main.cpp
 
 SRC_DIR = src

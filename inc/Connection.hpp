@@ -2,6 +2,11 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
+#include <netinet/in.h>
+#include <unistd.h> // for dup
+
+#include "HTTPRequest.hpp"
+
 class Connection {
   public:
     Connection();
@@ -12,6 +17,7 @@ class Connection {
     Connection(int sockfd);
 
     void receiveData();
+    void sendData();
 
   private:
     int _connection_fd;

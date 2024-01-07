@@ -27,7 +27,7 @@ class Server {
 
     int getSockFd();
     void acceptNewConnection();
-    std::vector<Connection>& getConnections() const;
+    std::vector<Connection>& getConnections();
 
   private:
     int _sockfd;

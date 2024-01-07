@@ -1,6 +1,6 @@
 #pragma once
-#ifndef SOCKETMANAGER_HPP
-#define SOCKETMANAGER_HPP
+#ifndef ServerManager_HPP
+#define ServerManager_HPP
 
 #include <poll.h>
 
@@ -8,10 +8,10 @@
 
 #include <vector>
 
-class SocketManager {
+class ServerManager {
   public:
-    SocketManager();
-    ~SocketManager();
+    ServerManager();
+    ~ServerManager();
 
     void addServer(const Server& server);
     // void addConnection(Connection& connection);
@@ -28,8 +28,8 @@ class SocketManager {
 
 
 
-    SocketManager(SocketManager& other);
-    SocketManager& operator=(SocketManager& other);
+    ServerManager(ServerManager& other);
+    ServerManager& operator=(ServerManager& other);
 };
 
 #endif

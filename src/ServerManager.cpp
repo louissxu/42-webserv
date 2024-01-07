@@ -1,28 +1,28 @@
-#include "SocketManager.hpp"
+#include "ServerManager.hpp"
 
-SocketManager::SocketManager() {
+ServerManager::ServerManager() {
   // _pfds = new struct pollfd[10];
   // _pfds_count = 0;
   // _pfds_array_size = 10;
 
 }
 
-// SocketManager::SocketManager(SocketManager& other) {
+// ServerManager::ServerManager(ServerManager& other) {
 
 // }
 
-// SocketManager& SocketManager::operator=(SocketManager& other) {
+// ServerManager& ServerManager::operator=(ServerManager& other) {
 
 // }
 
-SocketManager::~SocketManager() {
+ServerManager::~ServerManager() {
   // delete[] _pfds;
   // _pfds_count = 0;
   // _pfds_array_size = 0;
-  std::cout << "SocketManager destructor" << std::endl;
+  std::cout << "ServerManager destructor" << std::endl;
 }
 
-// void SocketManager::extendPfdArray(int amount) {
+// void ServerManager::extendPfdArray(int amount) {
 //   struct pollfd *new_pfds = new struct pollfd[_pfds_array_size + amount];
 //   for (size_t i = 0; i < _pfds_array_size; i++) {
 //     new_pfds[i] = _pfds[i];
@@ -32,7 +32,7 @@ SocketManager::~SocketManager() {
 //   _pfds_array_size = _pfds_array_size + amount;
 // }
 
-void SocketManager::addServer(const Server& server) {
+void ServerManager::addServer(const Server& server) {
   _servers.push_back(server);
   
   return;
@@ -47,7 +47,7 @@ void SocketManager::addServer(const Server& server) {
   // _pfds_count += 1;
 }
 
-void SocketManager::runPoll() {
+void ServerManager::runPoll() {
   size_t pfd_count = _servers.size(); // + connections
   struct pollfd *pfds = new struct pollfd[pfd_count];
   for (size_t i = 0; i < _servers.size(); i++) {
@@ -55,8 +55,9 @@ void SocketManager::runPoll() {
     pfds[i].events = POLLIN;
   }
   
-  std::cout << "Hit RETURN or wait 2.5 seconds for timeout" << std::endl;
-  size_t num_events = poll(pfds, pfd_count, 2500);
+  std::cout << "Hit RETURN or wait 10 seconds for timeout" << std::endl;
+  std::cout << "If you try to connect to 127.0.0.1:2345 while this is running you will see a hello world message" << std::endl;;
+  size_t num_events = poll(pfds, pfd_count, 10000);
 
   std::cout << "number of ready events is: " << num_events << std::endl;
 

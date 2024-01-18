@@ -21,6 +21,7 @@ SRC_FILES = \
 	ServerManager.cpp \
 	Server.cpp \
 	Connection.cpp \
+	Cout.cpp \
 	main.cpp
 
 SRC_DIR = src

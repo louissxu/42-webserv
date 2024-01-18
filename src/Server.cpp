@@ -41,6 +41,16 @@ Server::Server(std::string port) {
   // set to allow port reuse? or something
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
+  
+  // make the socket non-blocking
+  int flags;
+  // Get the current flags
+  if ((flags = fcntl(sockfd, F_GETFD, 0)) == -1)
+      perror("fcntl F_GETFL");
+  // Set the O_NONBLOCK flag
+  if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
+      perror("fcntl F_SETFL O_NONBLOCK");
+
 
   error_return = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
   if (error_return != 0) {

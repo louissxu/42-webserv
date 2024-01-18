@@ -9,12 +9,15 @@
 #include <netinet/in.h>
 #include <stdio.h> // for perror
 #include <unistd.h> // for dup
+#include <fcntl.h>
 
 #include <string>
 #include <iostream>
 
 #include <vector>
 #include "Connection.hpp"
+
+
 
 class Server {
   public:
@@ -24,6 +27,8 @@ class Server {
     ~Server();
 
     Server(std::string port);
+
+    // init_servers()
 
     int getSockFd();
     void acceptNewConnection();

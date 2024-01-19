@@ -4,7 +4,7 @@
 
 NAME = webserv
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98 #-fsanitize=address -g
+CFLAGS = -Wall -Wextra -Werror -g -std=c++98 #-fsanitize=address -g
 
 #	o-----------------o
 #	|    INCLUDES     |

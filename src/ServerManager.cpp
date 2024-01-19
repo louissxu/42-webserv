@@ -85,13 +85,44 @@ void ServerManager::acceptNewConnections( int nev ) {
                   perror("accept");
                   continue;
               }
-
+              std::cout << "accepted: " << conn_fd << std::endl;
               // Add the new socket to kqueue
               EV_SET(&ev_set[j], conn_fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, NULL);
           }
       }
     }
   accepting = false;
+}
+#include <fstream>
+
+void send_file(int client_socket, const std::string& filename, const std::string& content_type) {
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
+    if (!file.is_open()) {
+        perror("Error opening file");
+        return;
+    }
+
+    std::ostringstream file_contents;
+    file_contents << file.rdbuf();
+
+/*
+HTTP/1.1 200 OK\r\n
+Content-Type: text/html\r\n
+Content-Length: 2087\r\n
+Connection: keep-alive\r\n
+Server: AMAnix\r\n
+Date: Fri, 19 Jan 2024 05:55:55 UTC\r\n\r\n
+*/
+
+    std::string response =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: " + content_type + "\r\n"
+        "Connection: keep-alive" + "\r\n"
+        "\r\n" + file_contents.str();
+
+    send(client_socket, response.c_str(), response.length(), 0);
+
+    file.close();
 }
 
 void ServerManager::processConnectionIO( int nev ) {
@@ -103,17 +134,63 @@ void ServerManager::processConnectionIO( int nev ) {
             ssize_t n = read(ev_list[i].ident, buffer, BUFFER_SIZE - 1);
             if (n <= 0) {
                 // Connection closed
+                std::cout << "failed to read: " << ev_list[i].ident << std::endl;
                 close(ev_list[i].ident);
-                continue;
+                exit (EXIT_FAILURE);
             }
-
+            std::cout << "read from " << ev_list[i].ident << std::endl;
             buffer[n] = '\0';
             std::cout << "Received: " << buffer << std::endl;
 
-            // Sending a basic HTTP response
-            const char *response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello from C++ kqueue server!";
-            write(ev_list[i].ident, response, strlen(response));
+            static int first = 1;
+            if (first)
+            {
+            send_file(ev_list[i].ident, "webpages/menu.html", "text/html");
+            first = 0;
+            }
+            else
+            {
+            send_file(ev_list[i].ident, "webpages/styles.css", "text/css");
+            first = 1;
+            }
+        // Send the CSS file
+        
+            // // Sending a basic HTTP response
+            // const char *response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello from C++ kqueue server!";
+            // write(ev_list[i].ident, response, strlen(response));
+            // std::ifstream indexFile("webpages/menu.html");
 
+            // if (indexFile) {
+            //     std::string response;
+            //     std::string htmlContent;
+            //     while (getline(indexFile, htmlContent)) {
+            //         response += htmlContent + "\n";
+            //     }
+            //     std::string contentLength = std::to_string(response.length());
+            //     std::string httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: " + contentLength + "\r\n\r\n" + response;
+            //     send(ev_list[i].ident, httpResponse.c_str(), httpResponse.length(), 0);
+            // } else {
+            //     // If index.html not found, send a simple response
+            //     std::string notFoundResponse = "HTTP/1.1 404 Not Found\r\n\r\n<html><body><h1>404 Not Found</h1></body></html>";
+            //     send(ev_list[i].ident, notFoundResponse.c_str(), notFoundResponse.length(), 0);
+            // }
+            
+            // std::ifstream indexFile1("webpages/styles.css");
+
+            // if (indexFile1) {
+            //     std::string response;
+            //     std::string htmlContent;
+            //     while (getline(indexFile1, htmlContent)) {
+            //         response += htmlContent + "\n";
+            //     }
+            //     std::string contentLength = std::to_string(response.length());
+            //     std::string httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: text/css\r\nContent-Length: " + contentLength + "\r\n\r\n" + response;
+            //     send(ev_list[i].ident, httpResponse.c_str(), httpResponse.length(), 0);
+            // } else {
+            //     // If index.html not found, send a simple response
+            //     std::string notFoundResponse = "HTTP/1.1 404 Not Found\r\n\r\n<html><body><h1>404 Not Found</h1></body></html>";
+            //     send(ev_list[i].ident, notFoundResponse.c_str(), notFoundResponse.length(), 0);
+            // }
             // Closing connection
             close(ev_list[i].ident);
         }
@@ -126,7 +203,7 @@ void ServerManager::runKQ() {
   // struct kevent ev_list[MAX_EVENTS];
   accepting = true; // to check if socket should be added to the queue. 
 	struct timespec tmout = { 5, 0 };     /* block for 5 seconds at most */ 
-  
+  std::cout << "\n\n\n\n\n";
   createQ();
   while (true) {
     int nev = kevent(kq, ev_set, numServers, ev_list, MAX_EVENTS, &tmout);
@@ -143,10 +220,10 @@ void ServerManager::runKQ() {
       acceptNewConnections(nev); // Process new connections
     else {
       // Add the listening sockets back to kqueue
+      processConnectionIO( nev );
       for (int j = 0; j < numServers; j++) {
           EV_SET(&ev_set[j], _servers[j].getSockFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
       }
-      processConnectionIO( nev );
     }
   }
 }

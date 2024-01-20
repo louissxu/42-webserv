@@ -3,18 +3,27 @@
 #define HTTPRESPONSE_HPP
 
 #include <string>
+#include <fstream>
+#include <sstream>
+#include <unistd.h>
 
-/*
-	TODO add later:
-	Server: AMAnix\r\n
-	Date: Fri, 19 Jan 2024 05:55:55 UTC\r\n\r\n
-*/
+#include "message.hpp"
 
-class HTTPResponse {
-	private:
-		std::string contentType;
-		std::string contentLength;
-		std::string connection;
+class HTTPResponse: public Message {
+  public:
+    HTTPResponse();
+    HTTPResponse(HTTPResponse& other);
+    HTTPResponse& operator=(HTTPResponse& other);
+    virtual ~HTTPResponse();
+
+    // void print();
+
+  private:
+    void generateResponse();
+    std::string getFileName( std::string uri ) const;
+    // std::string Response();
+    // std::string getFileContents();
+    std::string _response;
 };
 
 #endif

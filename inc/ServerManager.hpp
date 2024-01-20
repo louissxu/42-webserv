@@ -18,6 +18,7 @@
 #include <netinet/in.h>
 #include <sys/event.h>
 #include <sys/time.h>
+#include "HTTPResponse.hpp"
 
 #define MAX_EVENTS 20 // random value
 #define BUFFER_SIZE 1024

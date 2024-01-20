@@ -85,7 +85,7 @@ void ServerManager::acceptNewConnections( int nev ) {
                   perror("accept");
                   continue;
               }
-              std::cout << "accepted: " << conn_fd << std::endl;
+              // std::cout << "accepted: " << conn_fd << std::endl;
               // Add the new socket to kqueue
               EV_SET(&ev_set[j], conn_fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, NULL);
           }
@@ -125,11 +125,14 @@ Date: Fri, 19 Jan 2024 05:55:55 UTC\r\n\r\n
     file.close();
 }
 
+
 void ServerManager::processConnectionIO( int nev ) {
    char buffer[BUFFER_SIZE];
   
    for (int i = 0; i < nev; i++) {
         if (ev_list[i].filter == EVFILT_READ) {
+
+          
             // Handling read event
             ssize_t n = read(ev_list[i].ident, buffer, BUFFER_SIZE - 1);
             if (n <= 0) {
@@ -138,65 +141,74 @@ void ServerManager::processConnectionIO( int nev ) {
                 close(ev_list[i].ident);
                 exit (EXIT_FAILURE);
             }
-            std::cout << "read from " << ev_list[i].ident << std::endl;
             buffer[n] = '\0';
-            std::cout << "Received: " << buffer << std::endl;
+            Message* messagePtr = new HTTPRequest(buffer);
+            messagePtr->generateResponse(ev_list[i].ident);
+            // HTTPRequest request(buffer);
+            // Message message = request;
+            // HTTPResponse(message);
+            // message.generateResponse();
+            // request.print();
 
-            static int first = 1;
-            if (first)
-            {
-            send_file(ev_list[i].ident, "webpages/menu.html", "text/html");
-            first = 0;
-            }
-            else
-            {
-            send_file(ev_list[i].ident, "webpages/styles.css", "text/css");
-            first = 1;
-            }
-        // Send the CSS file
-        
-            // // Sending a basic HTTP response
-            // const char *response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello from C++ kqueue server!";
-            // write(ev_list[i].ident, response, strlen(response));
-            // std::ifstream indexFile("webpages/menu.html");
+            // std::cout << "read from " << ev_list[i].ident << std::endl;
+            // buffer[n] = '\0';
+            // // std::cout << "Received: \n" << buffer << "\n\n" << std::endl;
 
-            // if (indexFile) {
-            //     std::string response;
-            //     std::string htmlContent;
-            //     while (getline(indexFile, htmlContent)) {
-            //         response += htmlContent + "\n";
-            //     }
-            //     std::string contentLength = std::to_string(response.length());
-            //     std::string httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: " + contentLength + "\r\n\r\n" + response;
-            //     send(ev_list[i].ident, httpResponse.c_str(), httpResponse.length(), 0);
-            // } else {
-            //     // If index.html not found, send a simple response
-            //     std::string notFoundResponse = "HTTP/1.1 404 Not Found\r\n\r\n<html><body><h1>404 Not Found</h1></body></html>";
-            //     send(ev_list[i].ident, notFoundResponse.c_str(), notFoundResponse.length(), 0);
+            // static int first = 1;
+            // if (first)
+            // {
+            //   send_file(ev_list[i].ident, "webpages/menu.html", "text/html");
+            //   first = 0;
             // }
-            
-            // std::ifstream indexFile1("webpages/styles.css");
-
-            // if (indexFile1) {
-            //     std::string response;
-            //     std::string htmlContent;
-            //     while (getline(indexFile1, htmlContent)) {
-            //         response += htmlContent + "\n";
-            //     }
-            //     std::string contentLength = std::to_string(response.length());
-            //     std::string httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: text/css\r\nContent-Length: " + contentLength + "\r\n\r\n" + response;
-            //     send(ev_list[i].ident, httpResponse.c_str(), httpResponse.length(), 0);
-            // } else {
-            //     // If index.html not found, send a simple response
-            //     std::string notFoundResponse = "HTTP/1.1 404 Not Found\r\n\r\n<html><body><h1>404 Not Found</h1></body></html>";
-            //     send(ev_list[i].ident, notFoundResponse.c_str(), notFoundResponse.length(), 0);
+            // else
+            // {
+            //   send_file(ev_list[i].ident, "webpages/styles.css", "text/css");
+            //   first = 1;
             // }
-            // Closing connection
             close(ev_list[i].ident);
         }
     }
 	accepting = true;
 }
+
+
+// void ServerManager::processConnectionIO( int nev ) {
+//    char buffer[BUFFER_SIZE];
+  
+//    for (int i = 0; i < nev; i++) {
+//         if (ev_list[i].filter == EVFILT_READ) {
+//             // Handling read event
+//             ssize_t n = read(ev_list[i].ident, buffer, BUFFER_SIZE - 1);
+//             if (n <= 0) {
+//                 // Connection closed
+//                 std::cout << "failed to read: " << ev_list[i].ident << std::endl;
+//                 close(ev_list[i].ident);
+//                 exit (EXIT_FAILURE);
+//             }
+
+//             HTTPRequest request(buffer);
+//             request.print();
+
+//             // std::cout << "read from " << ev_list[i].ident << std::endl;
+//             buffer[n] = '\0';
+//             // std::cout << "Received: \n" << buffer << "\n\n" << std::endl;
+
+//             static int first = 1;
+//             if (first)
+//             {
+//               send_file(ev_list[i].ident, "webpages/menu.html", "text/html");
+//               first = 0;
+//             }
+//             else
+//             {
+//               send_file(ev_list[i].ident, "webpages/styles.css", "text/css");
+//               first = 1;
+//             }
+//             close(ev_list[i].ident);
+//         }
+//     }
+// 	accepting = true;
+// }
 
 void ServerManager::runKQ() {
   int numServers = _servers.size();

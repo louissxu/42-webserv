@@ -61,8 +61,8 @@ class Server {
 
   private:
     int _sockfd;
-    std::string _port;
-    std::string _ip;
+    std::string _listen;
+    std::string _host;
     std::string _name;
     std::vector<Connection> _connections;
 };

@@ -121,6 +121,7 @@ Server::Server() {
   _sockfd = -1;
   _ip = "";
   _port = "";
+  _name = "";
   std::cout << "default constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
 }
 

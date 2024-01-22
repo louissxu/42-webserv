@@ -24,9 +24,11 @@ int main(void) {
   Server a = Server(port1);
   Server b = Server(port2);
 
+
+
+
   std::cout << "adding socket manager" << std::endl;
   ServerManager sm;
-
   sm.addServer(a);
   sm.addServer(b);
 

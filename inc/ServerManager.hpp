@@ -18,7 +18,12 @@
 #include <netinet/in.h>
 #include <sys/event.h>
 #include <sys/time.h>
+
+
 #include "HTTPResponse.hpp"
+#include "ConfigParser.hpp"
+
+class ConfigParser;
 
 #define MAX_EVENTS 20 // random value
 #define BUFFER_SIZE 1024
@@ -31,14 +36,15 @@ class ServerManager {
     // void addConnection(Connection& connection);
 
     void runPoll();
-
     void runKQ();
     void createQ();
     void acceptNewConnections( int nev );
     void processConnectionIO(int nev );
 
+    ConfigParser getParser();
 
   private:
+    ConfigParser  parser;
     std::vector<Server> _servers;
     int kq;
     bool accepting;

@@ -22,6 +22,13 @@ ServerManager::~ServerManager() {
   std::cout << "ServerManager destructor" << std::endl;
 }
 
+ConfigParser ServerManager::getParser()
+{
+  return parser;
+}
+
+
+
 void ServerManager::addServer(const Server& server) {
   _servers.push_back(server);
   return;

@@ -22,6 +22,7 @@ SRC_FILES = \
 	ServerManager.cpp \
 	Server.cpp \
 	Connection.cpp \
+	ConfigParser.cpp \
 	Cout.cpp \
 	main.cpp
 

@@ -24,7 +24,16 @@ HTTPResponse::~HTTPResponse() {
 }
 
 void HTTPResponse::generateResponse(){
-	std::ifstream file(getFileName( getUri() ), std::ios::in | std::ios::binary);
+  std::string filePath = getFileName( getUri() );
+  if (filePath == "\0")
+  {
+    _response = getMethod() + "200 OK\r\n"
+		"Content-Type: " + getContentType() + "\r\n"
+		"Connection: " + getConnection() + "\r\n"
+		"\r\n" + file_contents.str();
+  }
+
+	std::ifstream file(filePath, std::ios::in | std::ios::binary);
     if (!file.is_open()) {
 		// TODO: send 404 error
         perror("Error opening file");
@@ -33,7 +42,7 @@ void HTTPResponse::generateResponse(){
 
     std::ostringstream file_contents;
     file_contents << file.rdbuf();
-	
+
 	_response =
 		getMethod() + "200 OK\r\n"
 		"Content-Type: " + getContentType() + "\r\n"
@@ -53,7 +62,7 @@ std::string HTTPResponse::getFileName( std::string uri ) const {
 
 	if (uri.compare(_default) == 0)
 		return dir + "/menu.html";
-	
+
 	if (access(fullpath.c_str(), F_OK))
 		return fullpath;
 	return nullptr;

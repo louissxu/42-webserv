@@ -111,6 +111,19 @@
     "vector": "cpp",
     "algorithm": "cpp",
     "fstream": "cpp",
-    "iomanip": "cpp"
+    "iomanip": "cpp",
+    "__functional_base": "cpp",
+    "__nullptr": "cpp",
+    "__string": "cpp",
+    "__tuple": "cpp",
+    "bit": "cpp",
+    "chrono": "cpp",
+    "deque": "cpp",
+    "functional": "cpp",
+    "iterator": "cpp",
+    "memory": "cpp",
+    "stack": "cpp",
+    "type_traits": "cpp",
+    "utility": "cpp"
   }
 }

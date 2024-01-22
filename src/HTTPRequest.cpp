@@ -40,6 +40,8 @@ void HTTPRequest::print() {
 
 void HTTPRequest::parseString(std::string str) {
 
+  // std::cout << "\033[34m" << str << "\n" << "\033[0m" << std::endl;
+
   std::stringstream ss(str);
   std::string line;
 
@@ -57,49 +59,24 @@ void HTTPRequest::parseString(std::string str) {
   std::getline(line_stream, item, '\\');
   _HTTP_version = item;
 
+  while (std::getline(ss, line, '\n'))
+  {
+    std::stringstream line_stream1(line);
+    std::string item;
+    std::getline(line_stream1, item, ' ');
+    if (item == "Accept:") {
+      std::getline(line_stream1, item, ',');
+      _content_type = item;
+    }
+    else if (item == "connection:") {
+      std::getline(line_stream1, item, '\n');
+      _Connection_type = item;
+    }
+  }
   // while (item.compare(0, 11, "Connection:"))
   // {
   //   std::getline(line_stream, item, '\n');
   //   continue;
   // }
-  _Connection_type = "keep-alive";
-  static bool first = true;
-  if (first)
-  {
-  _content_type = "text/html";
-  first = false;
-  }
-  else
-  {
-    _content_type = "text/css";
-    first = true;
-  }
+  // _Connection_type = "keep-alive";
 }
-
-
-// void HTTPRequest::parseString(std::string str) {
-//     std::stringstream ss(str);
-//     std::string line;
-    
-//     std::getline(ss, line, '\n');
-
-//     std::stringstream line_stream(line);
-//     std::string item;
-
-//     std::getline(line_stream >> std::ws, item, ' ');  // Trim leading whitespaces
-//     _request_method_name = item;
-
-//     std::getline(line_stream >> std::ws, item, ' ');  // Trim leading whitespaces
-//     _request_uri = item;
-
-//     std::getline(line_stream >> std::ws, item, ' ');  // Trim leading whitespaces
-//     _HTTP_version = item;
-
-//     // Find the "Connection:" header
-//     std::getline(ss, line, '\n');
-//     line_stream(line);
-//     while (std::getline(line_stream, item) && item.find("Connection:") == std::string::npos) {
-//         // Skip other headers
-//     }
-//     _Connection_type = item;
-// }

@@ -128,11 +128,11 @@ Date: Fri, 19 Jan 2024 05:55:55 UTC\r\n\r\n
 
 void ServerManager::processConnectionIO( int nev ) {
    char buffer[BUFFER_SIZE];
-  
+
    for (int i = 0; i < nev; i++) {
         if (ev_list[i].filter == EVFILT_READ) {
 
-          
+
             // Handling read event
             ssize_t n = read(ev_list[i].ident, buffer, BUFFER_SIZE - 1);
             if (n <= 0) {
@@ -165,6 +165,7 @@ void ServerManager::processConnectionIO( int nev ) {
             //   send_file(ev_list[i].ident, "webpages/styles.css", "text/css");
             //   first = 1;
             // }
+            delete messagePtr;
             close(ev_list[i].ident);
         }
     }
@@ -174,7 +175,7 @@ void ServerManager::processConnectionIO( int nev ) {
 
 // void ServerManager::processConnectionIO( int nev ) {
 //    char buffer[BUFFER_SIZE];
-  
+
 //    for (int i = 0; i < nev; i++) {
 //         if (ev_list[i].filter == EVFILT_READ) {
 //             // Handling read event
@@ -213,8 +214,8 @@ void ServerManager::processConnectionIO( int nev ) {
 void ServerManager::runKQ() {
   int numServers = _servers.size();
   // struct kevent ev_list[MAX_EVENTS];
-  accepting = true; // to check if socket should be added to the queue. 
-	struct timespec tmout = { 5, 0 };     /* block for 5 seconds at most */ 
+  accepting = true; // to check if socket should be added to the queue.
+	struct timespec tmout = { 5, 0 };     /* block for 5 seconds at most */
   std::cout << "\n\n\n\n\n";
   createQ();
   while (true) {

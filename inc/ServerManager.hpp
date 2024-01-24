@@ -40,11 +40,9 @@ class ServerManager {
     void createQ();
     void acceptNewConnections( int nev );
     void processConnectionIO(int nev );
-
-    ConfigParser getParser();
+    void setStateFromParser(const ConfigParser& src);	
 
   private:
-    ConfigParser  parser;
     std::vector<Server> _servers;
     int kq;
     bool accepting;

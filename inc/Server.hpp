@@ -54,7 +54,6 @@ class Server {
     Server(std::string port);
 
     // init_servers()
-
     int getSockFd();
     void acceptNewConnection();
     std::vector<Connection>& getConnections();
@@ -62,8 +61,11 @@ class Server {
   private:
     int _sockfd;
     std::string _listen;
+    std::string _server_name;
     std::string _host;
-    std::string _name;
+    std::string _root;
+    std::string _index;
+    std::string _error_page;
     std::vector<Connection> _connections;
 };
 

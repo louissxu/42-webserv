@@ -75,7 +75,7 @@ std::string Message::getFileContents( std::string filePath ) {
 	std::ifstream file;
 
 	if (filePath == "\0") {
-		file.open("webpages/error404/errorPage.html", std::ios::in | std::ios::binary);
+		file.open("documents/error404/errorPage.html", std::ios::in | std::ios::binary);
 		if (!file.is_open()) {
 			std::cout << "could not file error page\n" << std::endl;
 		}
@@ -98,7 +98,7 @@ std::string Message::getFileContents( std::string filePath ) {
 void Message::generateResponse( int fd ) {
 	// std::string filePath = getFileName( getUri() );
 	// if (filePath == "\0") {
-	// 	std::ifstream file("webpages/error404/errorPage.html", std::ios::in | std::ios::binary);
+	// 	std::ifstream file("documents/error404/errorPage.html", std::ios::in | std::ios::binary);
 	// 	if (!file.is_open()) {
 	// 		// TODO: send 404 error
 	// 		perror("Error opening file");
@@ -153,7 +153,7 @@ void Message::generateResponse( int fd ) {
 
 
 std::string Message::getFileName( std::string uri ) const {
-	std::string dir = "webpages";
+	std::string dir = "documents";
 	std::string fullpath = dir + uri;
 	std::string _default = "/";
 

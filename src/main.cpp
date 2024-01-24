@@ -18,51 +18,40 @@
 // Ref: https://beej.us/guide/bgnet/html/#structs
 
 int main(int argc, char **argv) {
-  
-  // try
-  // {
-  //   ServerManager sm;
-  //   if (argc == 1)
-  //   { 
-  //     std::string defaultConfigParser = "config/default.conf";
-  //     std::cout << "(Default ConfigParser file used): see <" << defaultConfigParser << ">. " << std::endl;
-  //     sm.getParser().setContent(defaultConfigParser);
-  //   }
-  //   else
-  //   {
-  //           sm.getParser().setContent(argv[1]);
-  //   }
+  try
+  {
+    ServerManager sm;
+    ConfigParser parser;
 
-  //   sm.getParser().setStateFromContent(0, false);	
-  //   sm.getParser().printContexts();
-  // }
-  // catch (std::exception &e)
-  // {
-  //   std::cerr << e.what() << std::endl;
-  //   return (1);
-  // }
-  
-  // return (0);
+    if (argc == 1)
+    { 
+      std::string defaultConfigParser = "config/default.conf";
+      std::cout << "(Default ConfigParser file used): see <" << defaultConfigParser << ">. " << std::endl;
+      parser.setContent(defaultConfigParser);
+    }
+    else
+    {
+            parser.setContent(argv[1]);
+    }
 
-  //OG
-  (void)argc;
-  (void)argv;
-  
-  std::string port1 = "2345";
-  std::string port2 = "3456";
-  
-  Server a = Server(port1);
-  Server b = Server(port2);
+    parser.setStateFromContent(0, false);
+    parser.printContexts();
+    sm.setStateFromParser(parser);	
 
-  std::cout << "adding socket manager" << std::endl;
-  ServerManager sm;
-  sm.addServer(a);
-  sm.addServer(b);
-
-  sm.runKQ();
-
-  // sm.runPoll();
-  std::cout << "all done!" << std::endl;
-
+    //testing / temp.
+    std::string port1 = "2345";
+    std::string port2 = "3456";
+    Server a = Server(port1);
+    Server b = Server(port2);
+    sm.addServer(a);
+    sm.addServer(b);
+    sm.runKQ();
+    std::cout << "all done!" << std::endl;
+  }
+  catch (std::exception &e)
+  {
+    std::cerr << e.what() << std::endl;
+    return (1);
+  }
   return(0);
 }

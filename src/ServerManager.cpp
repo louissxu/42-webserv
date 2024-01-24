@@ -22,10 +22,10 @@ ServerManager::~ServerManager() {
   std::cout << "ServerManager destructor" << std::endl;
 }
 
-ConfigParser ServerManager::getParser()
-{
-  return parser;
-}
+// ConfigParser ServerManager::getParser()
+// {
+//   return parser;
+// }
 
 
 
@@ -164,12 +164,12 @@ void ServerManager::processConnectionIO( int nev ) {
             // static int first = 1;
             // if (first)
             // {
-            //   send_file(ev_list[i].ident, "webpages/menu.html", "text/html");
+            //   send_file(ev_list[i].ident, "documents/menu.html", "text/html");
             //   first = 0;
             // }
             // else
             // {
-            //   send_file(ev_list[i].ident, "webpages/styles.css", "text/css");
+            //   send_file(ev_list[i].ident, "documents/styles.css", "text/css");
             //   first = 1;
             // }
             delete messagePtr;
@@ -204,12 +204,12 @@ void ServerManager::processConnectionIO( int nev ) {
 //             static int first = 1;
 //             if (first)
 //             {
-//               send_file(ev_list[i].ident, "webpages/menu.html", "text/html");
+//               send_file(ev_list[i].ident, "documents/menu.html", "text/html");
 //               first = 0;
 //             }
 //             else
 //             {
-//               send_file(ev_list[i].ident, "webpages/styles.css", "text/css");
+//               send_file(ev_list[i].ident, "documents/styles.css", "text/css");
 //               first = 1;
 //             }
 //             close(ev_list[i].ident);
@@ -247,3 +247,11 @@ void ServerManager::runKQ() {
     }
   }
 }
+
+
+
+ void ServerManager::setStateFromParser(const ConfigParser& src)
+ {
+   (void)src;
+   std::cout << "Server: setStateFromParser called!" << std::endl;
+ }

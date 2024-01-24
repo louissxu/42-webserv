@@ -121,7 +121,10 @@ Server::Server() {
   _sockfd = -1;
   _host = "";
   _listen = "";
-  _name = "";
+  _server_name = "";
+  _root = "";
+  _index = "";
+  _error_page = "";
   std::cout << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
 }
 

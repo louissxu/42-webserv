@@ -56,11 +56,12 @@ std::string ConfigParser::getContextName(std::string line)
 {
     std::string newStr;
     std::string::iterator it = line.begin();
-   while (it != line.end() && std::isalpha(*it))
+   while (it != line.end() && *it != '{')//std::isalpha(*it))
    {
        newStr.push_back(*it);
        ++it;
    }
+   removeWhiteSpace(newStr); //remove trailing and leading whitespace.
    return newStr;
 }
 
@@ -595,7 +596,7 @@ void    ConfigParser::printContexts( void )
             std::cout <<"\t";
             j++;
         }
-        std::cout << "context["<<i<<"]: name : " << (*it).getName() << std::endl;
+        std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
         //(*it).printDirectives();
         (*it).printContexts();
         i++;

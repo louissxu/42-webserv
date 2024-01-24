@@ -6,8 +6,8 @@
 #include <iostream>
 #include <sstream>
 
-#include "message.hpp"
-class HTTPRequest: public Message {
+#include "HTTPResponse.hpp"
+class HTTPRequest: public HTTPResponse {
   public:
     HTTPRequest();
     HTTPRequest(std::string request);

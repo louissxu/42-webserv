@@ -17,7 +17,7 @@ INC = inc
 #	o-----------------o
 
 SRC_FILES = \
-	message.cpp \
+	HTTPResponse.cpp \
 	HTTPRequest.cpp \
 	ServerManager.cpp \
 	Server.cpp \

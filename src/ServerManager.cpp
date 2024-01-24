@@ -37,7 +37,7 @@ void ServerManager::runPoll() {
   // const char *str = ;
   Cout::output(RED, "hello world", STDOUT_FILENO);
   // std::cout << "Hit RETURN or wait 10 seconds for timeout" << std::endl;
-  // std::cout << "If you try to connect to 127.0.0.1:2345 while this is running you will see a hello world message" << std::endl;;
+  // std::cout << "If you try to connect to 127.0.0.1:2345 while this is running you will see a hello world HTTPResponse" << std::endl;;
   size_t num_events = poll(pfds, pfd_count, 10000);
 
   std::cout << "number of ready events is: " << num_events << std::endl;
@@ -80,19 +80,26 @@ void ServerManager::acceptNewConnections( int nev ) {
       for (size_t j = 0; j < _servers.size(); j++) {
           if (static_cast<int>(ev_list[i].ident) == _servers[j].getSockFd()) {
               // Accepting new connections
-              conn_fd = accept(_servers[j].getSockFd(), (struct sockaddr *)NULL, NULL);
+              struct sockaddr_in client_address;
+              long  client_address_size = sizeof(client_address);
+              conn_fd = accept(_servers[j].getSockFd(), (struct sockaddr *)&client_address, (socklen_t*)&client_address_size);
               if (conn_fd < 0) {
                   perror("accept");
                   continue;
               }
               // std::cout << "accepted: " << conn_fd << std::endl;
               // Add the new socket to kqueue
-              EV_SET(&ev_set[j], conn_fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, NULL);
+              EV_SET(&ev_set[j], conn_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+              if (fcntl(conn_fd, F_SETFL, O_NONBLOCK) < 0) {
+                std::cout << RED << "fcntl error: closing: " << conn_fd << std::endl;
+                close(conn_fd);
+              }
           }
       }
     }
   accepting = false;
 }
+
 #include <fstream>
 
 void send_file(int client_socket, const std::string& filename, const std::string& content_type) {
@@ -105,15 +112,6 @@ void send_file(int client_socket, const std::string& filename, const std::string
     std::ostringstream file_contents;
     file_contents << file.rdbuf();
 
-/*
-HTTP/1.1 200 OK\r\n
-Content-Type: text/html\r\n
-Content-Length: 2087\r\n
-Connection: keep-alive\r\n
-Server: AMAnix\r\n
-Date: Fri, 19 Jan 2024 05:55:55 UTC\r\n\r\n
-*/
-
     std::string response =
         "HTTP/1.1 200 OK\r\n"
         "Content-Type: " + content_type + "\r\n"
@@ -125,102 +123,58 @@ Date: Fri, 19 Jan 2024 05:55:55 UTC\r\n\r\n
     file.close();
 }
 
+bool ServerManager::isListeningSocket(int socket_fd) {
+    for (size_t i = 0; i < _servers.size(); i++) {
+        if (_servers[i].getSockFd() == socket_fd) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void ServerManager::processConnectionIO( int nev ) {
    char buffer[BUFFER_SIZE];
 
    for (int i = 0; i < nev; i++) {
-        if (ev_list[i].filter == EVFILT_READ) {
-
-
+        if (ev_list[i].filter == EVFILT_READ && !isListeningSocket(ev_list[i].ident)) {
             // Handling read event
             ssize_t n = read(ev_list[i].ident, buffer, BUFFER_SIZE - 1);
-            if (n <= 0) {
-                // Connection closed
-                std::cout << "failed to read: " << ev_list[i].ident << std::endl;
-                close(ev_list[i].ident);
-                exit (EXIT_FAILURE);
+            if (n == 0)
+            {
+              std::cout << YELLOW << "closing connection with: " << ev_list[i].ident << RESET <<std::endl;
+              close(ev_list[i].ident);
             }
-            buffer[n] = '\0';
-            Message* messagePtr = new HTTPRequest(buffer);
-            messagePtr->generateResponse(ev_list[i].ident);
-            // HTTPRequest request(buffer);
-            // Message message = request;
-            // HTTPResponse(message);
-            // message.generateResponse();
-            // request.print();
-
-            // std::cout << "read from " << ev_list[i].ident << std::endl;
-            // buffer[n] = '\0';
-            // // std::cout << "Received: \n" << buffer << "\n\n" << std::endl;
-
-            // static int first = 1;
-            // if (first)
-            // {
-            //   send_file(ev_list[i].ident, "webpages/menu.html", "text/html");
-            //   first = 0;
-            // }
-            // else
-            // {
-            //   send_file(ev_list[i].ident, "webpages/styles.css", "text/css");
-            //   first = 1;
-            // }
-            delete messagePtr;
-            close(ev_list[i].ident);
+            else if (n < 0) {
+                // Connection closed
+              std::cout << RED << "failed to read: " << ev_list[i].ident << " closing connection." << RESET << std::endl;
+              close(ev_list[i].ident);
+              exit (EXIT_FAILURE);
+            }
+            else {
+              // std::cout << buffer << std::endl;
+              buffer[n] = '\0';
+              // std::cout << GREEN << buffer << "\n\n\n"<< std::endl;
+              // Cout::output(GREEN, buffer, 1);
+              
+              HTTPResponse* HTTPResponsePtr = new HTTPRequest(buffer);
+              HTTPResponsePtr->generateResponse(ev_list[i].ident);
+              delete HTTPResponsePtr;
+              close(ev_list[i].ident);
+            }
         }
     }
 	accepting = true;
 }
 
-
-// void ServerManager::processConnectionIO( int nev ) {
-//    char buffer[BUFFER_SIZE];
-
-//    for (int i = 0; i < nev; i++) {
-//         if (ev_list[i].filter == EVFILT_READ) {
-//             // Handling read event
-//             ssize_t n = read(ev_list[i].ident, buffer, BUFFER_SIZE - 1);
-//             if (n <= 0) {
-//                 // Connection closed
-//                 std::cout << "failed to read: " << ev_list[i].ident << std::endl;
-//                 close(ev_list[i].ident);
-//                 exit (EXIT_FAILURE);
-//             }
-
-//             HTTPRequest request(buffer);
-//             request.print();
-
-//             // std::cout << "read from " << ev_list[i].ident << std::endl;
-//             buffer[n] = '\0';
-//             // std::cout << "Received: \n" << buffer << "\n\n" << std::endl;
-
-//             static int first = 1;
-//             if (first)
-//             {
-//               send_file(ev_list[i].ident, "webpages/menu.html", "text/html");
-//               first = 0;
-//             }
-//             else
-//             {
-//               send_file(ev_list[i].ident, "webpages/styles.css", "text/css");
-//               first = 1;
-//             }
-//             close(ev_list[i].ident);
-//         }
-//     }
-// 	accepting = true;
-// }
-
 void ServerManager::runKQ() {
   int numServers = _servers.size();
-  // struct kevent ev_list[MAX_EVENTS];
   accepting = true; // to check if socket should be added to the queue.
-	struct timespec tmout = { 5, 0 };     /* block for 5 seconds at most */
   std::cout << "\n\n\n\n\n";
   createQ();
   while (true) {
-    int nev = kevent(kq, ev_set, numServers, ev_list, MAX_EVENTS, &tmout);
-    if (nev < 0) {
+    int nev = kevent(kq, ev_set, numServers, ev_list, MAX_EVENTS, nullptr);
+    if (
+      nev < 0) {
         perror("kevent");
         exit(EXIT_FAILURE);
     }
@@ -235,7 +189,7 @@ void ServerManager::runKQ() {
       // Add the listening sockets back to kqueue
       processConnectionIO( nev );
       for (int j = 0; j < numServers; j++) {
-          EV_SET(&ev_set[j], _servers[j].getSockFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+        EV_SET(&ev_set[j], _servers[j].getSockFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
       }
     }
   }

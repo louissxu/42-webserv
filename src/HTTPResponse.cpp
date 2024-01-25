@@ -75,7 +75,7 @@ std::string HTTPResponse::getFileContents( std::string filePath ) {
 	std::ifstream file;
 
 	if ( filePath == std::string() ) {
-		file.open("webpages/error404/errorPage.html", std::ios::in | std::ios::binary);
+		file.open("application/error404/errorPage.html", std::ios::in | std::ios::binary);
 		if (!file.is_open()) {
 			std::cout << "could not file error page\n" << std::endl;
 		}
@@ -95,32 +95,103 @@ std::string HTTPResponse::getFileContents( std::string filePath ) {
 	return file_contents.str();
 }
 
+#include <unistd.h>
+		#include <fcntl.h>
+
 void HTTPResponse::generateResponse( int fd ) {
-	// ! print our HTTPResponse
-	std::string fileContents = getFileContents(getFileName(getUri()));
-	// std::cout << "HTTP/1.1 " + getVersionState() + "\\r\\n"
-	// 	"Content-Type: " + getContentType() + "\\r\\n"
-	// 	"Connection: " + getConnection() + "\\r\\n" << std::endl;
+	std::string fileContents;
+	// if (this->cgi == true)
+	if (this->getUri().compare("/cgiBin/login.sh") == 0)
+	{
+		this->setVersionState(" 200 OK");
+		// std::cerr << "going inside cgi\n";
 
+		// Create pipes for communication
+		int pipe_to_cgi[2];
+		int pipe_from_cgi[2];
+
+		pipe(pipe_to_cgi);
+		pipe(pipe_from_cgi);
+
+		// Fork to create a child process for the CGI script
+		pid_t pid = fork();
+
+		if (pid == 0) {
+			// Child process (CGI script)
+
+			// Close unused pipe ends
+			close(pipe_to_cgi[1]);
+			close(pipe_from_cgi[0]);
+
+			// Redirect standard input and output
+			dup2(pipe_to_cgi[0], STDIN_FILENO);
+			dup2(pipe_from_cgi[1], STDOUT_FILENO);
+
+			// Execute the CGI script
+			execl("cgiBin/login.sh", "cgiBin/login.sh", nullptr);
+
+			// If execl fails
+			perror("execl");
+			exit(EXIT_FAILURE);
+		} else if (pid > 0) {
+			// Parent process (C++ server)
+
+			// Close unused pipe ends
+			close(pipe_to_cgi[0]);
+			close(pipe_from_cgi[1]);
+
+			// Write data to the CGI script
+			const char* dataToSend = "username=mehdi&password=mirzaie";
+			if (write(pipe_to_cgi[1], dataToSend, strlen(dataToSend)) < 0)
+				std::cerr << errno << std::endl;
+
+			close(pipe_to_cgi[1]);
+			// Read data from the CGI script
+			// std::cerr << "data was sent\n";
+			char buffer[1024];
+			ssize_t bytesRead;
+			while ((bytesRead = read(pipe_from_cgi[0], buffer, sizeof(buffer))) > 0) {
+				// std::cerr << buffer << std::endl;
+				fileContents.append(buffer, bytesRead);
+			}
+			fileContents.append("\0", 1);
+			close(pipe_from_cgi[0]);
+			wait(nullptr);
+		} else {
+			// Fork failed
+			perror("fork");
+			exit(EXIT_FAILURE);
+		}
+
+	}
+	else
+		fileContents = getFileContents(getFileName(getUri()));
 	_response =
-		"HTTP/1.1 " + getVersionState() + "\r\n"
-		"Content-Type: " + getContentType() + "\r\n"
-		"Connection: " + getConnection() + "\r\n"
-		"\r\n" + fileContents;
+			"HTTP/1.1 " + getVersionState() + "\r\n"
+			"Content-Type: " + getContentType() + "\r\n"
+			"Connection: " + getConnection() + "\r\n"
+			// "Set-Cookie: session_id=abc123; Path=/; HttpOnly \r\n"
+			"\r\n" + fileContents;
 
+	// std::cout << "HTTP/1.1 " + getVersionState() + "\\r\\n"
+	// 		"Content-Type: " + getContentType() + "\\r\\n"
+	// 		"Connection: " + getConnection() + "\\r\\n" << std::endl;
 	send(fd, _response.c_str(), _response.length(), 0);
 }
 
 
 std::string HTTPResponse::getFileName( std::string uri ) const {
-	std::string dir = "webpages";
+	std::string dir = "application";
 	std::string fullpath = dir + uri;
 	std::string _default = "/";
 
+	// if (this->cgi == true)
+	if (uri.compare("/cgiBin/login.sh") == 0)
+		return ("cgiBin/login.sh");
 	if (uri.compare(_default) == 0)
 		return dir + "/menu.html";
 
-	if (access(fullpath.c_str(), F_OK | R_OK) == 0)
+	if (access(fullpath.c_str(), F_OK) == 0)
 		return fullpath;
 	// TODO if !R_OK return 403 Forbidden.
 	std::cout << uri << " not found.\n" << std::endl;

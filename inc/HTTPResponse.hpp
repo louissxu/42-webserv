@@ -29,6 +29,8 @@ class HTTPResponse {
 		// std::string getFileContents();
 		std::string _response;
 
+		bool		cgi;
+
 	public:
 		HTTPResponse();
 		virtual ~HTTPResponse();

@@ -54,6 +54,11 @@ void HTTPRequest::parseString(std::string str) {
   std::getline(line_stream, item, ' ');
   _request_method_name = item;
 
+  if (_request_method_name.compare("POST") == 0)
+    cgi = true;
+  else
+    cgi = false;
+
   std::getline(line_stream, item, ' ');
   _request_uri = item;
 

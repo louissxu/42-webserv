@@ -40,7 +40,7 @@ class ServerManager {
     void createQ();
     void acceptNewConnections( int nev );
     void processConnectionIO(int nev );
-    void setStateFromParser(const ConfigParser& src);	
+    void setStateFromParser(ConfigParser &src);
 
   private:
     std::vector<Server> _servers;
@@ -49,6 +49,9 @@ class ServerManager {
     struct kevent *ev_set;
     struct kevent ev_list[MAX_EVENTS];
     // void extendPfdArray(int amount = 10);
+    //ConfigParser copied stuff:
+    std::vector< std::pair <std::string, std::string> > _directives;
+		std::vector < ConfigParser >  _contexts;
 
     ServerManager(ServerManager& other);
     ServerManager& operator=(ServerManager& other);

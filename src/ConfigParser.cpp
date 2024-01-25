@@ -36,21 +36,42 @@ ConfigParser::~ConfigParser() {}
 |                GETTERS                    |
 \------------------------------------------*/
 
-std::string		ConfigParser::getName(void)
+std::vector< std::pair <std::string, std::string> > ConfigParser::get_directives() const
+{
+    return _directives;
+}
+
+std::vector < ConfigParser > ConfigParser::get_contexts() const 
+{
+    return _contexts;
+}
+
+
+std::string		ConfigParser::getName(void) const
 {
     return _name;
 }
 
-// Find the first non-whitespace character
-char getFnwc(std::string& str)
+size_t	ConfigParser::get_contextLvl() const
 {
-   std::string::const_iterator it = std::find_if(str.begin(), str.end(), std::not1(std::ptr_fun<int, int>(std::isspace)));
-   if (it == str.end())
-   {
-       return '\0';
-   }
-   return *it;
+    return _contextLvl;
 }
+
+// Find the first non-whitespace character
+char getFnwc(std::string& str) {
+    std::string::const_iterator it = std::find_if(
+        str.begin(), 
+        str.end(), 
+        std::not1(std::ptr_fun<int, int>(std::isspace))
+    );
+
+    if (it == str.end()) {
+        return '\0';
+    }
+    return *it;
+}
+
+
 
 std::string ConfigParser::getContextName(std::string line)
 {
@@ -566,10 +587,11 @@ void ConfigParser::printContents2()
 
 void ConfigParser::printDirectives()
 {
+    //std::cout << "ConfigParser: printDirectives called." << std::endl;
     size_t i = 0;
     size_t j;
 
-    for(std::vector< std::pair < std::string, std::string> >::iterator it = _directives.begin(); it != _directives.end(); ++it)
+    for(std::vector< std::pair < std::string, std::string> >::iterator it = this->_directives.begin(); it != this->_directives.end(); ++it)
     {
         j = 0;
         while (j < this->_contextLvl)

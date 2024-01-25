@@ -10,6 +10,8 @@
 #include <map>
 #include <vector>
 #include <sys/stat.h>
+#include <functional>
+
 
 //#include "Utils.hpp"
 
@@ -32,9 +34,14 @@ class ConfigParser
 
 		//getters : 
 		std::string &	get_directive(std::string &directiveName);
-		std::string		getName(void);
 		std::string		getContextName(std::string line);
 		e_lineType 		getLineType(std::string line);
+
+		std::string		getName(void) const;
+		std::vector< std::pair <std::string, std::string> > get_directives() const;
+		std::vector < ConfigParser > get_contexts() const;
+		size_t	get_contextLvl() const;
+
 
 		//setters :
 		int				setContent(std::string fileName);
@@ -88,7 +95,9 @@ class ConfigParser
 				virtual const char* what() const throw();
 		};
 
-
+	void addTestDirective(const std::string& key, const std::string& value) {
+        _directives.push_back(std::make_pair(key, value));
+    }
 	private:
 		std::vector< std::pair <std::string, std::string> > _directives;
 		std::vector < ConfigParser >  _contexts;

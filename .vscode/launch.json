@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/mmirzaie/Desktop/wev",
-      "program": "/Users/mmirzaie/Desktop/wev/webserv"
+      "cwd": "/Users/googs/25_05_24",
+      "program": "/Users/googs/25_05_24/webserv"
     }
   ]
 }

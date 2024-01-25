@@ -250,8 +250,37 @@ void ServerManager::runKQ() {
 
 
 
- void ServerManager::setStateFromParser(const ConfigParser& src)
- {
-   (void)src;
-   std::cout << "Server: setStateFromParser called!" << std::endl;
- }
+//  void ServerManager::setStateFromParser(ConfigParser *src)
+//  {
+//   std::cout << "Server: setStateFromParser called!" << std::endl;
+//   //src->printContexts();
+//   src->printDirectives();
+//   // size_t i = 0;
+//   // size_t j; // = 0;
+
+
+//     //src->printDirectives();
+//     // for(std::vector< ConfigParser >::iterator it = src.get_contexts().begin(); it != src.get_contexts().end(); ++it)
+//     // {
+//     //     j = 0;
+//     //     while (j < src.get_contextLvl())
+//     //     {
+//     //         std::cout <<"\t";
+//     //         j++;
+//     //     }
+//     //     std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
+//     //     //(*it).printDirectives();
+//     //     (*it).printContexts();
+//     //     i++;
+//     // }
+//  }
+
+
+ void ServerManager::setStateFromParser(ConfigParser &src)
+{
+    if (src.get_directives().empty()) {
+        std::cout << "No directives to print." << std::endl;
+        return;
+    }
+    src.printDirectives();
+}

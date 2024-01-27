@@ -36,13 +36,13 @@ int main(int argc, char **argv) {
 
     parser.setStateFromContent(0, false);
 
-    parser.printContexts();
+    //parser.printContexts();
 
         // Add test directives
-    parser.addTestDirective("TestKey1", "TestValue1");
-    parser.addTestDirective("TestKey2", "TestValue2");
+    //parser.addTestDirective("TestKey1", "TestValue1");
+    //parser.addTestDirective("TestKey2", "TestValue2");
 
-    parser.printContexts();
+    //parser.printContexts();
     
     //parser.printContexts();
     sm.setStateFromParser(parser);	

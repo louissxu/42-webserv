@@ -276,11 +276,63 @@ void ServerManager::runKQ() {
 //  }
 
 
+
+void ServerManager::p_d(ConfigParser &src)
+{
+   // std::cout << "ServerManager: printDirectives called." << std::endl;
+    size_t i = 0;
+    // if (src.get_directives().empty()) {
+    //     std::cout << "ERR: P_D: No directives to print." << std::endl;
+    // }
+
+    std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
+    for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
+    {
+        std::cout <<"\t " << src.getName() << ": ";
+        std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
+        i++;
+    }
+}
+
+void    ServerManager::p_c(ConfigParser &src)
+{
+    size_t i = 0;
+    std::vector< ConfigParser > temp = src.get_contexts();
+
+    p_d(src);
+    for(std::vector< ConfigParser >::iterator it = temp.begin(); it != temp.end(); ++it)
+    {
+        std::cout << src.getName() << ": ";
+        std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
+        //(*it).printDirectives();
+        p_c(*it);
+        i++;
+    }
+}
+
+
+
+
  void ServerManager::setStateFromParser(ConfigParser &src)
 {
+    //Out of server directives
     if (src.get_directives().empty()) {
         std::cout << "No directives to print." << std::endl;
-        return;
     }
-    src.printDirectives();
+    else
+    {
+      p_d(src);
+    }
+
+    //Context check:
+    if (src.get_contexts().empty()) {
+        std::cout << "No contexts to print." << std::endl;
+    }
+    else
+    {
+      std::cout << "Calling server: Print contexts: " << std::endl;
+      p_c(src);
+    }
+
+
 }

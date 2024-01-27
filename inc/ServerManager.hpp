@@ -42,6 +42,11 @@ class ServerManager {
     void processConnectionIO(int nev );
     void setStateFromParser(ConfigParser &src);
 
+    void p_d(ConfigParser &src);
+    void p_c(ConfigParser &src);
+
+
+
   private:
     std::vector<Server> _servers;
     int kq;

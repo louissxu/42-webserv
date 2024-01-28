@@ -57,6 +57,7 @@ class Server {
     int getSockFd();
     void acceptNewConnection();
     std::vector<Connection>& getConnections();
+    void addDirective(const std::string& name, const std::string& value);
 
   private:
     int _sockfd;

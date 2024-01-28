@@ -18,10 +18,14 @@
 #include <netinet/in.h>
 #include <sys/event.h>
 #include <sys/time.h>
-
+#include <set>
 
 #include "HTTPResponse.hpp"
 #include "ConfigParser.hpp"
+
+
+
+
 
 class ConfigParser;
 
@@ -42,9 +46,9 @@ class ServerManager {
     void processConnectionIO(int nev );
     void setStateFromParser(ConfigParser &src);
 
+    bool isValidDirectiveName(const std::string &src);
     void p_d(ConfigParser &src);
     void p_c(ConfigParser &src);
-
 
 
   private:
@@ -61,5 +65,7 @@ class ServerManager {
     ServerManager(ServerManager& other);
     ServerManager& operator=(ServerManager& other);
 };
+
+
 
 #endif

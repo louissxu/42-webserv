@@ -48,12 +48,12 @@ int main(int argc, char **argv) {
     sm.setStateFromParser(parser);	
 
     //testing / temp.
-    std::string port1 = "2345";
-    std::string port2 = "3456";
-    Server a = Server(port1);
-    Server b = Server(port2);
-    sm.addServer(a);
-    sm.addServer(b);
+    // std::string port1 = "2345";
+    // std::string port2 = "3456";
+    // Server a = Server(port1);
+    // Server b = Server(port2);
+    // sm.addServer(a);
+    // sm.addServer(b);
     sm.runKQ();
     std::cout << "all done!" << std::endl;
   }

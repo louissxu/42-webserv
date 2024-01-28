@@ -137,3 +137,22 @@ void Server::acceptNewConnection() {
 std::vector<Connection>& Server::getConnections() {
   return _connections;
 }
+
+void Server::addDirective(const std::string& name, const std::string& value) {
+  if (name == "listen") 
+  {
+    _listen = value;
+  } 
+  else if (name == "server_name")
+  {
+    _server_name = value;
+  } 
+  else if (name == "host")
+  {
+    _host = value;
+  } 
+  else if (name == "root")
+  {
+    _root = value;
+  }
+}

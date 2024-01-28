@@ -1,6 +1,6 @@
 #include "ConfigParser.hpp"
 
-#include "ConfigParser.hpp"
+unsigned int ConfigParser::lastAssignedPort = 8000;
 
 /*------------------------------------------\
 |              CONSTRUCTORS                 |
@@ -115,6 +115,17 @@ e_lineType ConfigParser::getLineType(std::string line)
         return OTHER;
     }
 }
+
+std::string ConfigParser::getListen() const {
+    for (size_t i = 0; i < _directives.size(); ++i) {
+        if (_directives[i].first == "listen") {
+            return _directives[i].second;
+        }
+    }
+    std::cout << "Error: No listen set! setting to default listen: " << lastAssignedPort << std::endl;
+    return std::to_string(lastAssignedPort++);
+}
+
 
 /*------------------------------------------\
 |                SETTERS                    |

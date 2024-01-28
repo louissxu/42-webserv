@@ -56,7 +56,7 @@ void HTTPResponse::generateResponse(){
 
 
 std::string HTTPResponse::getFileName( std::string uri ) const {
-	std::string dir = "documents";
+	std::string dir = "files";
 	std::string fullpath = dir + uri;
 	std::string _default = "/";
 

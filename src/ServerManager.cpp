@@ -164,12 +164,12 @@ void ServerManager::processConnectionIO( int nev ) {
             // static int first = 1;
             // if (first)
             // {
-            //   send_file(ev_list[i].ident, "documents/menu.html", "text/html");
+            //   send_file(ev_list[i].ident, "files/menu.html", "text/html");
             //   first = 0;
             // }
             // else
             // {
-            //   send_file(ev_list[i].ident, "documents/styles.css", "text/css");
+            //   send_file(ev_list[i].ident, "files/styles.css", "text/css");
             //   first = 1;
             // }
             delete messagePtr;
@@ -204,12 +204,12 @@ void ServerManager::processConnectionIO( int nev ) {
 //             static int first = 1;
 //             if (first)
 //             {
-//               send_file(ev_list[i].ident, "documents/menu.html", "text/html");
+//               send_file(ev_list[i].ident, "files/menu.html", "text/html");
 //               first = 0;
 //             }
 //             else
 //             {
-//               send_file(ev_list[i].ident, "documents/styles.css", "text/css");
+//               send_file(ev_list[i].ident, "files/styles.css", "text/css");
 //               first = 1;
 //             }
 //             close(ev_list[i].ident);
@@ -277,29 +277,84 @@ void ServerManager::runKQ() {
 
 
 
+bool ServerManager::isValidDirectiveName(const std::string &src) {
+    static const std::string validDirectiveNames[] = {
+        "server_name",
+        "host",
+        "root",
+        "index",
+        "error_page",
+        "allow_methods",
+        "autoindex",
+        "return",
+        "cgi_path",
+        "cgi_ext",
+    };
+
+    static const size_t numDirectives = sizeof(validDirectiveNames) / sizeof(validDirectiveNames[0]);
+    for (size_t i = 0; i < numDirectives; ++i) {
+        if (validDirectiveNames[i] == src) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Server::Server() {
+//   _sockfd = -1;
+//   _host = "";
+//   _listen = "";
+//   _server_name = "";
+//   _root = "";
+//   _index = "";
+//   _error_page = "";
+//   std::cout << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+// }
+
+
+
+
 void ServerManager::p_d(ConfigParser &src)
 {
    // std::cout << "ServerManager: printDirectives called." << std::endl;
     size_t i = 0;
-    // if (src.get_directives().empty()) {
-    //     std::cout << "ERR: P_D: No directives to print." << std::endl;
-    // }
-
-    std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
-    for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
+    static size_t server_id = 0;
+    if (src.getName() == "server")
     {
-        std::cout <<"\t " << src.getName() << ": ";
-        std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
-        i++;
+      std::cout << "Server: " << server_id++ <<" Init: " << std::endl;
+      std::string listenValue = src.getListen();
+      Server newServ = Server(listenValue);
+     // Server newServ = Server(src.getListen());
+      std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
+      if (temp.empty())
+      {
+       return;
+      }
+      for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
+      {
+         std::cout <<"\t " << src.getName() << ": ";
+         std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
+         if (isValidDirectiveName(it->first))
+         {
+            std::cout << "Adding " << it->first << " to Server " << (server_id - 1) << ". " << std::endl;
+            newServ.addDirective(it->first, it->second);
+         }
+          i++;
+      }
+      this->addServer(newServ);
     }
 }
 
 void    ServerManager::p_c(ConfigParser &src)
 {
     size_t i = 0;
-    std::vector< ConfigParser > temp = src.get_contexts();
 
+    std::vector< ConfigParser > temp = src.get_contexts();
     p_d(src);
+    if (temp.empty())
+    {
+      return;
+    }
     for(std::vector< ConfigParser >::iterator it = temp.begin(); it != temp.end(); ++it)
     {
         std::cout << src.getName() << ": ";

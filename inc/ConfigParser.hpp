@@ -40,8 +40,8 @@ class ConfigParser
 		std::string		getName(void) const;
 		std::vector< std::pair <std::string, std::string> > get_directives() const;
 		std::vector < ConfigParser > get_contexts() const;
-		size_t	get_contextLvl() const;
-
+		size_t			get_contextLvl() const;
+		std::string 	getListen() const;
 
 		//setters :
 		int				setContent(std::string fileName);
@@ -95,14 +95,12 @@ class ConfigParser
 				virtual const char* what() const throw();
 		};
 
-	void addTestDirective(const std::string& key, const std::string& value) {
-        _directives.push_back(std::make_pair(key, value));
-    }
 	private:
 		std::vector< std::pair <std::string, std::string> > _directives;
 		std::vector < ConfigParser >  _contexts;
 		std::string _name;
 		std::string _contents;
 		size_t	_contextLvl;
+		static unsigned int lastAssignedPort;
 };
 #endif

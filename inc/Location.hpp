@@ -18,22 +18,43 @@ enum e_HRM {
 class Location
 {
     public:
+    // Constructors
         Location();
         Location(const Location& other);
         Location& operator=(const Location& other);
         ~Location();
 
-    private:
+    // Getters
+        std::string                 getPath();
+        std::string                 getRoot();
+        std::string                 getIndex();
+        std::string                 getFilePathPost();
+        std::map<enum e_HRM, bool>  getMethodPermissions();
+        std::map<int, std::string>	getErrPage();
+        bool                        getAutoIndex();
+        size_t                      getClientMaxBodySize();
 
+    //Setters
+        void setPath(std::string newPath);
+        void setRoot(std::string newRoot);       
+        void setIndex(std::string newIndex);  
+        void setFilePathPost(std::string newFilePathPost);  
+        void setMethodPermissions(std::map<enum e_HRM, bool> newPermissions);
+        void setMethodPermission(enum e_HRM, bool permissionState);
+        void setErrPages(std::map<int, std::string> newErrPage);
+        void setErrPage(int pageId, std::string page);
+        void setAutoIndex(bool indexState);
+        void setClientMaxBodySize(size_t newClientMaxBodySize);
+
+    private:
         std::string                 _path;
         std::string                 _root;
         std::string                 _index;
-        std::string                 _errorPage;
         std::string                 _filePathPost;
-        std::map<enum e_HRM, bool>  _method_permissions;
-        std::map<int, std::string>	_err_page;
+        std::map<enum e_HRM, bool>  _methodPermissions;
+        std::map<int, std::string>	_errPage;
         bool                        _autoIndex;
-        size_t          _client_max_body_size;
+        size_t                      _clientMaxBodySize;
 };
 
 #endif

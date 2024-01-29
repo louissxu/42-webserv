@@ -51,12 +51,14 @@ class Server {
     Server(const Server& other);
     Server& operator=(const Server& other);
     ~Server();
-    Server(std::string port);
 
     // init_servers()
     int getSockFd();
     void acceptNewConnection();
     std::vector<Connection>& getConnections();
+    void startServer();
+
+    //setter for multiple attributes prior to server start.
     void addDirective(const std::string& name, const std::string& value);
 
   private:

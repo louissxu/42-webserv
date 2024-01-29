@@ -1,11 +1,6 @@
 #include "ServerManager.hpp"
 
-ServerManager::ServerManager() {
-  // _pfds = new struct pollfd[10];
-  // _pfds_count = 0;
-  // _pfds_array_size = 10;
-
-}
+ServerManager::ServerManager() {}
 
 // ServerManager::ServerManager(ServerManager& other) {
 
@@ -21,13 +16,6 @@ ServerManager::~ServerManager() {
   // _pfds_array_size = 0;
   std::cout << "ServerManager destructor" << std::endl;
 }
-
-// ConfigParser ServerManager::getParser()
-// {
-//   return parser;
-// }
-
-
 
 void ServerManager::addServer(const Server& server) {
   _servers.push_back(server);
@@ -179,45 +167,6 @@ void ServerManager::processConnectionIO( int nev ) {
 	accepting = true;
 }
 
-
-// void ServerManager::processConnectionIO( int nev ) {
-//    char buffer[BUFFER_SIZE];
-
-//    for (int i = 0; i < nev; i++) {
-//         if (ev_list[i].filter == EVFILT_READ) {
-//             // Handling read event
-//             ssize_t n = read(ev_list[i].ident, buffer, BUFFER_SIZE - 1);
-//             if (n <= 0) {
-//                 // Connection closed
-//                 std::cout << "failed to read: " << ev_list[i].ident << std::endl;
-//                 close(ev_list[i].ident);
-//                 exit (EXIT_FAILURE);
-//             }
-
-//             HTTPRequest request(buffer);
-//             request.print();
-
-//             // std::cout << "read from " << ev_list[i].ident << std::endl;
-//             buffer[n] = '\0';
-//             // std::cout << "Received: \n" << buffer << "\n\n" << std::endl;
-
-//             static int first = 1;
-//             if (first)
-//             {
-//               send_file(ev_list[i].ident, "files/menu.html", "text/html");
-//               first = 0;
-//             }
-//             else
-//             {
-//               send_file(ev_list[i].ident, "files/styles.css", "text/css");
-//               first = 1;
-//             }
-//             close(ev_list[i].ident);
-//         }
-//     }
-// 	accepting = true;
-// }
-
 void ServerManager::runKQ() {
   int numServers = _servers.size();
   // struct kevent ev_list[MAX_EVENTS];
@@ -248,37 +197,9 @@ void ServerManager::runKQ() {
   }
 }
 
-
-
-//  void ServerManager::setStateFromParser(ConfigParser *src)
-//  {
-//   std::cout << "Server: setStateFromParser called!" << std::endl;
-//   //src->printContexts();
-//   src->printDirectives();
-//   // size_t i = 0;
-//   // size_t j; // = 0;
-
-
-//     //src->printDirectives();
-//     // for(std::vector< ConfigParser >::iterator it = src.get_contexts().begin(); it != src.get_contexts().end(); ++it)
-//     // {
-//     //     j = 0;
-//     //     while (j < src.get_contextLvl())
-//     //     {
-//     //         std::cout <<"\t";
-//     //         j++;
-//     //     }
-//     //     std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
-//     //     //(*it).printDirectives();
-//     //     (*it).printContexts();
-//     //     i++;
-//     // }
-//  }
-
-
-
 bool ServerManager::isValidDirectiveName(const std::string &src) {
     static const std::string validDirectiveNames[] = {
+        "listen",
         "server_name",
         "host",
         "root",
@@ -300,20 +221,6 @@ bool ServerManager::isValidDirectiveName(const std::string &src) {
     return false;
 }
 
-// Server::Server() {
-//   _sockfd = -1;
-//   _host = "";
-//   _listen = "";
-//   _server_name = "";
-//   _root = "";
-//   _index = "";
-//   _error_page = "";
-//   std::cout << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
-// }
-
-
-
-
 void ServerManager::p_d(ConfigParser &src)
 {
    // std::cout << "ServerManager: printDirectives called." << std::endl;
@@ -321,9 +228,10 @@ void ServerManager::p_d(ConfigParser &src)
     static size_t server_id = 0;
     if (src.getName() == "server")
     {
-      std::cout << "Server: " << server_id++ <<" Init: " << std::endl;
-      std::string listenValue = src.getListen();
-      Server newServ = Server(listenValue);
+        std::cout << "Server: " << server_id++ <<" Init: " << std::endl;
+        //std::string listenValue = src.getListen();
+        Server newServ = Server();
+        //newServ._listen = src.getListen();
      // Server newServ = Server(src.getListen());
       std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
       if (temp.empty())
@@ -341,6 +249,9 @@ void ServerManager::p_d(ConfigParser &src)
          }
           i++;
       }
+
+      //starting the server now that the required fields have been populated.
+      newServ.startServer();
       this->addServer(newServ);
     }
 }

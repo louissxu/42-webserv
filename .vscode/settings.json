@@ -126,7 +126,8 @@
     "type_traits": "cpp",
     "utility": "cpp",
     "__tree": "cpp",
-    "map": "cpp"
+    "map": "cpp",
+    "set": "cpp"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

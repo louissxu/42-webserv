@@ -78,7 +78,7 @@ class Server {
     bool                        _autoindex;
     std::map<int, std::string>  _err_pages;
     std::vector<Connection>     _connections;
-    Location                    _location;
+    std::vector<Location> 			_locations;
 };
 
 #endif

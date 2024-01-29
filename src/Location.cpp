@@ -105,6 +105,10 @@ void Location::setPath(std::string newPath)
     _path = newPath;
 }
 
+
+	// if (ConfigFile::getTypePath(parametr) != 2)
+	// 	throw ServerConfig::ErrorException("root of location");
+	// this->_root = parametr;
 void Location::setRoot(std::string newRoot)
 {
     _root = newRoot;
@@ -141,6 +145,21 @@ void Location::setMethodPermission(enum e_HRM test, bool permissionState)
 void Location::setAutoIndex(bool indexState)
 {
     _autoIndex = indexState;
+}
+
+void Location::setClientMaxBodySize(std::string newClientMaxBodySize)
+{
+	unsigned long body_size = 0;
+
+	for (size_t i = 0; i < parametr.length(); i++)
+	{
+		if (parametr[i] < '0' || parametr[i] > '9')
+			throw Server::ErrorException("Wrong syntax: client_max_body_size");
+	}
+	if (!ft_stoi(parametr))
+		throw Server::ErrorException("Wrong syntax: client_max_body_size");
+	body_size = ft_stoi(parametr);
+	this->_client_max_body_size = body_size;
 }
 
 void Location::setClientMaxBodySize(size_t newClientMaxBodySize)

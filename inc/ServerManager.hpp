@@ -50,6 +50,21 @@ class ServerManager {
     void p_d(ConfigParser &src);
     void p_c(ConfigParser &src);
 
+		class ErrorException : public std::exception
+		{
+			private:
+				std::string _message;
+			public:
+				ErrorException(std::string message) throw()
+				{
+					_message = "SERVER CONFIG ERROR: " + message;
+				}
+				virtual const char* what() const throw()
+				{
+					return (_message.c_str());
+				}
+				virtual ~ErrorException() throw() {}
+		};
 
   private:
     std::vector<Server> _servers;
@@ -64,6 +79,7 @@ class ServerManager {
 
     ServerManager(ServerManager& other);
     ServerManager& operator=(ServerManager& other);
+
 };
 
 

@@ -302,3 +302,19 @@ void    ServerManager::p_c(ConfigParser &src)
 
 
 }
+
+
+
+
+
+ServerManager::ErrorException::ErrorException(std::string message) throw()
+{
+    _message = "SERVER CONFIG ERROR: " + message;
+}
+
+virtual const char* ServerManager::ErrorException::what() const throw()
+{
+	return (_message.c_str());
+}
+
+virtual ServerManager::ErrorException::~ErrorException() throw() {}

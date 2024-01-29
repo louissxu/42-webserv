@@ -12,7 +12,6 @@ static int safe_dup(int fd) {
   if (fd == -1) {
     return -1;
   }
-
   int copy = dup(fd);
   if (copy < 0) {
     throw std::runtime_error(strerror(errno));
@@ -29,16 +28,13 @@ Server::Server() {
   _host = ""; // IP.
   _server_name = "";  //default localhost on most systems.
   _root = "";  //root directory of server.
-  //_client_max_body_size = MAX_CONTENT_LENGTH;
+  _client_max_body_size = MAX_CONTENT_LENGTH;
   _index = "";  
   _sockfd = -1; //server FD.
-  //_autoindex = false;
+  _autoindex = false;
   this->initialiseErrorPages();
   std::cout << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
 }
-
-
-
 
 Server::Server(const Server& other) {
   _sockfd = safe_dup(other._sockfd);
@@ -74,21 +70,21 @@ Server::~Server() {
 
 void Server::initialiseErrorPages(void)
 {
-	_err_page[301] = "";
-	_err_page[302] = "";
-	_err_page[400] = "";
-	_err_page[401] = "";
-	_err_page[402] = "";
-	_err_page[403] = "";
-	_err_page[404] = "";
-	_err_page[405] = "";
-	_err_page[406] = "";
-	_err_page[500] = "";
-	_err_page[501] = "";
-	_err_page[502] = "";
-	_err_page[503] = "";
-	_err_page[505] = "";
-	_err_page[505] = "";
+	_err_pages[301] = "";
+	_err_pages[302] = "";
+	_err_pages[400] = "";
+	_err_pages[401] = "";
+	_err_pages[402] = "";
+	_err_pages[403] = "";
+	_err_pages[404] = "";
+	_err_pages[405] = "";
+	_err_pages[406] = "";
+	_err_pages[500] = "";
+	_err_pages[501] = "";
+	_err_pages[502] = "";
+	_err_pages[503] = "";
+	_err_pages[505] = "";
+	_err_pages[505] = "";
 }
 
 

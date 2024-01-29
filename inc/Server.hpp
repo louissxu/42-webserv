@@ -15,6 +15,9 @@
 #include <vector>
 #include <map>
 #include "Connection.hpp"
+#include "Location.hpp"
+
+#define MAX_CONTENT_LENGTH 30000000
 
 /*
 In the configuration file, you should be able to:
@@ -63,16 +66,16 @@ class Server {
     void addDirective(const std::string& name, const std::string& value);
 
   private:
-    std::string _listen;
-    std::string _host;
-    std::string _server_name;
-    std::string _root;
-    std::string _index;
-    int _sockfd;
-
-    std::map<int, std::string>	_err_page;
-    std::vector<Connection> _connections;
-
+    std::string                 _listen;
+    std::string                 _host;
+    std::string                 _server_name;
+    std::string                 _root;
+    std::string                 _index;
+    int                         _sockfd;
+    size_t                      _client_max_body_size;
+    bool                        _autoindex;
+    std::map<int, std::string>  _err_pages;
+    std::vector<Connection>     _connections;
 };
 
 #endif

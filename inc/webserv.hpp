@@ -19,7 +19,4 @@
 #include <vector>
 
 
-#define MAX_CONTENT_LENGTH 30000000
-
-
 #endif

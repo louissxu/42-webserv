@@ -24,6 +24,7 @@ SRC_FILES = \
 	Connection.cpp \
 	ConfigParser.cpp \
 	Cout.cpp \
+	Location.cpp \
 	main.cpp
 
 SRC_DIR = src

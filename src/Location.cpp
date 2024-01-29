@@ -1,39 +1,61 @@
 #include "Location.hpp"
 
-    // private:
-    //     std::string                 _path;
-    //     std::string                 _root;
-    //     std::string                 _index;
-    //     std::string                 _filePathPost;
-    //     std::map<enum e_HRM, bool>  _methodPermissions;
-    //     std::map<int, std::string>	_errPage;
-    //     bool                        _autoIndex;
-    //     size_t                      _clientMaxBodySize;
-
-
 /*------------------------------------------*\
 |              CONSTRUCTORS                  |
 \*------------------------------------------*/
 
+void Location::initMethodPermissions()
+{
+    _methodPermissions[GET] = false;
+    _methodPermissions[POST] = false;
+    _methodPermissions[PATCH] = false;
+    _methodPermissions[PUT] = false;
+    _methodPermissions[DELETE] = false;
+    _methodPermissions[HEAD] = false;
+    _methodPermissions[OPTIONS] = false;
+    _methodPermissions[CONNECT] = false;
+    _methodPermissions[TRACE] = false;
+}
+
 Location::Location()
 {
-
+	this->_path = "";
+	this->_root = "";
+	this->_index = "";
+	this->_filePathPost = "";
+    this->_autoIndex = false;
+	this->_clientMaxBodySize = MAX_CONTENT_LENGTH;
+    initMethodPermissions();
 }
 
 Location::Location(const Location& other)
 {
-
+	this->_path = other._path;
+	this->_root = other._root;
+	this->_index = other._index;
+	this->_filePathPost = other._filePathPost;
+    this->_autoIndex = other._autoIndex;
+	this->_clientMaxBodySize = other._clientMaxBodySize;
+    this->_methodPermissions = other._methodPermissions;
+    initMethodPermissions();
 }
 
-Location::Location& operator=(const Location& other)
+Location &Location::operator=(const Location &rhs)
 {
-
+	if (this != &rhs)
+	{
+	    this->_path = rhs._path;
+	    this->_root = rhs._root;
+	    this->_index = rhs._index;
+	    this->_filePathPost = rhs._filePathPost;
+        this->_autoIndex = rhs._autoIndex;
+	    this->_clientMaxBodySize = rhs._clientMaxBodySize;
+        this->_methodPermissions = rhs._methodPermissions;
+    }
+	return (*this);
 }
 
-Location::~Location()
-{
-
-}
+Location::~Location(){}
 
 /*------------------------------------------*\
 |                 GETTERS                    |
@@ -64,11 +86,6 @@ std::map<enum e_HRM, bool> Location::getMethodPermissions()
     return _methodPermissions;
 }
 
-std::map<int, std::string> Location::getErrPage()
-{
-    return _errPage;
-}
-
 bool Location::getAutoIndex()
 {
     return _autoIndex;
@@ -85,52 +102,53 @@ size_t Location::getClientMaxBodySize()
 
 void Location::setPath(std::string newPath)
 {
-
+    _path = newPath;
 }
 
 void Location::setRoot(std::string newRoot)
 {
-
+    _root = newRoot;
 }
 
 void Location::setIndex(std::string newIndex)
 {
-
+    _index = newIndex;
 }
 
 void Location::setFilePathPost(std::string newFilePathPost)
 {
-
+    _filePathPost = newFilePathPost;
 }
 
 void Location::setMethodPermissions(std::map<enum e_HRM, bool> newPermissions)
 {
-
+    _methodPermissions[GET]     = newPermissions[GET];
+    _methodPermissions[POST]    = newPermissions[POST];
+    _methodPermissions[PATCH]   = newPermissions[PATCH];
+    _methodPermissions[PUT]     = newPermissions[PUT];
+    _methodPermissions[DELETE]  = newPermissions[DELETE];
+    _methodPermissions[HEAD]    = newPermissions[HEAD];
+    _methodPermissions[OPTIONS] = newPermissions[OPTIONS];
+    _methodPermissions[CONNECT] = newPermissions[CONNECT];
+    _methodPermissions[TRACE]   = newPermissions[TRACE];
 }
 
-void Location::setMethodPermission(enum e_HRM, bool permissionState)
+void Location::setMethodPermission(enum e_HRM test, bool permissionState)
 {
-
-}
-
-void Location::setErrPages(std::map<int, std::string> newErrPage)
-{
-
-}
-
-void Location::setErrPage(int pageId, std::string page)
-{
-
+    _methodPermissions[test] = permissionState;
 }
 
 void Location::setAutoIndex(bool indexState)
 {
-
+    _autoIndex = indexState;
 }
 
 void Location::setClientMaxBodySize(size_t newClientMaxBodySize)
 {
-
+    _clientMaxBodySize = newClientMaxBodySize;
 }
 
+/*------------------------------------------*\
+|                 OTHER                      |
+\*------------------------------------------*/
   

@@ -15,7 +15,9 @@
 #include <vector>
 #include <map>
 #include "Connection.hpp"
+#include "Definitions.hpp"
 #include "Location.hpp"
+
 
 #define MAX_CONTENT_LENGTH 30000000
 
@@ -76,6 +78,7 @@ class Server {
     bool                        _autoindex;
     std::map<int, std::string>  _err_pages;
     std::vector<Connection>     _connections;
+    Location                    _location;
 };
 
 #endif

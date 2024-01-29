@@ -5,6 +5,8 @@
 #include <vector>
 #include <map>
 
+#include "Definitions.hpp"
+
 //http request method ENUM.
 enum e_HRM {
     GET,
@@ -13,11 +15,15 @@ enum e_HRM {
     PUT,
     DELETE,
     HEAD,
+    OPTIONS,
+    CONNECT,
+    TRACE
 };
 
 class Location
 {
     public:
+
     // Constructors
         Location();
         Location(const Location& other);
@@ -30,21 +36,21 @@ class Location
         std::string                 getIndex();
         std::string                 getFilePathPost();
         std::map<enum e_HRM, bool>  getMethodPermissions();
-        std::map<int, std::string>	getErrPage();
         bool                        getAutoIndex();
         size_t                      getClientMaxBodySize();
 
-    //Setters
+    // Setters
         void setPath(std::string newPath);
         void setRoot(std::string newRoot);       
         void setIndex(std::string newIndex);  
         void setFilePathPost(std::string newFilePathPost);  
         void setMethodPermissions(std::map<enum e_HRM, bool> newPermissions);
         void setMethodPermission(enum e_HRM, bool permissionState);
-        void setErrPages(std::map<int, std::string> newErrPage);
-        void setErrPage(int pageId, std::string page);
         void setAutoIndex(bool indexState);
         void setClientMaxBodySize(size_t newClientMaxBodySize);
+
+    // Other
+        void initMethodPermissions();
 
     private:
         std::string                 _path;
@@ -52,7 +58,6 @@ class Location
         std::string                 _index;
         std::string                 _filePathPost;
         std::map<enum e_HRM, bool>  _methodPermissions;
-        std::map<int, std::string>	_errPage;
         bool                        _autoIndex;
         size_t                      _clientMaxBodySize;
 };

@@ -23,14 +23,27 @@ static int safe_dup(int fd) {
 |              CONSTRUCTORS                  |
 \*------------------------------------------*/
 
+    // std::string                 _listen;
+    // std::string                 _host;
+    // std::string                 _server_name;
+    // std::string                 _root;
+    // std::string                 _index;
+    // int                         _sockfd;
+    // size_t                      _client_max_body_size;
+    // bool                        _autoindex;
+    // std::map<int, std::string>  _err_pages;
+    // std::vector<Connection>     _connections;
+    // Location                    _location;
+
+
 Server::Server() {
   _listen = ""; // Port
   _host = ""; // IP.
   _server_name = "";  //default localhost on most systems.
   _root = "";  //root directory of server.
-  _client_max_body_size = MAX_CONTENT_LENGTH;
   _index = "";  
   _sockfd = -1; //server FD.
+  _client_max_body_size = MAX_CONTENT_LENGTH;
   _autoindex = false;
   this->initialiseErrorPages();
   std::cout << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;

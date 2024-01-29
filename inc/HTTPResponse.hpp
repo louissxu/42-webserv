@@ -8,6 +8,11 @@
 #include <sstream>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/event.h>
+#include <sys/types.h>
+#include "Cout.hpp"
+
+#include "ServerManager.hpp"
 
 /*
 	TODO add later:

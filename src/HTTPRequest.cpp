@@ -79,7 +79,7 @@ void HTTPRequest::parseString(std::string str) {
       _Connection_type = item;
     }
   }
-  this->print();
+  // this->print();
   // while (item.compare(0, 11, "Connection:"))
   // {
   //   std::getline(line_stream, item, '\n');

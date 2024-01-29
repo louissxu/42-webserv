@@ -21,7 +21,7 @@
 
 #include "HTTPResponse.hpp"
 
-#define MAX_EVENTS 20 // random value
+#define MAX_EVENTS 200 // random value
 #define BUFFER_SIZE 3000
 class ServerManager {
   public:
@@ -38,6 +38,7 @@ class ServerManager {
     void acceptNewConnections( int nev );
     void processConnectionIO(int nev );
     bool isListeningSocket(int socket_fd);
+    void add_cgi_IO_to_ev_set();
 
 
   private:
@@ -46,6 +47,7 @@ class ServerManager {
     bool accepting;
     struct kevent *ev_set;
     struct kevent ev_list[MAX_EVENTS];
+    int ev_set_count;
     // void extendPfdArray(int amount = 10);
 
     ServerManager(ServerManager& other);

@@ -51,6 +51,67 @@ void ServerManager::runPoll() {
   delete[] pfds;
 }
 
+
+void ServerManager::add_cgi_IO_to_ev_set()
+{
+
+		// Create pipes for communication
+		int pipe_to_cgi[2];
+		int pipe_from_cgi[2];
+
+		pipe(pipe_to_cgi);
+		pipe(pipe_from_cgi);
+
+		// Fork to create a child process for the CGI script
+		pid_t pid = fork();
+
+		if (pid == 0) {
+			// Child process (CGI script)
+
+			// Close unused pipe ends
+			close(pipe_to_cgi[1]);
+			close(pipe_from_cgi[0]);
+
+			// Redirect standard input and output
+			dup2(pipe_to_cgi[0], STDIN_FILENO);
+			dup2(pipe_from_cgi[1], STDOUT_FILENO);
+
+			// Execute the CGI script
+			execl("cgiBin/login.sh", "cgiBin/login.sh", nullptr);
+
+			// If execl fails
+			perror("execl");
+			exit(EXIT_FAILURE);
+		} else if (pid > 0) {
+			// Parent process (C++ server)
+
+			// Close unused pipe ends
+			close(pipe_to_cgi[0]);
+			close(pipe_from_cgi[1]);
+
+			// Write data to the CGI script
+			EV_SET(&ev_set[ev_set_count], pipe_to_cgi[1], EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+			if (fcntl(pipe_to_cgi[1], F_SETFL, O_NONBLOCK) < 0) {
+				std::cout << RED << "fcntl error: closing: " << pipe_to_cgi[1] << std::endl;
+				close(pipe_to_cgi[1]);
+			}
+			ev_set_count++;
+
+			// Read data from the CGI script
+			// std::cerr << "data was sent\n";
+			EV_SET(&ev_set[ev_set_count], pipe_from_cgi[0], EVFILT_READ, EV_ADD, 0, 0, NULL);
+			if (fcntl(pipe_to_cgi[1], F_SETFL, O_NONBLOCK) < 0) {
+				std::cout << RED << "fcntl error: closing: " << pipe_to_cgi[1] << std::endl;
+				close(pipe_to_cgi[1]);
+			}
+      ev_set_count++;
+		} else {
+			// Fork failed
+			perror("fork");
+			exit(EXIT_FAILURE);
+		}
+}
+
 /*
 *purpose
 add all the listening sockets(servers) to the empty queue (kq);
@@ -168,11 +229,13 @@ void ServerManager::processConnectionIO( int nev ) {
 
 void ServerManager::runKQ() {
   int numServers = _servers.size();
+  ev_set_count = numServers;
   accepting = true; // to check if socket should be added to the queue.
   std::cout << "\n\n\n\n\n";
   createQ();
   while (true) {
     int nev = kevent(kq, ev_set, numServers, ev_list, MAX_EVENTS, nullptr);
+    std::cout << "number of events was: " << nev << std::endl;
     if (
       nev < 0) {
         perror("kevent");

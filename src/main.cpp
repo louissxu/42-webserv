@@ -1,19 +1,4 @@
-#include <iostream>
-
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netdb.h>
-
-#include <string.h>
-
-#include <arpa/inet.h>
-#include <netinet/in.h>
-
-#include "HTTPRequest.hpp"
-#include "Server.hpp"
-#include "ServerManager.hpp"
-
-#include <vector>
+#include "Webserv.hpp"
 
 // Ref: https://beej.us/guide/bgnet/html/#structs
 

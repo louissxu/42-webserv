@@ -13,6 +13,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <map>
 #include "Connection.hpp"
 
 /*
@@ -57,20 +58,21 @@ class Server {
     void acceptNewConnection();
     std::vector<Connection>& getConnections();
     void startServer();
-
+    void initialiseErrorPages();
     //setter for multiple attributes prior to server start.
     void addDirective(const std::string& name, const std::string& value);
 
   private:
-    int _sockfd;
     std::string _listen;
-    std::string _server_name;
     std::string _host;
+    std::string _server_name;
     std::string _root;
     std::string _index;
-    std::string _error_page;
-    std::vector<Connection> _connections;
-};
+    int _sockfd;
 
+    std::map<int, std::string>	_err_page;
+    std::vector<Connection> _connections;
+
+};
 
 #endif

@@ -8,6 +8,95 @@
 // Ref: https://stackoverflow.com/questions/56369138/moving-an-object-with-a-file-descriptor
 // Ref: https://stackoverflow.com/questions/4172722/what-is-the-rule-of-three#:~:text=The%20rule%20of%203%2F5,functions%20when%20creating%20your%20class.
 
+static int safe_dup(int fd) {
+  if (fd == -1) {
+    return -1;
+  }
+
+  int copy = dup(fd);
+  if (copy < 0) {
+    throw std::runtime_error(strerror(errno));
+  }
+  return copy;
+}
+
+/*------------------------------------------*\
+|              CONSTRUCTORS                  |
+\*------------------------------------------*/
+
+Server::Server() {
+  _listen = ""; // Port
+  _host = ""; // IP.
+  _server_name = "";  //default localhost on most systems.
+  _root = "";  //root directory of server.
+  //_client_max_body_size = MAX_CONTENT_LENGTH;
+  _index = "";  
+  _sockfd = -1; //server FD.
+  //_autoindex = false;
+  this->initialiseErrorPages();
+  std::cout << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+}
+
+
+
+
+Server::Server(const Server& other) {
+  _sockfd = safe_dup(other._sockfd);
+  _host = other._host;
+  _listen = other._listen;
+  std::cout << "copy constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+}
+
+Server& Server::operator=(const Server& other) {
+  int new_fd = safe_dup(other._sockfd);
+  if (_sockfd != -1) {
+    close(_sockfd);
+  }
+  _sockfd = new_fd;
+  _host = other._host;
+  _listen = other._listen;
+  std::cout << "assignment constructor ran. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
+  return *this;
+}
+
+Server::~Server() {
+  // TODO. Do teardown stuff
+  std::cout << "destructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  if (_sockfd != -1) {
+    shutdown(_sockfd, 2); 
+  }
+}
+
+
+/*------------------------------------------*\
+|                 SETTERS                    |
+\*------------------------------------------*/
+
+void Server::initialiseErrorPages(void)
+{
+	_err_page[301] = "";
+	_err_page[302] = "";
+	_err_page[400] = "";
+	_err_page[401] = "";
+	_err_page[402] = "";
+	_err_page[403] = "";
+	_err_page[404] = "";
+	_err_page[405] = "";
+	_err_page[406] = "";
+	_err_page[500] = "";
+	_err_page[501] = "";
+	_err_page[502] = "";
+	_err_page[503] = "";
+	_err_page[505] = "";
+	_err_page[505] = "";
+}
+
+
+/*------------------------------------------*\
+|             OTHER METHODS                  |
+\*------------------------------------------*/
+
+
 void Server::startServer(void) {
   struct addrinfo hints;
   memset(&hints, 0, sizeof hints);
@@ -72,58 +161,8 @@ void Server::startServer(void) {
   freeaddrinfo(servinfo);
 }
 
-static int safe_dup(int fd) {
-  if (fd == -1) {
-    return -1;
-  }
-
-  int copy = dup(fd);
-  if (copy < 0) {
-    throw std::runtime_error(strerror(errno));
-  }
-  return copy;
-}
-
-Server::Server(const Server& other) {
-  _sockfd = safe_dup(other._sockfd);
-  _host = other._host;
-  _listen = other._listen;
-  std::cout << "copy constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
-}
-
-Server& Server::operator=(const Server& other) {
-  int new_fd = safe_dup(other._sockfd);
-  if (_sockfd != -1) {
-    close(_sockfd);
-  }
-  _sockfd = new_fd;
-  _host = other._host;
-  _listen = other._listen;
-  std::cout << "assignment constructor ran. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
-  return *this;
-}
-
-Server::~Server() {
-  // TODO. Do teardown stuff
-  std::cout << "destructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
-  if (_sockfd != -1) {
-    shutdown(_sockfd, 2); 
-  }
-}
-
 int Server::getSockFd() {
   return _sockfd;
-}
-
-Server::Server() {
-  _sockfd = -1;
-  _host = "";
-  _listen = "";
-  _server_name = "";
-  _root = "";
-  _index = "";
-  _error_page = "";
-  std::cout << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
 }
 
 void Server::acceptNewConnection() {

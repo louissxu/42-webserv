@@ -1,4 +1,15 @@
 #	o-----------------o
+#	|    COLOURS      |
+#	o-----------------o
+
+RESET			:= 	\033[0m
+GREEN 			:= 	\033[38;5;46m
+WHITE 			:= 	\033[38;5;15m
+GREY 			:= 	\033[38;5;8m
+ORANGE 			:= 	\033[38;5;202m
+RED 			:= 	\033[38;5;160m
+
+#	o-----------------o
 #	|    VARIABLES    |
 #	o-----------------o
 
@@ -42,21 +53,28 @@ OBJS = $(addprefix $(OBJ_DIR)/, $(OBJ_RAW))
 all: $(OBJ_DIR) $(NAME)
 
 $(NAME): $(OBJS)
+	@echo "$(GREY)Compiling...				$<"
 	$(CC) $(OBJS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@echo "Making $<"
+	@echo "$(GREEN)----------------------------------------------------"
 	$(CC) $(CFLAGS) -I $(INC) -c $< -o $@
+	@echo "Executable				./$(NAME) $(RESET)"
+# @echo "Making $<"
 
 $(OBJ_DIR):
 	mkdir -p $@
 
 clean:
+	@echo "$(RED)----------------------------------------------------"
 	rm -f $(OBJS)
-	rm -df $(OBJ_DIR)
+	rm -rf $(OBJ_DIR)
+	@echo "$(GRAY)REMOVED O-FILES $(RESET)"
 
 fclean: clean
+	@echo "$(RED)----------------------------------------------------"
 	rm -f $(NAME)
+	@echo "$(GRAY)REMOVED EXECUTABLE FILE $(RESET)"
 
 re: fclean all
 

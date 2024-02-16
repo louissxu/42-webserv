@@ -1,24 +1,20 @@
 #pragma once
-#ifndef HTTPREQUEST_HPP
-#define HTTPREQUEST_HPP
 
-#include <string>
-#include <iostream>
-#include <sstream>
+#include "message.hpp"
 
-#include "HTTPResponse.hpp"
-class HTTPRequest: public HTTPResponse {
-  public:
-    HTTPRequest();
-    HTTPRequest(std::string request);
-    HTTPRequest(HTTPRequest& other);
-    HTTPRequest& operator=(HTTPRequest& other);
-    virtual ~HTTPRequest();
+class HTTPRequest : public Message
+{
+public:
+  HTTPRequest();
+  HTTPRequest(std::string method, std::string uri);
+  HTTPRequest(HTTPRequest const &other);
+  HTTPRequest &operator=(HTTPRequest const &other);
+  ~HTTPRequest();
 
-    void print();
+  std::string const &getMethod() const;
+  std::string const &getUri() const;
 
-  private:
-    void parseString(std::string str);
+private:
+  std::string method;
+  std::string uri;
 };
-
-#endif

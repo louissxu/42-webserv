@@ -1,11 +1,11 @@
 #pragma once
-#ifndef CONNECTION_HPP
-#define CONNECTION_HPP
 
 #include <netinet/in.h>
 #include <unistd.h> // for dup
 
 #include "HTTPRequest.hpp"
+
+class HTTPRequest;
 
 class Connection {
   public:
@@ -21,7 +21,5 @@ class Connection {
 
   private:
     int _connection_fd;
-    HTTPRequest _req;
+    HTTPRequest *_req;
 };
-
-#endif

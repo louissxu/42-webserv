@@ -61,8 +61,8 @@ void Connection::receiveData() {
   std::string input_string = buff;
   HTTPRequest http_request(input_string);
 
-  _req = http_request;
-  _req.print();
+  _req = &http_request;
+  _req->print();
   std::cout << "bytes received: " << bytes_received << std::endl;
 }
 

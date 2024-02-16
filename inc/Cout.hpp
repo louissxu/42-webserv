@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iostream>
-#include <string>
+// #include <iostream>
+// #include <string>
 
 #define RESET "\033[0m"
 #define BLACK "\033[30m"			  /* Black */
@@ -21,8 +21,8 @@
 #define BOLDCYAN "\033[1m\033[36m"	  /* Bold Cyan */
 #define BOLDWHITE "\033[1m\033[37m"	  /* Bold White */
 
-class Cout
-{
-public:
-	static void output(const char *colour, const char *str, int outfd);
-};
+// class Cout
+// {
+// public:
+// 	static void output(const char *colour, const char *str, int outfd);
+// };

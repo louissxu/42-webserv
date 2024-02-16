@@ -39,6 +39,6 @@ public:
     virtual void fromString(const std::string& data);
 
 protected:
-	std::unordered_map<std::string, std::string> headers;
+	std::map<std::string, std::string> headers;
 	std::string body;
 };

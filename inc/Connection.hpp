@@ -3,6 +3,11 @@
 #include <netinet/in.h>
 #include <unistd.h> // for dup
 
+#include <exception>
+#include <string>
+#include <sys/errno.h>
+#include <iostream>
+
 #include "HTTPRequest.hpp"
 
 class HTTPRequest;
@@ -21,5 +26,5 @@ class Connection {
 
   private:
     int _connection_fd;
-    HTTPRequest *_req;
+    // HTTPRequest *_req;
 };

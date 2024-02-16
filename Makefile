@@ -28,13 +28,21 @@ INC = inc
 #	o-----------------o
 
 SRC_FILES = \
-	HTTPResponse.cpp \
-	HTTPRequest.cpp \
 	ServerManager.cpp \
 	Server.cpp \
 	Connection.cpp \
+	Client.cpp \
 	Cout.cpp \
 	main.cpp
+
+# SRC_FILES = \
+# 	HTTPResponse.cpp \
+# 	HTTPRequest.cpp \
+# 	ServerManager.cpp \
+# 	Server.cpp \
+# 	Connection.cpp \
+# 	Cout.cpp \
+# 	main.cpp
 
 SRC_DIR = src
 

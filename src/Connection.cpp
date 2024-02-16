@@ -53,16 +53,16 @@ Connection::Connection(int sockfd) {
 
 void Connection::receiveData() {
   char buff[1024];
-  
+
   int bytes_received = recv(_connection_fd, &buff, 1024, 0);
   (void)bytes_received;
   // Should use bytes_received to tell if i have all the chars and to build my string from my buff
 
   std::string input_string = buff;
-  HTTPRequest http_request(input_string);
+  // HTTPRequest http_request(input_string);
 
-  _req = &http_request;
-  _req->print();
+  // _req = &http_request;
+  // _req->print();
   std::cout << "bytes received: " << bytes_received << std::endl;
 }
 

@@ -41,7 +41,7 @@ Server::Server(std::string port) {
   // set to allow port reuse? or something
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
-  
+
   // make the socket non-blocking
   int flags;
   // Get the current flags
@@ -126,10 +126,10 @@ Server::Server() {
 
 void Server::acceptNewConnection() {
   Connection newConnection = Connection(_sockfd);
-  _connections.push_back(newConnection);
+  _connections->push_back(newConnection);
   std::cout << "connection accepted" << std::endl;
 }
 
 std::vector<Connection>& Server::getConnections() {
-  return _connections;
+  return *_connections;
 }

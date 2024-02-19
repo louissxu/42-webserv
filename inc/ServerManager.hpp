@@ -34,8 +34,11 @@ public:
 
   void acceptClient(int indexListenSocket);
   Client *getClient(int fd);
+  void readClient(Client *cl, int dataLen);
+  bool writeToClient(Client *cl, int dataLen);
 
   void updateEvent(int ident, short filter, u_short flags, u_int fflags, int data, void *udata);
+  void closeConnection(Client *cl);
   // void acceptNewConnections(int nev);
   void processConnectionIO(int nev);
   bool isListeningSocket(int socket_fd);

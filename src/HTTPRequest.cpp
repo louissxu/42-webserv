@@ -1,24 +1,26 @@
-// #include "HTTPRequest.hpp"
+#include "HTTPRequest.hpp"
 
-// HTTPRequest::HTTPRequest() {}
+HTTPRequest::HTTPRequest() : Message() {}
 
-// HTTPRequest::HTTPRequest(std::string _method, std::string _uri) : method(_method), uri(_uri) {}
+HTTPRequest::HTTPRequest(char *request, int len) : Message(request, len) {}
 
-// HTTPRequest::HTTPRequest(HTTPRequest const &other)
-// {
-//   *this = other;
-// }
+HTTPRequest::HTTPRequest(std::string _method, std::string _uri) : method(_method), uri(_uri) {}
 
-// HTTPRequest &HTTPRequest::operator=(HTTPRequest const &other)
-// {
-//   this->method = other.method;
-//   this->uri = other.uri;
-//   return *this;
-// }
+HTTPRequest::HTTPRequest(HTTPRequest const &other)
+{
+	*this = other;
+}
 
-// HTTPRequest::~HTTPRequest()
-// {
-// }
+HTTPRequest &HTTPRequest::operator=(HTTPRequest const &other)
+{
+	this->method = other.method;
+	this->uri = other.uri;
+	return *this;
+}
+
+HTTPRequest::~HTTPRequest()
+{
+}
 
 // // void HTTPRequest::print() {
 // //   // std::cout << "---- Parsed HTTP Request Contents (rest was discarded) ----" << std::endl;

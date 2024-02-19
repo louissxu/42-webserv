@@ -1,9 +1,13 @@
 #include "../inc/message.hpp"
 
-Message::Message(std::string const &request)
+Message::Message() { this->init(); }
+
+Message::Message(char *request, int len)
 {
-	this->parseRequest(request);
+	this->request = request;
+	this->requestLen = len;
 }
+
 Message::~Message()
 {
 }
@@ -20,8 +24,55 @@ Message &Message::operator=(Message const &src)
 	return *this;
 }
 
-void Message::parseRequest(std::string const &request)
+void Message::init()
 {
+	this->request = NULL;
+	this->requestLen = 0;
+}
+
+void Message::parseRequest()
+{
+	std::string key, value; // header, value
+
+	std::stringstream ss(this->request);
+	std::string line;
+
+	std::getline(ss, line, '\n');
+	/*
+	first line will always have the request method
+	e.g. GET, POST, PUT, and it is formated different to the rest.
+	this will need to be
+	*/
+	std::stringstream line_stream(line);
+	std::getline(line_stream, key, ' ');
+	std::getline(line_stream, value, '\n');
+	this->headers.insert(std::pair<std::string, std::string>(key, value));
+
+	/*
+	the rest of the headers have the same formate "key: value"
+	so we can use the following while loop to add the key and value to the map.
+	*/
+	while (std::getline(ss, line, '\n'))
+	{
+		line_stream = std::stringstream(line);
+		getline(line_stream, key, ':');
+		std::getline(line_stream, value, '\n');
+		this->headers.insert(std::pair<std::string, std::string>(key, value));
+	}
+
+	/*
+	the rest of the request is the body, since we do not have cgi right now
+	we will leave it empty.
+	*/
+
+	// std::unordered_map<std::string, std::string>::iterator it = headers.begin();
+	// for (; it != headers.end(); ++it)
+	// 	std::cout << it->first << ": " << it->second << std::endl;
+}
+
+void Message::parseRequest(std::string const &request, int requestLen)
+{
+	(void)requestLen;
 	std::string key, value; // header, value
 
 	std::stringstream ss(request);
@@ -69,7 +120,7 @@ void Message::parseRequest(std::string const &request)
 
 std::string Message::getHeaderValue(const std::string &key) const
 {
-	std::unordered_map<std::string, std::string>::const_iterator it = this->headers.find(key);
+	std::map<std::string, std::string>::const_iterator it = this->headers.find(key);
 	return (it != headers.end()) ? it->second : "";
 }
 
@@ -78,41 +129,41 @@ std::string Message::getBody() const
 	return this->body;
 }
 
-// Method to serialize the message into a string
-std::string Message::toString() const
-{
-	std::stringstream ss;
-	// Serialize headers
-	std::unordered_map<std::string, std::string>::const_iterator it;
-	for (it = headers.begin(); it != headers.end(); ++it)
-	{
-		ss << it->first << ": " << it->second << "\r\n";
-	}
-	ss << "\r\n"; // Empty line separating headers and body
-	ss << body;	  // Add message body
-	return ss.str();
-}
+// // Method to serialize the message into a string
+// std::string Message::toString() const
+// {
+// 	std::stringstream ss;
+// 	// Serialize headers
+// 	std::unordered_map<std::string, std::string>::const_iterator it;
+// 	for (it = headers.begin(); it != headers.end(); ++it)
+// 	{
+// 		ss << it->first << ": " << it->second << "\r\n";
+// 	}
+// 	ss << "\r\n"; // Empty line separating headers and body
+// 	ss << body;	  // Add message body
+// 	return ss.str();
+// }
 
-// Method to deserialize a string into a message
-void Message::fromString(const std::string &data)
-{
-	std::istringstream ss(data);
-	std::string line;
+// // Method to deserialize a string into a message
+// void Message::fromString(const std::string &data)
+// {
+// 	std::istringstream ss(data);
+// 	std::string line;
 
-	// Parse headers
-	while (std::getline(ss, line) && !line.empty())
-	{
-		size_t colonPos = line.find(':');
-		if (colonPos != std::string::npos)
-		{
-			std::string key = line.substr(0, colonPos);
-			std::string value = line.substr(colonPos + 2); // Skip ': ' after colon
-			headers[key] = value;
-		}
-	}
+// 	// Parse headers
+// 	while (std::getline(ss, line) && !line.empty())
+// 	{
+// 		size_t colonPos = line.find(':');
+// 		if (colonPos != std::string::npos)
+// 		{
+// 			std::string key = line.substr(0, colonPos);
+// 			std::string value = line.substr(colonPos + 2); // Skip ': ' after colon
+// 			headers[key] = value;
+// 		}
+// 	}
 
-	// Get the rest as the body
-	body = ss.str();
-	// Remove headers from the body
-	body.erase(0, ss.tellg());
-}
+// 	// Get the rest as the body
+// 	body = ss.str();
+// 	// Remove headers from the body
+// 	body.erase(0, ss.tellg());
+// }

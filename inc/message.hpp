@@ -16,12 +16,16 @@ class Message
 {
 public:
 	Message();
-	Message(std::string const &request);
+	Message(char *request, int len);
+	// Message(std::string const &request);
 	virtual ~Message();
 	Message(Message const &src);
 	Message &operator=(Message const &src);
 
-	void parseRequest(std::string const &request);
+	void init();
+
+	void parseRequest(std::string const &request, int requestLen);
+	void parseRequest();
 
 	// std::map of headers manipulation
 	void addHeader(std::string line);
@@ -32,13 +36,17 @@ public:
 	std::string getBody() const;
 
 
-	// Method to serialize the message into a string
-    virtual std::string toString() const;
+	// // Method to serialize the message into a string
+    // virtual std::string toString() const;
 
-    // Method to deserialize a string into a message
-    virtual void fromString(const std::string& data);
+    // // Method to deserialize a string into a message
+    // virtual void fromString(const std::string& data);
 
 protected:
 	std::map<std::string, std::string> headers;
 	std::string body;
+
+	char *request;
+	int requestLen;
+
 };

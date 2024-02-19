@@ -1,20 +1,21 @@
-// #pragma once
+#pragma once
 
-// #include "message.hpp"
+#include "message.hpp"
 
-// class HTTPRequest : public Message
-// {
-// public:
-//   HTTPRequest();
-//   HTTPRequest(std::string method, std::string uri);
-//   HTTPRequest(HTTPRequest const &other);
-//   HTTPRequest &operator=(HTTPRequest const &other);
-//   ~HTTPRequest();
+class HTTPRequest : public Message
+{
+public:
+	HTTPRequest();
+	HTTPRequest(char *request, int len);
+	HTTPRequest(std::string method, std::string uri);
+	HTTPRequest(HTTPRequest const &other);
+	HTTPRequest &operator=(HTTPRequest const &other);
+	~HTTPRequest();
 
-//   std::string const &getMethod() const;
-//   std::string const &getUri() const;
+	std::string const &getMethod() const;
+	std::string const &getUri() const;
 
-// private:
-//   std::string method;
-//   std::string uri;
-// };
+private:
+	std::string method;
+	std::string uri;
+};

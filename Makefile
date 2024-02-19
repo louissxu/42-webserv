@@ -33,6 +33,9 @@ SRC_FILES = \
 	Connection.cpp \
 	Client.cpp \
 	Cout.cpp \
+	message.cpp \
+	HTTPRequest.cpp \
+	HTTPResponse.cpp \
 	main.cpp
 
 # SRC_FILES = \

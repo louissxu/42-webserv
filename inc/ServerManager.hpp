@@ -4,16 +4,19 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
-#include <sys/time.h>
 
 #include <sys/types.h>
 #include <sys/event.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 
 #include <map>
 
 #include "Server.hpp"
 #include "Client.hpp"
+
+#include "HTTPResponse.hpp"
+#include "HTTPRequest.hpp"
 
 class Server;
 
@@ -37,6 +40,10 @@ public:
   void readClient(Client *cl, int dataLen);
   bool writeToClient(Client *cl, int dataLen);
 
+  void processRequest(Client *cl, HTTPRequest request);
+  std::string getFileContents(std::string uri);
+
+
   void updateEvent(int ident, short filter, u_short flags, u_int fflags, int data, void *udata);
   void closeConnection(Client *cl);
   // void acceptNewConnections(int nev);
@@ -56,4 +63,7 @@ private:
 
   ServerManager(ServerManager &other);
   ServerManager &operator=(ServerManager &other);
+
+  private:
+    std::string defaultPath;
 };

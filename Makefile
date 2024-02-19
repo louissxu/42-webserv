@@ -16,6 +16,7 @@ RED 			:= 	\033[38;5;160m
 NAME = webserv
 CC = c++
 CFLAGS = -Wall -Wextra -Werror -g -std=c++98 #-fsanitize=address -g
+# CFLAGS = -g -std=c++11 #-fsanitize=address -g
 
 #	o-----------------o
 #	|    INCLUDES     |

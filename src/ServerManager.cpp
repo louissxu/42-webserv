@@ -1,7 +1,10 @@
 #include "ServerManager.hpp"
 #include "Cout.hpp"
 
-ServerManager::ServerManager() {}
+ServerManager::ServerManager()
+{
+  defaultPath = "./application";
+}
 
 ServerManager::~ServerManager() {}
 
@@ -68,66 +71,7 @@ Client *ServerManager::getClient(int fd)
   return nullptr;
 }
 
-// void ServerManager::acceptNewConnections(int nev)
-// {
-//   int conn_fd;
-
-//   for (int i = 0; i < nev; i++)
-//   {
-//     for (size_t j = 0; j < _servers.size(); j++)
-//     {
-//       if (static_cast<int>(ev_list[i].ident) == _servers[j].getSockFd())
-//       {
-//         // Accepting new connections
-//         struct sockaddr_in client_address;
-//         long client_address_size = sizeof(client_address);
-//         conn_fd = accept(_servers[j].getSockFd(), (struct sockaddr *)&client_address, (socklen_t *)&client_address_size);
-//         if (conn_fd < 0)
-//         {
-//           perror("accept");
-//           continue;
-//         }
-//         // std::cout << "accepted: " << conn_fd << std::endl;
-//         // Add the new socket to kqueue
-//         EV_SET(&ev_set[j], conn_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-//         if (fcntl(conn_fd, F_SETFL, O_NONBLOCK) < 0)
-//         {
-//           std::cout << RED << "fcntl error: closing: " << conn_fd << std::endl;
-//           close(conn_fd);
-//         }
-//       }
-//     }
-//   }
-//   accepting = false;
-// }
-
-#include <fstream>
-
-// void send_file(int client_socket, const std::string &filename, const std::string &content_type)
-// {
-//   std::ifstream file(filename, std::ios::in | std::ios::binary);
-//   if (!file.is_open())
-//   {
-//     perror("Error opening file");
-//     return;
-//   }
-
-//   std::ostringstream file_contents;
-//   file_contents << file.rdbuf();
-
-//   std::string response =
-//       "HTTP/1.1 200 OK\r\n"
-//       "Content-Type: " +
-//       content_type + "\r\n"
-//                      "Connection: keep-alive" +
-//       "\r\n"
-//       "\r\n" +
-//       file_contents.str();
-
-//   send(client_socket, response.c_str(), response.length(), 0);
-
-//   file.close();
-// }
+// #include <fstream>
 
 bool ServerManager::isListeningSocket(int socket_fd)
 {
@@ -182,9 +126,6 @@ void ServerManager::runKQ()
           std::cout << ev_list[i].ident << ": you are gay the client does not exist\n";
           continue;
         }
-        // else
-        //   std::cout << myClient->getSockFD() << " is connected to " << myClient->getSockFDconnectedTo() << "\n";
-
         if (ev_list[i].flags & EV_EOF)
         {
           closeConnection(myClient);
@@ -228,6 +169,8 @@ void ServerManager::readClient(Client *cl, int dataLen)
 
   memset(ClientMessage, 0, dataLen);
   int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
+  std::cout << YELLOW << ClientMessage << std::endl;
+  // Response me = Response::deserialize(ClientMessage);
   if (readLen == 0)
   {
     std::cout << RED << "Client disconnected\n";
@@ -240,24 +183,30 @@ void ServerManager::readClient(Client *cl, int dataLen)
   }
   else
   {
-    HTTPRequest *request = new HTTPRequest(ClientMessage, readLen);
-    request->parseRequest();
+    HTTPRequest request = HTTPRequest::deserialize(ClientMessage, readLen);
+    // request->parseRequest();
   }
   // std::cout << ClientMessage << readLen << std::endl;
 }
 
+/*
+send may not send the full response, therefore we have to check
+if the actual amount send was equal to the length of the respoinse string.
+if not we have to send it in the second try.
+*/
 bool ServerManager::writeToClient(Client *cl, int dataLen)
 {
   (void)dataLen;
-  std::string html = "<html><head><title>Test Title</title></head><body>Hello World!<br /></body></html>";
+  std::string html = "<html><head><title>Test Title</title></head><body>Hello World!\nmy name is mehdi<br /></body></html>";
   std::string response =
-    "HTTP/1.1 200 OK\r\n"
-    "Content-Length: " + std::to_string(html.size()) + "\r\n"
-    "Content-Type: text/html\r\n"
-    "Date: Sun, 19 Feb 2024 04:04:07 GMT\r\n"
-    "Server: webserv/1.0\r\n"
-    "Connection: Close\r\n\r\n" + 
-    html;
+      "HTTP/1.1 200 OK\r\n"
+      "Content-Length: " +
+      std::to_string(html.size()) + "\r\n"
+                                    "Content-Type: text/html\r\n"
+                                    "Date: Sun, 19 Feb 2024 04:04:07 GMT\r\n"
+                                    "Server: webserv/1.0\r\n"
+                                    "Connection: Keep-Alive\r\n\r\n" +
+      html;
 
   static int buffer = 0;
   int attempSend = response.size();
@@ -268,4 +217,45 @@ bool ServerManager::writeToClient(Client *cl, int dataLen)
   if (actualSend >= attempSend)
     buffer = actualSend;
   return true;
+}
+
+void ServerManager::processRequest(Client *cl, HTTPRequest request)
+{
+  getFileContents(request.getUri());
+}
+
+std::string ServerManager::getFileContents(std::string uri)
+{
+  std::string path = defaultPath + uri;
+  // std::string contents;
+  struct stat s;
+  if (stat(path.c_str(), &s) == 0)
+  {
+    if (s.st_mode & S_IFDIR)
+    {
+      // it's a directory
+    }
+    else if (s.st_mode & S_IFREG)
+    {
+      int len = s.st_size;
+      char contents[len];
+
+      std::ifstream file;
+      file.open(uri, std::ios::in | std::ios::binary);
+      if (!file.is_open()) {
+        std::cout << "could not file error page\n" << std::endl;
+      }
+      file.read(contents, len);
+      return (contents);
+      // this->status = OK;
+    }
+    else
+    {
+      // something else
+    }
+  }
+  else
+  {
+    // error
+  }
 }

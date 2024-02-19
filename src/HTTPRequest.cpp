@@ -1,10 +1,18 @@
 #include "HTTPRequest.hpp"
 
-HTTPRequest::HTTPRequest() : Message() {}
+HTTPRequest::HTTPRequest()
+{
+	isCgi = false;
+}
 
-HTTPRequest::HTTPRequest(char *request, int len) : Message(request, len) {}
+HTTPRequest::HTTPRequest(std::string _method, std::string _version, std::string _uri, std::map<std::string, std::string> _headers, std::string _body) : method(_method), version(_version), uri(_uri), headers(_headers), body(_body)
+{
+	this->setIsCgi();
+}
 
-HTTPRequest::HTTPRequest(std::string _method, std::string _uri) : method(_method), uri(_uri) {}
+// HTTPRequest::HTTPRequest(char *request, int len) {}
+
+// HTTPRequest::HTTPRequest(std::string _method, std::string _uri) {}
 
 HTTPRequest::HTTPRequest(HTTPRequest const &other)
 {
@@ -22,62 +30,56 @@ HTTPRequest::~HTTPRequest()
 {
 }
 
-// // void HTTPRequest::print() {
-// //   // std::cout << "---- Parsed HTTP Request Contents (rest was discarded) ----" << std::endl;
-// //   std::cout << "\033[31m" << "HTTP Request" << "\033[0m" << std::endl;
-// //   std::cout << "  Method name:  " << _request_method_name << std::endl;
-// //   std::cout << "  URI:          " << _request_uri << std::endl;
-// //   std::cout << "  HTTP version: " << _HTTP_version << std::endl;
-// //   std::cout << "  Connection type: " << _Connection_type << std::endl;
-// //   std::cout << "  Content type: " << _content_type << std::endl;
-// //   std::cout << "\033[31m" << "---- end of request ----\n" << "\033[0m" << std::endl;
-// // }
+void HTTPRequest::setMethod(std::string const &_method)
+{
+	this->method = _method;
+}
 
-// // void HTTPRequest::parseString(std::string str) {
+void HTTPRequest::setUri(std::string const &_uri)
+{
+	this->uri = _uri;
+}
 
-// //   // std::cout << "\033[34m" << str << "\n" << "\033[0m" << std::endl;
+HTTPRequest HTTPRequest::deserialize(char *requestMessage, int requestLen)
+{
+	(void)requestLen;
+	std::string key, value; // header, value
+	std::string method;
+	std::string version;
+	std::string uri;
+	std::map<std::string, std::string> headers;
+	std::string body;
 
-// //   std::stringstream ss(str);
-// //   std::string line;
+	std::stringstream ss(requestMessage);
+	std::string line;
 
-// //   std::getline(ss, line, '\n');
+	std::getline(ss, line, '\n');
+	std::stringstream line_stream(line);
+	std::getline(line_stream, method, ' ');
+	std::getline(line_stream, uri, ' ');
+	std::getline(line_stream, version, '\r');
 
-// //   std::stringstream line_stream(line);
-// //   std::string item;
-
-// //   std::getline(line_stream, item, ' ');
-// //   _request_method_name = item;
-
-// //   if (_request_method_name.compare("POST") == 0)
-// //     cgi = true;
-// //   else
-// //     cgi = false;
-
-// //   std::getline(line_stream, item, ' ');
-// //   _request_uri = item;
-
-// //   std::getline(line_stream, item, '\\');
-// //   _HTTP_version = item;
-
-// //   while (std::getline(ss, line, '\n'))
-// //   {
-// //     std::stringstream line_stream1(line);
-// //     std::string item;
-// //     std::getline(line_stream1, item, ' ');
-// //     if (item == "Accept:") {
-// //       std::getline(line_stream1, item, ',');
-// //       _content_type = item;
-// //     }
-// //     else if (item == "connection:") {
-// //       std::getline(line_stream1, item, '\n');
-// //       _Connection_type = item;
-// //     }
-// //   }
-// //   // this->print();
-// //   // while (item.compare(0, 11, "Connection:"))
-// //   // {
-// //   //   std::getline(line_stream, item, '\n');
-// //   //   continue;
-// //   // }
-// //   // _Connection_type = "keep-alive";
-// // }
+	// Parse headers
+	while (std::getline(ss, line) && !line.empty())
+	{
+		size_t colonPos = line.find(':');
+		if (colonPos != std::string::npos)
+		{
+			std::string key = line.substr(0, colonPos);
+			std::string value = line.substr(colonPos + 2); // Skip ': ' after colon
+			headers[key] = value;
+		}
+	}
+	// Get the rest as the body
+	body = ss.str();
+	// Remove headers from the body
+	body.erase(0, ss.tellg());
+	return HTTPRequest(method, version, uri, headers, body);
+}
+// #include <iostream>
+void HTTPRequest::setIsCgi()
+{
+	isCgi = false;
+	if (uri.compare(0, 7, "/cgiBin") == 0)
+		isCgi = true;
+}

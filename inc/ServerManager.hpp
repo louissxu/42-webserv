@@ -40,16 +40,18 @@ public:
   void readClient(Client *cl, int dataLen);
   bool writeToClient(Client *cl, int dataLen);
 
-  void processRequest(Client *cl, HTTPRequest request);
+  // void processRequest(Client *cl, HTTPRequest request);
+  HTTPRequest *parseRequest(Client *cl, std::string const &message);
+
   std::string getFileContents(std::string uri);
 
 
   void updateEvent(int ident, short filter, u_short flags, u_int fflags, int data, void *udata);
   void closeConnection(Client *cl);
   // void acceptNewConnections(int nev);
-  void processConnectionIO(int nev);
+  // void processConnectionIO(int nev);
   bool isListeningSocket(int socket_fd);
-  void add_cgi_IO_to_ev_set();
+  // void add_cgi_IO_to_ev_set();
 
 private:
   std::vector<Server> _servers;

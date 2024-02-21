@@ -21,3 +21,8 @@ sockaddr_in Client::getClinetAddr() const
 {
 	return this->client_addr;
 }
+
+void Client::setMessage(Message const &src)
+{
+	this->message = src;	
+}

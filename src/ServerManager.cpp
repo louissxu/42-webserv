@@ -161,6 +161,7 @@ void ServerManager::closeConnection(Client *cl)
   delete cl;
 }
 
+// *unsure if recv will always read all the avialable data, need to learn.
 void ServerManager::readClient(Client *cl, int dataLen)
 {
   if (cl == NULL)
@@ -183,7 +184,12 @@ void ServerManager::readClient(Client *cl, int dataLen)
   }
   else
   {
-    HTTPRequest request = HTTPRequest::deserialize(ClientMessage, readLen);
+    HTTPRequest *_req = parseRequest(cl, ClientMessage);
+    (void)_req;
+    HTTPResponse _resp;
+    Message message(_resp);
+    cl->setMessage(message);
+    // HTTPRequest request = HTTPRequest::deserialize(ClientMessage, readLen);
     // request->parseRequest();
   }
   // std::cout << ClientMessage << readLen << std::endl;
@@ -219,10 +225,10 @@ bool ServerManager::writeToClient(Client *cl, int dataLen)
   return true;
 }
 
-void ServerManager::processRequest(Client *cl, HTTPRequest request)
-{
-  getFileContents(request.getUri());
-}
+// void ServerManager::processRequest(Client *cl, HTTPRequest request)
+// {
+//   getFileContents(request.getUri());
+// }
 
 std::string ServerManager::getFileContents(std::string uri)
 {
@@ -258,4 +264,42 @@ std::string ServerManager::getFileContents(std::string uri)
   {
     // error
   }
+  return "";
+}
+
+HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
+{
+  (void)cl;
+  std::string key, value; // header, value
+	std::string method;
+	std::string version;
+	std::string uri;
+	std::map<std::string, std::string> headers;
+	std::string body;
+
+	std::stringstream ss(message);
+	std::string line;
+
+	std::getline(ss, line, '\n');
+	std::stringstream line_stream(line);
+	std::getline(line_stream, method, ' ');
+	std::getline(line_stream, uri, ' ');
+	std::getline(line_stream, version, '\r');
+
+	// Parse headers
+	while (std::getline(ss, line) && !line.empty())
+	{
+		size_t colonPos = line.find(':');
+		if (colonPos != std::string::npos)
+		{
+			std::string key = line.substr(0, colonPos);
+			std::string value = line.substr(colonPos + 2); // Skip ': ' after colon
+			headers[key] = value;
+		}
+	}
+	// Get the rest as the body
+	body = ss.str();
+	// Remove headers from the body
+	body.erase(0, ss.tellg());
+  return (new HTTPRequest(headers, body, GET, uri, HTTP_1_1));
 }

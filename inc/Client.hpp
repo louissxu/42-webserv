@@ -26,6 +26,7 @@ class Client
 		int getSockFD() const;
 		int getSockFDconnectedTo() const;
 		sockaddr_in getClinetAddr() const;
+		Message const &getMessage() const;
 
 		void setMessage(Message const &src);
 };

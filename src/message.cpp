@@ -1,8 +1,8 @@
 #include "Message.hpp"
 
-Message::Message() : message("") {}
+Message::Message() : message(""), bufferSent(0) {}
 
-Message::Message(const HTTPResponse &_resp) : message("")
+Message::Message(const HTTPResponse &_resp) : message(""), bufferSent(0)
 {
     this->serialize(_resp);
 }
@@ -12,6 +12,21 @@ Message::~Message() {}
 const std::string &Message::getMessage() const
 {
     return this->message;
+}
+
+int Message::getMessageSize() const
+{
+    return this->message.size();
+}
+
+const int &Message::getBufferSent() const
+{
+	return this->bufferSent;
+}
+
+void Message::setBufferSent(int buffer)
+{
+	this->bufferSent = buffer;
 }
 
 void Message::serialize(const HTTPResponse &_resp)

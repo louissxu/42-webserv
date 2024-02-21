@@ -200,30 +200,49 @@ send may not send the full response, therefore we have to check
 if the actual amount send was equal to the length of the respoinse string.
 if not we have to send it in the second try.
 */
+// bool ServerManager::writeToClient(Client *cl, int dataLen)
+// {
+//   (void)dataLen;
+//   std::string html = "<html><head><title>Test Title</title></head><body>Hello World!\nmy name is mehdi<br /></body></html>";
+//   std::string response =
+//       "HTTP/1.1 200 OK\r\n"
+//       "Content-Length: " +
+//       std::to_string(html.size()) + "\r\n"
+//                                     "Content-Type: text/html\r\n"
+//                                     "Date: Sun, 19 Feb 2024 04:04:07 GMT\r\n"
+//                                     "Server: webserv/1.0\r\n"
+//                                     "Connection: Keep-Alive\r\n\r\n" +
+//       html;
+
+//   static int buffer = 0;
+//   int attempSend = response.size();
+//   if (buffer == attempSend)
+//     return false;
+//   int actualSend = send(cl->getSockFD(), response.c_str(), response.length(), 0);
+//   std::cout << GREEN << "send the httpResponse\n";
+//   if (actualSend >= attempSend)
+//     buffer = actualSend;
+//   return true;
+// }
+
 bool ServerManager::writeToClient(Client *cl, int dataLen)
 {
   (void)dataLen;
-  std::string html = "<html><head><title>Test Title</title></head><body>Hello World!\nmy name is mehdi<br /></body></html>";
-  std::string response =
-      "HTTP/1.1 200 OK\r\n"
-      "Content-Length: " +
-      std::to_string(html.size()) + "\r\n"
-                                    "Content-Type: text/html\r\n"
-                                    "Date: Sun, 19 Feb 2024 04:04:07 GMT\r\n"
-                                    "Server: webserv/1.0\r\n"
-                                    "Connection: Keep-Alive\r\n\r\n" +
-      html;
+  Message message = cl->getMessage();
 
-  static int buffer = 0;
-  int attempSend = response.size();
-  if (buffer == attempSend)
+  // static int buffer = 0;
+  int attempSend = message.getMessageSize();
+  if (message.getBufferSent() == attempSend)
     return false;
-  int actualSend = send(cl->getSockFD(), response.c_str(), response.length(), 0);
+  int actualSend = send(cl->getSockFD(), message.getMessage().c_str(), attempSend, 0);
   std::cout << GREEN << "send the httpResponse\n";
   if (actualSend >= attempSend)
-    buffer = actualSend;
+    message.setBufferSent(actualSend);
+  cl->setMessage(message);
   return true;
 }
+
+
 
 // void ServerManager::processRequest(Client *cl, HTTPRequest request)
 // {

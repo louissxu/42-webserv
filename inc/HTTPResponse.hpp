@@ -8,6 +8,9 @@
 #include <sstream>
 #include <exception>
 #include <map>
+#include <sys/stat.h>
+
+#include "HTTPRequest.hpp"
 
 enum Status
 {
@@ -39,6 +42,8 @@ public:
 	HTTPResponse(HTTPResponse const &src);
 	HTTPResponse &operator=(HTTPResponse const &src);
 
+	HTTPResponse(HTTPRequest const &request);
+
 	// setters
 	void setVersion(std::string const &_version);
 	// void setReason(std::string const &_version);
@@ -54,6 +59,8 @@ public:
 	std::string const &getReason() const;
 	std::map<std::string, std::string> const &getHeaders() const;
 	std::string const &getBody() const;
+
+	void setBodyUri(std::string const &uri);
 
 	void buildDefaultResponse();
 	void setDefaultHeaders();

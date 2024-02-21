@@ -8,25 +8,20 @@
 
 class Client
 {
-	private:
-		int sockFD;
-		sockaddr_in client_addr;
-		int FDconnectedTo;
+private:
+	int sockFD;
+	sockaddr_in client_addr;
+	int FDconnectedTo;
 
-		Message message;
+	Message message;
+public:
+	Client(int _sockFD, int _FDconnectedTo, sockaddr_in _client_addr);
+	~Client();
 
-		// std::string response;
-		// HTTPResponse response;
+	int getSockFD() const;
+	int getSockFDconnectedTo() const;
+	sockaddr_in getClinetAddr() const;
+	Message const &getMessage() const;
 
-
-	public:
-		Client(int _sockFD, int _FDconnectedTo, sockaddr_in _client_addr);
-		~Client();
-
-		int getSockFD() const;
-		int getSockFDconnectedTo() const;
-		sockaddr_in getClinetAddr() const;
-		Message const &getMessage() const;
-
-		void setMessage(Message const &src);
+	void setMessage(Message const &src);
 };

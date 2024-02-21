@@ -185,8 +185,8 @@ void ServerManager::readClient(Client *cl, int dataLen)
   else
   {
     HTTPRequest *_req = parseRequest(cl, ClientMessage);
-    (void)_req;
-    HTTPResponse _resp;
+    // (void)_req;
+    HTTPResponse _resp(*_req);
     Message message(_resp);
     cl->setMessage(message);
     // HTTPRequest request = HTTPRequest::deserialize(ClientMessage, readLen);
@@ -241,8 +241,6 @@ bool ServerManager::writeToClient(Client *cl, int dataLen)
   cl->setMessage(message);
   return true;
 }
-
-
 
 // void ServerManager::processRequest(Client *cl, HTTPRequest request)
 // {

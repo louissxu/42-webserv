@@ -24,6 +24,12 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 	return *this;
 }
 
+HTTPResponse::HTTPResponse(HTTPRequest const &request)
+{
+	buildDefaultResponse();
+	setBodyUri(request.getUri());
+}
+
 std::string const &HTTPResponse::getVersion() const
 {
 	return this->version;
@@ -85,7 +91,11 @@ void HTTPResponse::setReason(std::string const &_reason)
 void HTTPResponse::addHeader(std::string const &_key, std::string const &_value)
 {
 	// TODO check if key is already in the map, or is the key "Cookie".
-	headers.insert(std::pair<std::string, std::string>(_key, _value));
+	std::map<std::string, std::string>::iterator it = headers.find(_key);
+	if (it != headers.end())
+		it->second = _value;
+	else
+		headers.insert(std::pair<std::string, std::string>(_key, _value));
 }
 
 void HTTPResponse::setBody(std::string const &_body)
@@ -113,6 +123,67 @@ std::string const &HTTPResponse::getBody() const
 	return this->body;
 }
 
+void HTTPResponse::setBodyUri(std::string const &uri)
+{
+	if (uri.empty())
+	{
+		this->body = "";
+		return;
+	}
+	if (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos)
+	{
+		this->body = "";
+		return;
+	}
+
+	std::string path = "application" + uri;
+	struct stat s;
+	if (stat(path.c_str(), &s) == 0)
+	{
+		// if (s.st_mode & S_IFDIR)
+		// {
+		//   // it's a directory
+		// }
+		if (s.st_mode & S_IFREG)
+		{
+			int len = s.st_size;
+			char contents[len];
+
+			std::ifstream file;
+			file.open(path, std::ios::in | std::ios::binary);
+			if (!file.is_open())
+			{
+				// perror()
+				strerror(errno);
+				std::cout << "could not file error page\n"
+						  << std::endl;
+			}
+			file.read(contents, len);
+			this->body = contents;
+			this->addHeader("Content-Length", std::to_string(this->body.size()));
+			// int loc = uri.find(".");
+			this->addHeader("Content-Type", "text/" + uri.substr(uri.find(".") + 1, uri.size()));
+			// std::map<std::string, std::string>::iterator it = headers.find("Content-Length");
+			// if (it != headers.end())
+			// 	it->second = std::to_string(this->body.size());
+			// else
+			// 	headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(body.size())));
+			//   return (contents);
+			// this->status = OK;
+		}
+		// else
+		// {
+		//   // something else
+		// }
+	}
+	else
+	{
+		// error
+	}
+	//   return "";
+	// this->body = "";
+}
+
 void HTTPResponse::buildDefaultResponse()
 {
 	this->version = "HTTP/1.1";
@@ -125,7 +196,7 @@ void HTTPResponse::buildDefaultResponse()
 void HTTPResponse::setDefaultHeaders()
 {
 	headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(body.size())));
-	headers.insert(std::pair<std::string, std::string>("Content-Type", "en-us"));
+	headers.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
 	headers.insert(std::pair<std::string, std::string>("Connection", "Keep-Alive"));
 	headers.insert(std::pair<std::string, std::string>("Server", "mehdi's_webserv"));
 }

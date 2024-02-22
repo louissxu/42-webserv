@@ -147,38 +147,37 @@ void HTTPResponse::setBodyUri(std::string const &uri)
 		if (s.st_mode & S_IFREG)
 		{
 			int len = s.st_size;
-			char contents[len];
-
-			std::ifstream file;
-			file.open(path, std::ios::in | std::ios::binary);
-			if (!file.is_open())
+			if (!this->getResourse(path, len))
 			{
-				// perror()
-				strerror(errno);
-				std::cout << "could not file error page\n"
-						  << std::endl;
+				this->getDefaultResourse();
+				// this->getResourse("application/error404/errorPage.html")
 			}
-			file.read(contents, len);
-			this->body = contents;
-			this->addHeader("Content-Length", std::to_string(this->body.size()));
-			// int loc = uri.find(".");
-			this->addHeader("Content-Type", "text/" + uri.substr(uri.find(".") + 1, uri.size()));
-			// std::map<std::string, std::string>::iterator it = headers.find("Content-Length");
-			// if (it != headers.end())
-			// 	it->second = std::to_string(this->body.size());
-			// else
-			// 	headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(body.size())));
-			//   return (contents);
-			// this->status = OK;
+			// char contents[len];
+
+			// std::ifstream file;
+			// file.open(path, std::ios::in | std::ios::binary);
+			// if (!file.is_open())
+			// {
+			// 	// perror()
+			// 	strerror(errno);
+			// 	std::cout << "could not file error page\n"
+			// 			  << std::endl;
+			// }
+			// file.read(contents, len);
+			// this->body = contents;
+			// this->addHeader("Content-Length", std::to_string(this->body.size()));
+			// this->addHeader("Content-Type", "text/" + uri.substr(uri.find(".") + 1, uri.size()));
 		}
-		// else
-		// {
-		//   // something else
-		// }
+		else
+		{
+
+			//   something else
+		}
 	}
 	else
 	{
-		// error
+		this->getDefaultResourse();
+		// this->setBodyUri("error404/errorPage.html");
 	}
 	//   return "";
 	// this->body = "";
@@ -204,4 +203,43 @@ void HTTPResponse::setDefaultHeaders()
 void HTTPResponse::setDefaultBody()
 {
 	body = "<html><head><title>Test Title</title></head><body>Hello World!<br /></body></html>";
+}
+
+// !helper functions
+bool HTTPResponse::getResourse(std::string const &path, int const &len)
+{
+	char contents[len];
+	std::ifstream file;
+
+	file.open(path, std::ios::in | std::ios::binary);
+	if (!file.is_open())
+	{
+		strerror(errno);
+		std::cout << "could not file error page\n"
+				  << std::endl;
+		return false;
+	}
+	file.read(contents, len);
+	this->body = contents;
+	this->addHeader("Content-Length", std::to_string(this->body.size()));
+	this->addHeader("Content-Type", "text/" + path.substr(path.find(".") + 1, path.size()));
+	return true;
+}
+
+void HTTPResponse::getDefaultResourse()
+{
+	struct stat s;
+	std::string path = "application/error404/errorPage.html";
+	if (stat(path.c_str(), &s) == 0)
+	{
+		int len = s.st_size;
+		if (!this->getResourse(path, len))
+		{
+			std::cout << "unable to get resourse: " << path << std::endl;
+		}
+	}
+	this->status = NOT_FOUND;
+	this->reason = "NOT_FOUND";
+	// this->addHeader("Content-Length", std::to_string(this->body.size()));
+	// this->addHeader("Content-Type", "text/html");
 }

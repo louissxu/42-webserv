@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/mehdimirzaie/Desktop/42-webserv",
-      "program": "/Users/mehdimirzaie/Desktop/42-webserv/webserv"
+      "cwd": "/Users/mmirzaie/Desktop/42-webserv",
+      "program": "/Users/mmirzaie/Desktop/42-webserv/webserv"
     }
   ]
 }

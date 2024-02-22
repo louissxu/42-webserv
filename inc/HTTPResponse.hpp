@@ -65,6 +65,10 @@ public:
 	void buildDefaultResponse();
 	void setDefaultHeaders();
 	void setDefaultBody();
+
+private:
+	bool getResourse(std::string const &path, int const &len);
+	void getDefaultResourse();
 };
 
 // #include "HTTPRequest.hpp"

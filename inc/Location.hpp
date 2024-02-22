@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdlib>
 #include <map>
 
 #include "Definitions.hpp"
@@ -47,10 +48,28 @@ class Location
         void setMethodPermissions(std::map<enum e_HRM, bool> newPermissions);
         void setMethodPermission(enum e_HRM, bool permissionState);
         void setAutoIndex(bool indexState);
+        void setClientMaxBodySize(std::string size_str);
         void setClientMaxBodySize(size_t newClientMaxBodySize);
 
     // Other
         void initMethodPermissions();
+
+    //Exceptions
+    	class ErrorException : public std::exception
+		{
+			private:
+				std::string _message;
+			public:
+				ErrorException(std::string message) throw()
+				{
+					_message = "SERVER CONFIG ERROR: " + message;
+				}
+				virtual const char* what() const throw()
+				{
+					return (_message.c_str());
+				}
+				virtual ~ErrorException() throw() {}
+		};
 
     private:
         std::string                 _path;

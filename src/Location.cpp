@@ -147,19 +147,19 @@ void Location::setAutoIndex(bool indexState)
     _autoIndex = indexState;
 }
 
-void Location::setClientMaxBodySize(std::string newClientMaxBodySize)
+void Location::setClientMaxBodySize(std::string size_str)
 {
 	unsigned long body_size = 0;
 
-	for (size_t i = 0; i < parametr.length(); i++)
+	for (size_t i = 0; i < size_str.length(); i++)
 	{
-		if (parametr[i] < '0' || parametr[i] > '9')
-			throw Server::ErrorException("Wrong syntax: client_max_body_size");
+		if (size_str[i] < '0' || size_str[i] > '9')
+			throw Location::ErrorException("Wrong syntax: client_max_body_size");
 	}
-	if (!ft_stoi(parametr))
-		throw Server::ErrorException("Wrong syntax: client_max_body_size");
-	body_size = ft_stoi(parametr);
-	this->_client_max_body_size = body_size;
+	if (!std::atoi(size_str.c_str()))
+		throw Location::ErrorException("Wrong syntax: client_max_body_size");
+	body_size = std::atoi(size_str.c_str());
+	this->_clientMaxBodySize = body_size;
 }
 
 void Location::setClientMaxBodySize(size_t newClientMaxBodySize)

@@ -299,14 +299,9 @@ void    ServerManager::p_c(ConfigParser &src)
       std::cout << "Calling server: Print contexts: " << std::endl;
       p_c(src);
     }
-
-
 }
 
-
-
-
-
+/*
 ServerManager::ErrorException::ErrorException(std::string message) throw()
 {
     _message = "SERVER CONFIG ERROR: " + message;
@@ -318,3 +313,4 @@ virtual const char* ServerManager::ErrorException::what() const throw()
 }
 
 virtual ServerManager::ErrorException::~ErrorException() throw() {}
+*/

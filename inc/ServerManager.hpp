@@ -22,8 +22,7 @@
 
 #include "HTTPResponse.hpp"
 #include "ConfigParser.hpp"
-
-
+#include "Location.hpp"
 
 
 

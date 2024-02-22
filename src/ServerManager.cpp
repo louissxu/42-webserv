@@ -2,14 +2,6 @@
 
 ServerManager::ServerManager() {}
 
-// ServerManager::ServerManager(ServerManager& other) {
-
-// }
-
-// ServerManager& ServerManager::operator=(ServerManager& other) {
-
-// }
-
 ServerManager::~ServerManager() {
   // delete[] _pfds;
   // _pfds_count = 0;
@@ -221,39 +213,85 @@ bool ServerManager::isValidDirectiveName(const std::string &src) {
     return false;
 }
 
+std::string get_first(const std::string &name)
+{
+    std::istringstream iss(name);
+    std::string part;
+    std::getline(iss, part, ' '); // Assuming the parts are separated by '_'
+    return (part);
+}
+
+
+std::string get_last(const std::string &name)
+{
+    std::istringstream iss(name);
+    std::string part;
+    std::string lastPart;
+
+    while (std::getline(iss, part, ' ')) // Assuming the parts are separated by '_'
+    {
+        lastPart = part; // This will end up being the last part after the loop
+    }
+
+    return lastPart;
+}
+
+
 void ServerManager::p_d(ConfigParser &src)
 {
    // std::cout << "ServerManager: printDirectives called." << std::endl;
     size_t i = 0;
     static size_t server_id = 0;
+
     if (src.getName() == "server")
     {
         std::cout << "Server: " << server_id++ <<" Init: " << std::endl;
-        //std::string listenValue = src.getListen();
         Server newServ = Server();
-        //newServ._listen = src.getListen();
-     // Server newServ = Server(src.getListen());
-      std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
-      if (temp.empty())
-      {
-       return;
-      }
-      for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
-      {
-         std::cout <<"\t " << src.getName() << ": ";
-         std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
-         if (isValidDirectiveName(it->first))
-         {
-            std::cout << "Adding " << it->first << " to Server " << (server_id - 1) << ". " << std::endl;
-            newServ.addDirective(it->first, it->second);
-         }
-          i++;
-      }
-
+        std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
+        if (temp.empty())
+        {
+            return;
+        }
+        for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
+        {
+            std::cout <<"\t " << src.getName() << ": ";
+            std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
+            if (isValidDirectiveName(it->first))
+            {
+                std::cout << "Adding " << it->first << " to Server " << (server_id - 1) << ". " << std::endl;
+                newServ.addDirective(it->first, it->second);
+            }
+            i++;
+        }
       //starting the server now that the required fields have been populated.
       newServ.startServer();
       this->addServer(newServ);
     }
+    //std::cout <<"GET_FIRST :"<< get_first(src.getName()) << std::endl;
+
+    // if (get_first(src.getName()) == "location")
+    // {
+    //     std::string path = get_last(src.getName());
+    //     std::cout << "LOCATION: " << path << std::endl;
+    //     //Location newLocation = Location();
+    //     Location newLocation = Location(path);
+    //     std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
+    //     if (temp.empty())
+    //     {
+    //         return;
+    //     }
+    //     for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
+    //     {
+    //         std::cout <<"\t " << src.getName() << ": ";
+    //         std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
+    //         if (isValidDirectiveName(it->first))
+    //         {
+    //             std::cout << "Adding " << it->first << " to Server " << (server_id - 1) << ". " << std::endl;
+    //             newLocation.addDirective(it->first, it->second);
+    //         }
+    //         i++;
+    //     }
+    // }
 }
 
 void    ServerManager::p_c(ConfigParser &src)
@@ -270,16 +308,12 @@ void    ServerManager::p_c(ConfigParser &src)
     {
         std::cout << src.getName() << ": ";
         std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
-        //(*it).printDirectives();
         p_c(*it);
         i++;
     }
 }
 
-
-
-
- void ServerManager::setStateFromParser(ConfigParser &src)
+void ServerManager::setStateFromParser(ConfigParser &src)
 {
     //Out of server directives
     if (src.get_directives().empty()) {
@@ -300,17 +334,3 @@ void    ServerManager::p_c(ConfigParser &src)
       p_c(src);
     }
 }
-
-/*
-ServerManager::ErrorException::ErrorException(std::string message) throw()
-{
-    _message = "SERVER CONFIG ERROR: " + message;
-}
-
-virtual const char* ServerManager::ErrorException::what() const throw()
-{
-	return (_message.c_str());
-}
-
-virtual ServerManager::ErrorException::~ErrorException() throw() {}
-*/

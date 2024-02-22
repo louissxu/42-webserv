@@ -28,6 +28,18 @@ Location::Location()
     initMethodPermissions();
 }
 
+//PARAMETERISED CONSTRUCTOR: USING THE PATH.
+Location::Location(std::string &path)
+{
+	this->_path = path;
+	this->_root = "";
+	this->_index = "";
+	this->_filePathPost = "";
+    this->_autoIndex = false;
+	this->_clientMaxBodySize = MAX_CONTENT_LENGTH;
+    initMethodPermissions();
+}
+
 Location::Location(const Location& other)
 {
 	this->_path = other._path;

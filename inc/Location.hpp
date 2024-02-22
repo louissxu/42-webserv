@@ -27,6 +27,7 @@ class Location
 
     // Constructors
         Location();
+        Location(std::string &path);
         Location(const Location& other);
         Location& operator=(const Location& other);
         ~Location();
@@ -62,7 +63,7 @@ class Location
 			public:
 				ErrorException(std::string message) throw()
 				{
-					_message = "SERVER CONFIG ERROR: " + message;
+					_message = "LOCATION CONFIG ERROR: " + message;
 				}
 				virtual const char* what() const throw()
 				{

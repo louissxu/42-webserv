@@ -123,19 +123,22 @@ void ServerManager::runKQ()
         myClient = getClient(ev_list[i].ident);
         if (myClient == nullptr)
         {
-          std::cout << ev_list[i].ident << ": you are gay the client does not exist\n";
+          std::cout << ev_list[i].ident << ":client does not exist\n";
           continue;
         }
         if (ev_list[i].flags & EV_EOF)
         {
+          std::cout << "\n\nclosing connection with: " << ev_list[i].ident << "\n\n";
           closeConnection(myClient);
           continue;
         }
         if (ev_list[i].filter == EVFILT_READ)
         {
-          readClient(myClient, ev_list[i].data);
-          updateEvent(ev_list[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-          updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+          if (!readClient(myClient, ev_list[i].data))
+          {
+            updateEvent(ev_list[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+            updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+          }
         }
         else if (ev_list[i].filter == EVFILT_WRITE)
         {
@@ -162,36 +165,48 @@ void ServerManager::closeConnection(Client *cl)
 }
 
 // *unsure if recv will always read all the avialable data, need to learn.
-void ServerManager::readClient(Client *cl, int dataLen)
+bool ServerManager::readClient(Client *cl, int dataLen)
 {
   if (cl == NULL)
-    return;
-  char ClientMessage[dataLen];
+    return false;
+  char ClientMessage[
+    dataLen - cl->getBufferRead()];
 
-  memset(ClientMessage, 0, dataLen);
-  int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
-  std::cout << YELLOW << ClientMessage << std::endl;
-  // Response me = Response::deserialize(ClientMessage);
-  if (readLen == 0)
+  // memset(ClientMessage, 0, dataLen);
+  if (cl->getBufferRead() != dataLen)
   {
-    std::cout << RED << "Client disconnected\n";
-    closeConnection(cl);
+    int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
+    cl->appendRecvMessage(ClientMessage);
+    if (readLen >= cl->getBufferRead())
+      cl->setBufferRead(readLen);
+    std::cout << "recived: " YELLOW << ClientMessage << RESET << std::endl;
+    // Response me = Response::deserialize(ClientMessage);
+    if (readLen == 0)
+    {
+      std::cout << RED << "Client disconnected\n" << RESET;
+      closeConnection(cl);
+    }
+    if (readLen < 0)
+    {
+      std::cout << RED << "Something went wrong when reading\n" << RESET;
+      closeConnection(cl);
+    }
+    // return true;
   }
-  if (readLen < 0)
+  if (cl->getBufferRead() == dataLen)
   {
-    std::cout << RED << "Something went wrong when reading\n";
-    closeConnection(cl);
-  }
-  else
-  {
-    HTTPRequest *_req = parseRequest(cl, ClientMessage);
+    HTTPRequest *_req = parseRequest(cl, cl->getRecvMessage());
     // (void)_req;
     HTTPResponse _resp(*_req);
     Message message(_resp);
     cl->setMessage(message);
+    cl->setBufferRead(0);
+    cl->resetRecvMessage();
     // HTTPRequest request = HTTPRequest::deserialize(ClientMessage, readLen);
     // request->parseRequest();
+  return false;
   }
+  return true;
   // std::cout << ClientMessage << readLen << std::endl;
 }
 
@@ -200,31 +215,6 @@ send may not send the full response, therefore we have to check
 if the actual amount send was equal to the length of the respoinse string.
 if not we have to send it in the second try.
 */
-// bool ServerManager::writeToClient(Client *cl, int dataLen)
-// {
-//   (void)dataLen;
-//   std::string html = "<html><head><title>Test Title</title></head><body>Hello World!\nmy name is mehdi<br /></body></html>";
-//   std::string response =
-//       "HTTP/1.1 200 OK\r\n"
-//       "Content-Length: " +
-//       std::to_string(html.size()) + "\r\n"
-//                                     "Content-Type: text/html\r\n"
-//                                     "Date: Sun, 19 Feb 2024 04:04:07 GMT\r\n"
-//                                     "Server: webserv/1.0\r\n"
-//                                     "Connection: Keep-Alive\r\n\r\n" +
-//       html;
-
-//   static int buffer = 0;
-//   int attempSend = response.size();
-//   if (buffer == attempSend)
-//     return false;
-//   int actualSend = send(cl->getSockFD(), response.c_str(), response.length(), 0);
-//   std::cout << GREEN << "send the httpResponse\n";
-//   if (actualSend >= attempSend)
-//     buffer = actualSend;
-//   return true;
-// }
-
 bool ServerManager::writeToClient(Client *cl, int dataLen)
 {
   (void)dataLen;
@@ -235,17 +225,12 @@ bool ServerManager::writeToClient(Client *cl, int dataLen)
   if (message.getBufferSent() == attempSend)
     return false;
   int actualSend = send(cl->getSockFD(), message.getMessage().c_str(), attempSend, 0);
-  std::cout << GREEN << "send the httpResponse\n";
+  std::cout << GREEN << "send the httpResponse\n" << RESET;
   if (actualSend >= attempSend)
     message.setBufferSent(actualSend);
   cl->setMessage(message);
   return true;
 }
-
-// void ServerManager::processRequest(Client *cl, HTTPRequest request)
-// {
-//   getFileContents(request.getUri());
-// }
 
 std::string ServerManager::getFileContents(std::string uri)
 {
@@ -314,9 +299,18 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
 			headers[key] = value;
 		}
 	}
+  std::getline(ss, line);
+  body = line;
 	// Get the rest as the body
-	body = ss.str();
-	// Remove headers from the body
-	body.erase(0, ss.tellg());
-  return (new HTTPRequest(headers, body, GET, uri, HTTP_1_1));
+	// body = ss.str();
+	// // Remove headers from the body
+	// body.erase(0, ss.tellg());
+  std::cout << "\n\n\nbody: " << body << "\n\n\n\n";
+
+  Method meth;
+  if (method == "GET")
+    meth = GET;
+  if (method == "POST")
+    meth = POST;
+  return (new HTTPRequest(headers, body, meth, uri, HTTP_1_1));
 }

@@ -33,7 +33,7 @@ private:
 	Version version;
 
 public:
-	HTTPRequest(std::map<std::string,std::string> const &_headers,
+	HTTPRequest(std::map<std::string, std::string> const &_headers,
 				std::string const &_body,
 				Method const &_method,
 				std::string const &_uri,

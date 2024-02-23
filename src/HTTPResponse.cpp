@@ -27,7 +27,18 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 HTTPResponse::HTTPResponse(HTTPRequest const &request)
 {
 	buildDefaultResponse();
-	setBodyUri(request.getUri());
+	std::cout << "method was: " << request.getMethod() << std::endl;
+	switch (request.getMethod())
+	{
+	case Method(GET):
+		setBodyUri(request.getUri());
+		return ;
+	case Method(POST):
+		POSTHandler(request);
+		return ;
+	default:
+		return ;
+	}
 }
 
 std::string const &HTTPResponse::getVersion() const
@@ -125,6 +136,7 @@ std::string const &HTTPResponse::getBody() const
 
 void HTTPResponse::setBodyUri(std::string const &uri)
 {
+	std::cout << "went in setBodyUri" << std::endl;
 	if (uri.empty())
 	{
 		this->body = "";
@@ -150,23 +162,7 @@ void HTTPResponse::setBodyUri(std::string const &uri)
 			if (!this->getResourse(path, len))
 			{
 				this->getDefaultResourse();
-				// this->getResourse("application/error404/errorPage.html")
 			}
-			// char contents[len];
-
-			// std::ifstream file;
-			// file.open(path, std::ios::in | std::ios::binary);
-			// if (!file.is_open())
-			// {
-			// 	// perror()
-			// 	strerror(errno);
-			// 	std::cout << "could not file error page\n"
-			// 			  << std::endl;
-			// }
-			// file.read(contents, len);
-			// this->body = contents;
-			// this->addHeader("Content-Length", std::to_string(this->body.size()));
-			// this->addHeader("Content-Type", "text/" + uri.substr(uri.find(".") + 1, uri.size()));
 		}
 		else
 		{
@@ -204,7 +200,7 @@ void HTTPResponse::setDefaultBody()
 {
 	body = "<html><head><title>Test Title</title></head><body>Hello World!<br /></body></html>";
 }
-
+#include "Cout.hpp"
 // !helper functions
 bool HTTPResponse::getResourse(std::string const &path, int const &len)
 {
@@ -220,6 +216,7 @@ bool HTTPResponse::getResourse(std::string const &path, int const &len)
 		return false;
 	}
 	file.read(contents, len);
+	contents[file.gcount()] = '\0';
 	this->body = contents;
 	this->addHeader("Content-Length", std::to_string(this->body.size()));
 	this->addHeader("Content-Type", "text/" + path.substr(path.find(".") + 1, path.size()));
@@ -242,4 +239,98 @@ void HTTPResponse::getDefaultResourse()
 	this->reason = "NOT_FOUND";
 	// this->addHeader("Content-Length", std::to_string(this->body.size()));
 	// this->addHeader("Content-Type", "text/html");
+}
+#include <fcntl.h>
+void HTTPResponse::POSTHandler(HTTPRequest const &request)
+{
+	// (void)request;
+	// return ;
+	std::cout << "POSTHandler" << std::endl;
+	int pipe_to_cgi[2];
+	int pipe_from_cgi[2];
+
+	pipe(pipe_to_cgi);
+	pipe(pipe_from_cgi);
+
+	// Fork to create a child process for the CGI script
+	pid_t pid = fork();
+	if (pid == 0)
+	{
+		// Child process (CGI script)
+
+		// Close unused pipe ends
+		close(pipe_to_cgi[1]);
+		close(pipe_from_cgi[0]);
+
+		// Redirect standard input and output
+		dup2(pipe_to_cgi[0], STDIN_FILENO);
+		dup2(pipe_from_cgi[1], STDOUT_FILENO);
+
+		// Execute the CGI script
+		execl("application/cgiBin/login.sh", "application/cgiBin/login.sh", nullptr);
+
+		// If execl fails
+		perror("execl");
+		exit(EXIT_FAILURE);
+	}
+	else if (pid > 0)
+	{
+		// Parent process (C++ server)
+
+		// Close unused pipe ends
+		close(pipe_to_cgi[0]);
+		close(pipe_from_cgi[1]);
+
+		// Write data to the CGI script
+		// const char *dataToSend = "username=mehdi&password=mirzaie";
+		if (write(pipe_to_cgi[1], request.getBody().c_str(), request.getBody().size()) < 0)
+			std::cerr << errno << std::endl;
+
+		close(pipe_to_cgi[1]);
+		// Read data from the CGI script
+		// std::cerr << "data was sent\n";
+		char buffer[1024];
+		ssize_t bytesRead;
+		this->body = "";
+		while ((bytesRead = read(pipe_from_cgi[0], buffer, sizeof(buffer))) > 0)
+		{
+			// std::cerr << buffer << std::endl;
+			this->body.append(buffer, bytesRead);
+		}
+		this->body.append("\0", 1);
+		this->addHeader("Content-Length", std::to_string(this->body.size()));
+		close(pipe_from_cgi[0]);
+		wait(nullptr);
+	}
+	else
+	{
+		// Fork failed
+		perror("fork");
+		exit(EXIT_FAILURE);
+	}
+
+	// int pFds[2];
+	// if (pipe(pFds) < 0)
+	// {
+	// 	strerror(errno);
+	// 	return ;
+	// }
+	// // export to env;
+
+	// if (fork() == 0)
+	// {
+	// 	dup2(STDIN_FILENO, pFds[0]);
+	// 	dup2(STDOUT_FILENO, pFds[1]);
+	// 	// updateEvent(clientFD, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+	// 	// updateEvent(clientFD, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+	// 	if (fcntl(pFds[0], F_SETFL, O_NONBLOCK) < 0 || fcntl(pFds[1], F_SETFL, O_NONBLOCK))
+	// 	{
+	// 		std::cerr << "fcntl error in child process" << std::endl;
+	// 		close(pFds[0]);
+	// 		close(pFds[1]);
+	// 		return;
+	// 	}
+
+	// 	execve()
+	// }
 }

@@ -37,7 +37,7 @@ public:
 
   void acceptClient(int indexListenSocket);
   Client *getClient(int fd);
-  void readClient(Client *cl, int dataLen);
+  bool readClient(Client *cl, int dataLen);
   bool writeToClient(Client *cl, int dataLen);
 
   // void processRequest(Client *cl, HTTPRequest request);

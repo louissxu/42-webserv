@@ -1,6 +1,11 @@
 #include "Client.hpp"
 
-Client::Client(int _sockFD, int _FDConnectedTo, sockaddr_in _client_addr): sockFD(_sockFD), client_addr(_client_addr), FDconnectedTo(_FDConnectedTo) {}
+Client::Client(): sockFD(0), FDconnectedTo(-1), bufferRead(0) {}
+
+Client::Client(int _sockFD, int _FDConnectedTo, sockaddr_in _client_addr): sockFD(_sockFD), client_addr(_client_addr), FDconnectedTo(_FDConnectedTo)
+{
+	bufferRead = 0;
+}
 
 Client::~Client()
 {
@@ -30,4 +35,29 @@ Message const &Client::getMessage() const
 void Client::setMessage(Message const &src)
 {
 	this->message = src;	
+}
+
+int const &Client::getBufferRead() const
+{
+	return this->bufferRead;
+}
+
+void Client::setBufferRead(int const &buffer)
+{
+	this->bufferRead = buffer;
+}
+
+void Client::resetRecvMessage()
+{
+	recvMessage = "";
+}
+
+void Client::appendRecvMessage(std::string const &message)
+{
+	recvMessage += message;
+}
+
+std::string const &Client::getRecvMessage() const
+{
+	return this->recvMessage;
 }

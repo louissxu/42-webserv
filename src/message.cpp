@@ -2,6 +2,8 @@
 
 Message::Message() : message(""), bufferSent(0) {}
 
+Message::Message(const std::string &_message): message(_message), bufferSent(0) {}
+
 Message::Message(const HTTPResponse &_resp) : message(""), bufferSent(0)
 {
     this->serialize(_resp);

@@ -61,3 +61,15 @@ std::string const &Client::getRecvMessage() const
 {
 	return this->recvMessage;
 }
+
+void Client::setPipeFrom(int *pipe)
+{
+	this->pipe_from_cgi[0] = pipe[0];
+	this->pipe_from_cgi[1] = pipe[1];
+}
+
+void Client::setPipeTo(int *pipe)
+{
+	this->pipe_to_cgi[0] = pipe[0];
+	this->pipe_to_cgi[1] = pipe[1];
+}

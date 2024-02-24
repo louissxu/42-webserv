@@ -15,7 +15,10 @@ private:
 	int bufferRead;
 	std::string recvMessage;
 	Message message;
+
 public:
+	int pipe_from_cgi[2];
+	int pipe_to_cgi[2];
 	Client();
 	Client(int _sockFD, int _FDconnectedTo, sockaddr_in _client_addr);
 	~Client();
@@ -33,4 +36,7 @@ public:
 	void resetRecvMessage();
 	void appendRecvMessage(std::string const &message);
 	std::string const &getRecvMessage() const;
+
+	void setPipeFrom(int pipe[2]);
+	void setPipeTo(int pipe[2]);
 };

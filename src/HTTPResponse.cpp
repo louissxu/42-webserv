@@ -33,9 +33,9 @@ HTTPResponse::HTTPResponse(HTTPRequest const &request)
 	case Method(GET):
 		setBodyUri(request.getUri());
 		return ;
-	case Method(POST):
-		POSTHandler(request);
-		return ;
+	// case Method(POST):
+	// 	POSTHandler(request);
+		// return ;
 	default:
 		return ;
 	}
@@ -241,96 +241,73 @@ void HTTPResponse::getDefaultResourse()
 	// this->addHeader("Content-Type", "text/html");
 }
 #include <fcntl.h>
-void HTTPResponse::POSTHandler(HTTPRequest const &request)
-{
-	// (void)request;
-	// return ;
-	std::cout << "POSTHandler" << std::endl;
-	int pipe_to_cgi[2];
-	int pipe_from_cgi[2];
+// int const &HTTPResponse::POSTHandler(HTTPRequest const &request)
+// {
+// 	// (void)request;
+// 	// return ;
+// 	std::cout << "POSTHandler" << std::endl;
+// 	int pipe_to_cgi[2];
+// 	int pipe_from_cgi[2];
 
-	pipe(pipe_to_cgi);
-	pipe(pipe_from_cgi);
+// 	pipe(pipe_to_cgi);
+// 	pipe(pipe_from_cgi);
 
-	// Fork to create a child process for the CGI script
-	pid_t pid = fork();
-	if (pid == 0)
-	{
-		// Child process (CGI script)
+// 	// Fork to create a child process for the CGI script
+// 	pid_t pid = fork();
+// 	if (pid == 0)
+// 	{
+// 		// Child process (CGI script)
 
-		// Close unused pipe ends
-		close(pipe_to_cgi[1]);
-		close(pipe_from_cgi[0]);
+// 		// Close unused pipe ends
+// 		close(pipe_to_cgi[1]);
+// 		close(pipe_from_cgi[0]);
 
-		// Redirect standard input and output
-		dup2(pipe_to_cgi[0], STDIN_FILENO);
-		dup2(pipe_from_cgi[1], STDOUT_FILENO);
+// 		// Redirect standard input and output
+// 		dup2(pipe_to_cgi[0], STDIN_FILENO);
+// 		dup2(pipe_from_cgi[1], STDOUT_FILENO);
 
-		// Execute the CGI script
-		execl("application/cgiBin/login.sh", "application/cgiBin/login.sh", nullptr);
+// 		// Execute the CGI script
+// 		execl("application/cgiBin/login.sh", "application/cgiBin/login.sh", nullptr);
 
-		// If execl fails
-		perror("execl");
-		exit(EXIT_FAILURE);
-	}
-	else if (pid > 0)
-	{
-		// Parent process (C++ server)
+// 		// If execl fails
+// 		perror("execl");
+// 		exit(EXIT_FAILURE);
+// 	}
+// 	else if (pid > 0)
+// 	{
+// 		// Parent process (C++ server)
 
-		// Close unused pipe ends
-		close(pipe_to_cgi[0]);
-		close(pipe_from_cgi[1]);
+// 		// Close unused pipe ends
+// 		close(pipe_to_cgi[0]);
+// 		close(pipe_from_cgi[1]);
 
-		// Write data to the CGI script
-		// const char *dataToSend = "username=mehdi&password=mirzaie";
-		if (write(pipe_to_cgi[1], request.getBody().c_str(), request.getBody().size()) < 0)
-			std::cerr << errno << std::endl;
+// 		// Write data to the CGI script
+// 		// const char *dataToSend = "username=mehdi&password=mirzaie";
+// 		if (write(pipe_to_cgi[1], request.getBody().c_str(), request.getBody().size()) < 0)
+// 			std::cerr << errno << std::endl;
 
-		close(pipe_to_cgi[1]);
-		// Read data from the CGI script
-		// std::cerr << "data was sent\n";
-		char buffer[1024];
-		ssize_t bytesRead;
-		this->body = "";
-		while ((bytesRead = read(pipe_from_cgi[0], buffer, sizeof(buffer))) > 0)
-		{
-			// std::cerr << buffer << std::endl;
-			this->body.append(buffer, bytesRead);
-		}
-		this->body.append("\0", 1);
-		this->addHeader("Content-Length", std::to_string(this->body.size()));
-		close(pipe_from_cgi[0]);
-		wait(nullptr);
-	}
-	else
-	{
-		// Fork failed
-		perror("fork");
-		exit(EXIT_FAILURE);
-	}
-
-	// int pFds[2];
-	// if (pipe(pFds) < 0)
-	// {
-	// 	strerror(errno);
-	// 	return ;
-	// }
-	// // export to env;
-
-	// if (fork() == 0)
-	// {
-	// 	dup2(STDIN_FILENO, pFds[0]);
-	// 	dup2(STDOUT_FILENO, pFds[1]);
-	// 	// updateEvent(clientFD, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	// 	// updateEvent(clientFD, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-	// 	if (fcntl(pFds[0], F_SETFL, O_NONBLOCK) < 0 || fcntl(pFds[1], F_SETFL, O_NONBLOCK))
-	// 	{
-	// 		std::cerr << "fcntl error in child process" << std::endl;
-	// 		close(pFds[0]);
-	// 		close(pFds[1]);
-	// 		return;
-	// 	}
-
-	// 	execve()
-	// }
-}
+// 		close(pipe_to_cgi[1]);
+// 		// Read data from the CGI script
+// 		// std::cerr << "data was sent\n";
+// 		// char buffer[1024];
+// 		// ssize_t bytesRead;
+// 		// this->body = "";
+// 		// while ((bytesRead = read(pipe_from_cgi[0], buffer, sizeof(buffer))) > 0)
+// 		// {
+// 		// 	// std::cerr << buffer << std::endl;
+// 		// 	this->body.append(buffer, bytesRead);
+// 		// }
+// 		// this->body.append("\0", 1);
+// 		// this->addHeader("Content-Length", std::to_string(this->body.size()));
+// 		// close(pipe_from_cgi[0]);
+// 		// wait(nullptr);
+// 		return (pipe_from_cgi[0]);
+// 	}
+// 	else
+// 	{
+// 		// Fork failed
+// 		perror("fork");
+// 		exit(EXIT_FAILURE);
+// 	}
+// 	return (-1);
+// }

@@ -70,7 +70,7 @@ private:
 	bool getResourse(std::string const &path, int const &len);
 	void getDefaultResourse();
 
-	void POSTHandler(HTTPRequest const &request);
+	int const &POSTHandler(HTTPRequest const &request);
 };
 
 // #include "HTTPRequest.hpp"

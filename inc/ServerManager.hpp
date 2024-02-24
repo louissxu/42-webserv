@@ -34,38 +34,41 @@ public:
   void runKQ();
   void createQ();
 
-
   void acceptClient(int indexListenSocket);
   Client *getClient(int fd);
-  bool readClient(Client *cl, int dataLen);
+  Client *getCgiRead(int fd);
+  int getCgiReadFd(Client *cl);
+  Client *getCgiWrite(int fd);
+  int readClient(Client *cl, int dataLen);
   bool writeToClient(Client *cl, int dataLen);
+
+  void CgiReadHandler(Client *cl, struct kevent ev_list);
+  bool CgiWriteHandler(Client *cl, struct kevent ev_list);
 
   // void processRequest(Client *cl, HTTPRequest request);
   HTTPRequest *parseRequest(Client *cl, std::string const &message);
 
   std::string getFileContents(std::string uri);
-
-
   void updateEvent(int ident, short filter, u_short flags, u_int fflags, int data, void *udata);
   void closeConnection(Client *cl);
-  // void acceptNewConnections(int nev);
-  // void processConnectionIO(int nev);
   bool isListeningSocket(int socket_fd);
-  // void add_cgi_IO_to_ev_set();
 
 private:
   std::vector<Server> _servers;
   std::map<int, Client *> _clients;
+  std::map<int, Client *> _cgiRead;
+  std::map<int, Client *> _cgiWrite;
 
   int kq;
   bool accepting;
   struct kevent *ev_set;
   struct kevent ev_list[MAX_EVENTS];
   int ev_set_count;
+  std::string defaultPath;
 
   ServerManager(ServerManager &other);
   ServerManager &operator=(ServerManager &other);
 
-  private:
-    std::string defaultPath;
+private:
+  void launchCgi(HTTPRequest const &request, Client *cl);
 };

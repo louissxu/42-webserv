@@ -8,16 +8,16 @@
 
 int main(void) {
   std::string port1 = "2345";
-  std::string port2 = "3456";
+  // std::string port2 = "3456";
 
   Server a = Server(port1);
-  Server b = Server(port2);
+  // Server b = Server(port2);
 
   std::cout << "adding socket manager" << std::endl;
   ServerManager sm;
 
   sm.addServer(a);
-  sm.addServer(b);
+  // sm.addServer(b);
 
   sm.runKQ();
 

@@ -5,8 +5,11 @@
 #include <vector>
 #include <cstdlib>
 #include <map>
+#include <iostream>
 
 #include "Definitions.hpp"
+#include "ConfigParser.hpp"
+#include "Utils.hpp"
 
 //http request method ENUM.
 enum e_HRM {
@@ -27,7 +30,7 @@ class Location
 
     // Constructors
         Location();
-        Location(std::string &path);
+        Location(const std::string &path);
         Location(const Location& other);
         Location& operator=(const Location& other);
         ~Location();
@@ -52,8 +55,15 @@ class Location
         void setClientMaxBodySize(std::string size_str);
         void setClientMaxBodySize(size_t newClientMaxBodySize);
 
+    //wip
+        void setAllowMethods(const std::string &methods);
+        void setAutoIndex(std::string stateString);
+        void setDirective(const std::string& name, const std::string& value);
+
     // Other
+        bool isValidLocationDirective(const std::string &src);
         void initMethodPermissions();
+        void initLocationDirectives(ConfigParser &src);
 
     //Exceptions
     	class ErrorException : public std::exception
@@ -77,6 +87,9 @@ class Location
         std::string                 _root;
         std::string                 _index;
         std::string                 _filePathPost;
+        std::string                 _return;
+        std::string                 _cgi_path;
+        std::string                 _cgi_ext;
         std::map<enum e_HRM, bool>  _methodPermissions;
         bool                        _autoIndex;
         size_t                      _clientMaxBodySize;

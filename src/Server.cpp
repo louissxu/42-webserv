@@ -105,7 +105,6 @@ void Server::initialiseErrorPages(void)
 |             OTHER METHODS                  |
 \*------------------------------------------*/
 
-
 void Server::startServer(void) {
   struct addrinfo hints;
   memset(&hints, 0, sizeof hints);
@@ -180,6 +179,10 @@ void Server::acceptNewConnection() {
   std::cout << "connection accepted" << std::endl;
 }
 
+void Server::acceptNewLocation(Location newLocation) {
+  _locations.push_back(newLocation);
+}
+
 std::vector<Connection>& Server::getConnections() {
   return _connections;
 }
@@ -202,3 +205,8 @@ void Server::addDirective(const std::string& name, const std::string& value) {
     _root = value;
   }
 }
+
+// void Server::addLocation(Location & src)
+// {
+//   std::cout << "Adding new location: " << utils::getSecond(src.getName()) << std::endl;
+// }

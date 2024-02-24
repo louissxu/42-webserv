@@ -29,8 +29,9 @@ Location::Location()
 }
 
 //PARAMETERISED CONSTRUCTOR: USING THE PATH.
-Location::Location(std::string &path)
+Location::Location(const std::string & path)
 {
+    std::cout << "Location: path constructor: " << path << std::endl;
 	this->_path = path;
 	this->_root = "";
 	this->_index = "";
@@ -179,7 +180,132 @@ void Location::setClientMaxBodySize(size_t newClientMaxBodySize)
     _clientMaxBodySize = newClientMaxBodySize;
 }
 
+void Location::setDirective(const std::string& name, const std::string& value) {
+  
+  if (name == "root") 
+  {
+    _root = value;
+  } 
+  else if (name == "allow_methods")
+  {
+    setAllowMethods(value);
+  } 
+  else if (name == "index")
+  {
+    _index = value;
+  } 
+  else if (name == "autoindex")
+  {
+    setAutoIndex(value);
+  }
+  else if (name == "cgi_ext")
+  {
+    _cgi_ext = value;
+  }
+  else if (name == "cgi_path")
+  {
+    _cgi_path = value;
+  }
+  else if (name == "return")
+  {
+    _return = value;
+  }
+}
+
+
+/*------------------------------------------*\
+|                 TODO                       |
+\*------------------------------------------*/
+
+void Location::setAllowMethods(const std::string& methods) {
+    std::map<std::string, e_HRM> methodMap;
+    methodMap["GET"] = GET;
+    methodMap["POST"] = POST;
+    methodMap["PATCH"] = PATCH;
+    methodMap["PUT"] = PUT;
+    methodMap["DELETE"] = DELETE;
+    methodMap["HEAD"] = HEAD;
+    methodMap["OPTIONS"] = OPTIONS;
+    methodMap["CONNECT"] = CONNECT;
+    methodMap["TRACE"] = TRACE;
+
+    std::istringstream iss(methods);
+    std::string method;
+    while (iss >> method) {
+        std::map<std::string, e_HRM>::iterator it = methodMap.find(method);
+        if (it != methodMap.end()) {
+            Utils::setColour("green");
+            std::cout << "Location: "<< getPath() <<" setting "<<it->first<<" to true." << std::endl;
+            Utils::setColour("reset");
+            _methodPermissions[it->second] = true;
+        } else {
+            std::cout << "Unknown method: " << method << std::endl;
+        }
+    }
+}
+
+void Location::setAutoIndex(std::string stateString)
+{
+    std::cout << "setAutoIndex called: " << stateString << std::endl;
+    if (stateString == "on")
+    {
+        _autoIndex = true;
+    }
+    else
+    {
+        _autoIndex = false;
+    }
+}
+
 /*------------------------------------------*\
 |                 OTHER                      |
 \*------------------------------------------*/
-  
+
+bool Location::isValidLocationDirective(const std::string &src) {
+    static const std::string validDirectiveNames[] = {
+        "cgi_ext",
+        "cgi_path",
+        "root",
+        "allow_methods",
+        "index",
+        "autoindex",
+        "return"
+    };
+    static const size_t numDirectives = sizeof(validDirectiveNames) / sizeof(validDirectiveNames[0]);
+    for (size_t i = 0; i < numDirectives; ++i) {
+        if (validDirectiveNames[i] == src) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Location::initLocationDirectives(ConfigParser &src)
+{
+    size_t i = 0;
+    Utils::setColour("yellow");
+    std::cout << "Location " << this->getPath() << ": adding: " <<std::endl;
+    Utils::setColour("reset");
+    std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
+    if (temp.empty())
+    {
+        return;
+    }
+    for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
+    {
+        Utils::setColour("yellow");
+        std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
+        Utils::setColour("reset");
+        if (isValidLocationDirective(it->first))
+        {
+            this->setDirective(it->first, it->second);
+        }
+        else
+        {
+            Utils::setColour("magenta");
+            std::cout << it->first << "is not a Location directive I am aware of.." << std::endl;
+            Utils::setColour("reset");
+        }
+        i++;
+    }
+}

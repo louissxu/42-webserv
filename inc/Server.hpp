@@ -65,6 +65,8 @@ class Server {
     std::vector<Connection>& getConnections();
     void startServer();
     void initialiseErrorPages();
+    void acceptNewLocation(Location newLocation);
+    //void addLocation(Location & src);
     //setter for multiple attributes prior to server start.
     void addDirective(const std::string& name, const std::string& value);
 

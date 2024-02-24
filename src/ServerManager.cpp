@@ -108,7 +108,6 @@ Date: Fri, 19 Jan 2024 05:55:55 UTC\r\n\r\n
         "\r\n" + file_contents.str();
 
     send(client_socket, response.c_str(), response.length(), 0);
-
     file.close();
 }
 
@@ -118,8 +117,6 @@ void ServerManager::processConnectionIO( int nev ) {
 
    for (int i = 0; i < nev; i++) {
         if (ev_list[i].filter == EVFILT_READ) {
-
-
             // Handling read event
             ssize_t n = read(ev_list[i].ident, buffer, BUFFER_SIZE - 1);
             if (n <= 0) {
@@ -131,27 +128,7 @@ void ServerManager::processConnectionIO( int nev ) {
             buffer[n] = '\0';
             Message* messagePtr = new HTTPRequest(buffer);
             messagePtr->generateResponse(ev_list[i].ident);
-            // HTTPRequest request(buffer);
-            // Message message = request;
-            // HTTPResponse(message);
-            // message.generateResponse();
-            // request.print();
-
-            // std::cout << "read from " << ev_list[i].ident << std::endl;
-            // buffer[n] = '\0';
-            // // std::cout << "Received: \n" << buffer << "\n\n" << std::endl;
-
-            // static int first = 1;
-            // if (first)
-            // {
-            //   send_file(ev_list[i].ident, "files/menu.html", "text/html");
-            //   first = 0;
-            // }
-            // else
-            // {
-            //   send_file(ev_list[i].ident, "files/styles.css", "text/css");
-            //   first = 1;
-            // }
+            
             delete messagePtr;
             close(ev_list[i].ident);
         }
@@ -213,31 +190,13 @@ bool ServerManager::isValidDirectiveName(const std::string &src) {
     return false;
 }
 
-std::string get_first(const std::string &name)
-{
-    std::istringstream iss(name);
-    std::string part;
-    std::getline(iss, part, ' '); // Assuming the parts are separated by '_'
-    return (part);
-}
 
-
-std::string get_last(const std::string &name)
-{
-    std::istringstream iss(name);
-    std::string part;
-    std::string lastPart;
-
-    while (std::getline(iss, part, ' ')) // Assuming the parts are separated by '_'
-    {
-        lastPart = part; // This will end up being the last part after the loop
-    }
-
-    return lastPart;
-}
-
-
-void ServerManager::p_d(ConfigParser &src)
+/*
+* @Brief: ns_addDirectives(ConfigParser &src)
+* Adds Directives, Contexts, and Locations to a new Server block
+* before starting said server.
+*/
+void ServerManager::ns_addDirectives(ConfigParser &src)
 {
    // std::cout << "ServerManager: printDirectives called." << std::endl;
     size_t i = 0;
@@ -245,6 +204,7 @@ void ServerManager::p_d(ConfigParser &src)
 
     if (src.getName() == "server")
     {
+        //adding Directives to the current server block.
         std::cout << "Server: " << server_id++ <<" Init: " << std::endl;
         Server newServ = Server();
         std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
@@ -263,35 +223,37 @@ void ServerManager::p_d(ConfigParser &src)
             }
             i++;
         }
+
+      //adding contexts/locations to the current Server block
+      size_t i = 0;
+      std::vector< ConfigParser > src_contexts = src.get_contexts();
+      if (temp.empty())
+      {
+        return;
+      }
+      for(std::vector< ConfigParser >::iterator it = src_contexts.begin(); it != src_contexts.end(); ++it)
+      {
+          Utils::setColour("red");
+          std::cout << src.getName() << ": ";
+          std::cout << "NSAD: context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
+          Utils::setColour("reset");
+          if (Utils::getFirst(it->getName())=="location")
+          {
+            Utils::setColour("red");
+            std::cout << "Adding Location: " << Utils::getSecond(it->getName()) << std::endl;
+            Utils::setColour("reset");
+            Location newLocation = Location(Utils::getSecond(it->getName()));
+            newLocation.initLocationDirectives(*it);
+            newServ.acceptNewLocation(newLocation);
+          }
+
+          p_c(*it);
+        i++;
+      }
       //starting the server now that the required fields have been populated.
       newServ.startServer();
       this->addServer(newServ);
     }
-    //std::cout <<"GET_FIRST :"<< get_first(src.getName()) << std::endl;
-
-    // if (get_first(src.getName()) == "location")
-    // {
-    //     std::string path = get_last(src.getName());
-    //     std::cout << "LOCATION: " << path << std::endl;
-    //     //Location newLocation = Location();
-    //     Location newLocation = Location(path);
-    //     std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
-    //     if (temp.empty())
-    //     {
-    //         return;
-    //     }
-    //     for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
-    //     {
-    //         std::cout <<"\t " << src.getName() << ": ";
-    //         std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
-    //         if (isValidDirectiveName(it->first))
-    //         {
-    //             std::cout << "Adding " << it->first << " to Server " << (server_id - 1) << ". " << std::endl;
-    //             newLocation.addDirective(it->first, it->second);
-    //         }
-    //         i++;
-    //     }
-    // }
 }
 
 void    ServerManager::p_c(ConfigParser &src)
@@ -299,15 +261,17 @@ void    ServerManager::p_c(ConfigParser &src)
     size_t i = 0;
 
     std::vector< ConfigParser > temp = src.get_contexts();
-    p_d(src);
+    ns_addDirectives(src);
     if (temp.empty())
     {
       return;
     }
     for(std::vector< ConfigParser >::iterator it = temp.begin(); it != temp.end(); ++it)
     {
+        Utils::setColour("red");
         std::cout << src.getName() << ": ";
         std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
+        Utils::setColour("reset");
         p_c(*it);
         i++;
     }
@@ -315,13 +279,14 @@ void    ServerManager::p_c(ConfigParser &src)
 
 void ServerManager::setStateFromParser(ConfigParser &src)
 {
+
     //Out of server directives
     if (src.get_directives().empty()) {
         std::cout << "No directives to print." << std::endl;
     }
     else
     {
-      p_d(src);
+      ns_addDirectives(src);
     }
 
     //Context check:

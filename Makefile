@@ -25,6 +25,7 @@ SRC_FILES = \
 	ConfigParser.cpp \
 	Cout.cpp \
 	Location.cpp \
+	Utils.cpp \
 	main.cpp
 
 SRC_DIR = src

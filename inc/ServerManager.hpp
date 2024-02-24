@@ -23,9 +23,9 @@
 #include "HTTPResponse.hpp"
 #include "ConfigParser.hpp"
 #include "Location.hpp"
+#include "Utils.hpp"
 
-
-
+class Utils;
 class ConfigParser;
 
 #define MAX_EVENTS 20 // random value
@@ -45,9 +45,12 @@ class ServerManager {
     void processConnectionIO(int nev );
     void setStateFromParser(ConfigParser &src);
 
+    std::string getFirst(const std::string& str);
+    std::string getSecond(const std::string& str);
     bool isValidDirectiveName(const std::string &src);
-    void p_d(ConfigParser &src);
+    void ns_addDirectives(ConfigParser &src);
     void p_c(ConfigParser &src);
+
 
 		class ErrorException : public std::exception
 		{

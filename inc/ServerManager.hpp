@@ -11,12 +11,14 @@
 #include <sys/stat.h>
 
 #include <map>
+#include <vector>
 
 #include "Server.hpp"
 #include "Client.hpp"
 
 #include "HTTPResponse.hpp"
 #include "HTTPRequest.hpp"
+#include "log.hpp"
 
 class Server;
 
@@ -24,6 +26,22 @@ class Server;
 #define BUFFER_SIZE 3000
 class ServerManager
 {
+private:
+  std::vector<Server> _servers;
+  std::map<int, Client *> _clients;
+  std::map<int, Client *> _cgiRead;
+  std::map<int, Client *> _cgiWrite;
+
+  int kq;
+  bool accepting;
+  struct kevent *ev_set;
+  struct kevent ev_list[MAX_EVENTS];
+  int ev_set_count;
+  std::string defaultPath;
+
+  ServerManager(ServerManager &other);
+  ServerManager &operator=(ServerManager &other);
+
 public:
   ServerManager();
   ~ServerManager();
@@ -53,21 +71,6 @@ public:
   void closeConnection(Client *cl);
   bool isListeningSocket(int socket_fd);
 
-private:
-  std::vector<Server> _servers;
-  std::map<int, Client *> _clients;
-  std::map<int, Client *> _cgiRead;
-  std::map<int, Client *> _cgiWrite;
-
-  int kq;
-  bool accepting;
-  struct kevent *ev_set;
-  struct kevent ev_list[MAX_EVENTS];
-  int ev_set_count;
-  std::string defaultPath;
-
-  ServerManager(ServerManager &other);
-  ServerManager &operator=(ServerManager &other);
 
 private:
   void launchCgi(HTTPRequest const &request, Client *cl);

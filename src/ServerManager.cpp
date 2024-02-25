@@ -121,10 +121,12 @@ void ServerManager::updateEvent(int ident, short filter, u_short flags, u_int ff
 
 void ServerManager::runKQ()
 {
+  #define LOG_LEVEL ERR_LEVEL
   Client *myClient;
   bool isCgiRead = false;
   bool isCgiWrite = false;
   // bool writing = true;
+  ERR("socket: %s", "strerror(errno)");
 
   int numServers = _servers.size();
   ev_set_count = numServers;
@@ -206,6 +208,7 @@ void ServerManager::runKQ()
           }
           else
           {
+            std::cout << "trying to close connection\n";
             closeConnection(myClient);
           }
           std::cout << "\n\nclosing connection with: " << ev_list[i].ident << "\n\n";
@@ -226,6 +229,7 @@ void ServerManager::runKQ()
         }
         if (ev_list[i].filter == EVFILT_READ)
         {
+          std::cout << "going to read\n";
           int returnVal = readClient(myClient, ev_list[i].data);
           if (returnVal == 0)
           {
@@ -240,6 +244,7 @@ void ServerManager::runKQ()
         }
         else if (ev_list[i].filter == EVFILT_WRITE)
         {
+          std::cout << "going to write\n";
           if (!writeToClient(myClient, ev_list[i].data))
           {
             updateEvent(ev_list[i].ident, EVFILT_READ, EV_ENABLE, 0, 0, NULL);
@@ -256,7 +261,7 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
   char buffer[10000];
   ssize_t bytesRead;
   static std::string message = "";
-  std::cout << "listenning socket was: " << ev_list.ident << std::endl;
+  std::cout << "cgi listenning socket was: " << ev_list.ident << std::endl;
   bytesRead = read(ev_list.ident, buffer, sizeof(buffer));
   
   if (bytesRead == 0)

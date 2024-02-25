@@ -335,9 +335,11 @@ void Location::initLocationDirectives(ConfigParser &src)
         }
         else
         {
+            #ifdef _PRINT_
             Utils::setColour("magenta");
             std::cout << it->first << "is not a Location directive I am aware of.." << std::endl;
             Utils::setColour("reset");
+            #endif
         }
         i++;
     }

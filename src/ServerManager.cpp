@@ -214,12 +214,16 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
         }
         for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
         {
+            #ifdef _PRINT_
             std::cout <<"\t " << src.getName() << ": ";
             std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
+            #endif
             if (isValidDirectiveName(it->first))
             {
+              #ifdef _PRINT_
                 std::cout << "Adding " << it->first << " to Server " << (server_id - 1) << ". " << std::endl;
                 newServ.addDirective(it->first, it->second);
+              #endif
             }
             i++;
         }
@@ -298,11 +302,15 @@ void ServerManager::setStateFromParser(ConfigParser &src)
 
     //Context check:
     if (src.get_contexts().empty()) {
-        std::cout << "No contexts to print." << std::endl;
+      #ifdef _PRINT_
+      std::cout << "No contexts to print." << std::endl;
+      #endif
     }
     else
     {
+      #ifdef _PRINT_
       std::cout << "Calling server: Print contexts: " << std::endl;
+      #endif
       p_c(src);
     }
 }

@@ -233,17 +233,22 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
       }
       for(std::vector< ConfigParser >::iterator it = src_contexts.begin(); it != src_contexts.end(); ++it)
       {
+          #ifdef _PRINT_
           Utils::setColour("red");
           std::cout << src.getName() << ": ";
           std::cout << "NSAD: context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
           Utils::setColour("reset");
+          #endif
           if (Utils::getFirst(it->getName())=="location")
           {
+            #ifdef _PRINT_
             Utils::setColour("red");
             std::cout << "Adding Location: " << Utils::getSecond(it->getName()) << std::endl;
             Utils::setColour("reset");
+            #endif
             Location newLocation = Location(Utils::getSecond(it->getName()));
             newLocation.initLocationDirectives(*it);
+            //newLocation.printMethodPermissions();
             newServ.acceptNewLocation(newLocation);
           }
 
@@ -268,10 +273,12 @@ void    ServerManager::p_c(ConfigParser &src)
     }
     for(std::vector< ConfigParser >::iterator it = temp.begin(); it != temp.end(); ++it)
     {
+      #ifdef _PRINT_
         Utils::setColour("red");
         std::cout << src.getName() << ": ";
         std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
         Utils::setColour("reset");
+      #endif
         p_c(*it);
         i++;
     }

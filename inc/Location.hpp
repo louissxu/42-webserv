@@ -55,6 +55,9 @@ class Location
         void setClientMaxBodySize(std::string size_str);
         void setClientMaxBodySize(size_t newClientMaxBodySize);
 
+    //state printers:
+        void printMethodPermissions() const;
+
     //wip
         void setAllowMethods(const std::string &methods);
         void setAutoIndex(std::string stateString);

@@ -31,7 +31,9 @@ Location::Location()
 //PARAMETERISED CONSTRUCTOR: USING THE PATH.
 Location::Location(const std::string & path)
 {
+    #ifdef _PRINT_
     std::cout << "Location: path constructor: " << path << std::endl;
+    #endif
 	this->_path = path;
 	this->_root = "";
 	this->_index = "";
@@ -210,14 +212,46 @@ void Location::setDirective(const std::string& name, const std::string& value) {
   {
     _return = value;
   }
+  #ifdef _PRINT_
+  Utils::setColour("yellow");
+  std::cout << "Location " << this->getPath() << ": added: <" << value <<"> to <" << name 
+  << ">" <<std::endl;
+  Utils::setColour("reset");
+  #endif
 }
 
+/*------------------------------------------*\
+|               PRINTERS                     |
+\*------------------------------------------*/
 
+ void Location::printMethodPermissions() const {
+        Utils::setColour("blue");
+        std::cout << "Method Permissions:\n";
+        std::map<enum e_HRM, bool>::const_iterator it;
+        for (it = _methodPermissions.begin(); it != _methodPermissions.end(); ++it) {
+            const char* method;
+            switch (it->first) {
+                case GET: method = "GET"; break;
+                case POST: method = "POST"; break;
+                case PATCH: method = "PATCH"; break;
+                case PUT: method = "PUT"; break;
+                case DELETE: method = "DELETE"; break;
+                case HEAD: method = "HEAD"; break;
+                case OPTIONS: method = "OPTIONS"; break;
+                case CONNECT: method = "CONNECT"; break;
+                case TRACE: method = "TRACE"; break;
+                default: method = "Unknown"; break;
+            }
+            std::cout << method << ": " << (it->second ? "true" : "false") << "\n";
+        }
+        Utils::setColour("reset");
+    }
 /*------------------------------------------*\
 |                 TODO                       |
 \*------------------------------------------*/
 
 void Location::setAllowMethods(const std::string& methods) {
+    Utils::setColour("blue");
     std::map<std::string, e_HRM> methodMap;
     methodMap["GET"] = GET;
     methodMap["POST"] = POST;
@@ -234,19 +268,21 @@ void Location::setAllowMethods(const std::string& methods) {
     while (iss >> method) {
         std::map<std::string, e_HRM>::iterator it = methodMap.find(method);
         if (it != methodMap.end()) {
+            #ifdef _PRINT_
             Utils::setColour("green");
             std::cout << "Location: "<< getPath() <<" setting "<<it->first<<" to true." << std::endl;
             Utils::setColour("reset");
+            #endif
             _methodPermissions[it->second] = true;
         } else {
             std::cout << "Unknown method: " << method << std::endl;
         }
     }
+    Utils::setColour("reset");
 }
 
 void Location::setAutoIndex(std::string stateString)
 {
-    std::cout << "setAutoIndex called: " << stateString << std::endl;
     if (stateString == "on")
     {
         _autoIndex = true;
@@ -283,9 +319,6 @@ bool Location::isValidLocationDirective(const std::string &src) {
 void Location::initLocationDirectives(ConfigParser &src)
 {
     size_t i = 0;
-    Utils::setColour("yellow");
-    std::cout << "Location " << this->getPath() << ": adding: " <<std::endl;
-    Utils::setColour("reset");
     std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
     if (temp.empty())
     {
@@ -293,9 +326,9 @@ void Location::initLocationDirectives(ConfigParser &src)
     }
     for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
     {
-        Utils::setColour("yellow");
-        std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
-        Utils::setColour("reset");
+       // Utils::setColour("yellow");
+       // std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
+       // Utils::setColour("reset");
         if (isValidLocationDirective(it->first))
         {
             this->setDirective(it->first, it->second);

@@ -288,6 +288,7 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
     wait(NULL);
     HTTPResponse cgiResponse;
     cgiResponse.setBody(message);
+    cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
     Message cgiMessage = Message(cgiResponse);
     cl->setMessage(cgiMessage);
 
@@ -438,6 +439,7 @@ bool ServerManager::writeToClient(Client *cl, int dataLen)
   int attempSend = message.getMessageSize();
   if (message.getBufferSent() == attempSend)
     return false;
+  std::cout << message.getMessage() << std::endl;
   int actualSend = send(cl->getSockFD(), message.getMessage().c_str(), attempSend, 0);
   std::cout << GREEN << "send the httpResponse\n"
             << RESET;

@@ -52,16 +52,19 @@ public:
   void runKQ();
   void createQ();
 
-  void acceptClient(int indexListenSocket);
+  void acceptClient(int ListenSocket);
   Client *getClient(int fd);
+  Client *getCgiClient(int fd, bool &isRead, bool &isWrite);
   Client *getCgiRead(int fd);
   int getCgiReadFd(Client *cl);
   Client *getCgiWrite(int fd);
-  int readClient(Client *cl, int dataLen);
-  bool writeToClient(Client *cl, int dataLen);
+  int handleReadEvent(Client *cl, int dataLen);
+  bool handleWriteEvent(Client *cl, int dataLen);
 
   void CgiReadHandler(Client *cl, struct kevent ev_list);
   bool CgiWriteHandler(Client *cl, struct kevent ev_list);
+
+  void handleEOF(Client *cl, int fd, bool &isRead, bool &isWrite);
 
   // void processRequest(Client *cl, HTTPRequest request);
   HTTPRequest *parseRequest(Client *cl, std::string const &message);

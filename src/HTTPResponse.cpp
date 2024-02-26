@@ -204,7 +204,7 @@ void HTTPResponse::setDefaultBody()
 // !helper functions
 bool HTTPResponse::getResourse(std::string const &path, int const &len)
 {
-	char contents[len];
+	char contents[len + 1];
 	std::ifstream file;
 
 	file.open(path, std::ios::in | std::ios::binary);

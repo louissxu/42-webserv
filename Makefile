@@ -15,7 +15,8 @@ RED 			:= 	\033[38;5;160m
 
 NAME = webserv
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98 -g
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g
+LDFLAGS = -fsanitize=address
 # CFLAGS = -g -std=c++11 #-fsanitize=address -g
 
 #	o-----------------o
@@ -29,6 +30,7 @@ INC = inc
 #	o-----------------o
 
 SRC_FILES = \
+	main.cpp \
 	ServerManager.cpp \
 	Server.cpp \
 	Connection.cpp \
@@ -37,16 +39,6 @@ SRC_FILES = \
 	Message.cpp \
 	HTTPRequest.cpp \
 	HTTPResponse.cpp \
-	main.cpp
-
-# SRC_FILES = \
-# 	HTTPResponse.cpp \
-# 	HTTPRequest.cpp \
-# 	ServerManager.cpp \
-# 	Server.cpp \
-# 	Connection.cpp \
-# 	Cout.cpp \
-# 	main.cpp
 
 SRC_DIR = src
 
@@ -66,7 +58,7 @@ all: $(OBJ_DIR) $(NAME)
 
 $(NAME): $(OBJS)
 	@echo "$(GREY)Compiling...				$<"
-	$(CC) $(OBJS) -o $@
+	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@echo "$(GREEN)----------------------------------------------------"

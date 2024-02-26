@@ -34,7 +34,7 @@ Message const &Client::getMessage() const
 
 void Client::setMessage(Message const &src)
 {
-	this->message = src;	
+	this->message = src;
 }
 
 int const &Client::getBufferRead() const
@@ -52,9 +52,14 @@ void Client::resetRecvMessage()
 	recvMessage = "";
 }
 
-void Client::appendRecvMessage(std::string const &message)
+void Client::appendRecvMessage(std::string const &message, int len)
 {
-	recvMessage += message;
+	recvMessage.append(message, len);
+}
+
+void Client::appendRecvMessage(char *message, int len)
+{
+	recvMessage.append(message, len);
 }
 
 std::string const &Client::getRecvMessage() const

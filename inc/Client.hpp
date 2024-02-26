@@ -34,7 +34,8 @@ public:
 	void setBufferRead(int const &buffer);
 
 	void resetRecvMessage();
-	void appendRecvMessage(std::string const &message);
+	void appendRecvMessage(std::string const &message, int len);
+	void appendRecvMessage(char *message, int len);
 	std::string const &getRecvMessage() const;
 
 	void setPipeFrom(int pipe[2]);

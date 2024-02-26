@@ -4,6 +4,16 @@ Message::Message() : message(""), bufferSent(0) {}
 
 Message::Message(const std::string &_message): message(_message), bufferSent(0) {}
 
+Message::Message(Message const &src) { *this = src; };
+
+Message &Message::operator=(Message const &src)
+{
+    this->message.clear();
+    this->message = src.message;
+    this->bufferSent = src.bufferSent;
+    return *this;
+}
+
 Message::Message(const HTTPResponse &_resp) : message(""), bufferSent(0)
 {
     this->serialize(_resp);
@@ -49,7 +59,7 @@ void Message::serialize(const HTTPResponse &_resp)
 
     // Serialize body
     this->message += _resp.getBody();
-    
+
 	std::cout << "\033[31m" << this->message << "\033[0m" << std::endl;
 }
 

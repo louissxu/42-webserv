@@ -17,6 +17,8 @@ public:
     Message();
     Message(const std::string &_message);
     Message(const HTTPResponse &_resp);
+    Message(Message const &src);
+    Message &operator=(Message const &src);
     ~Message();
 
     // Getter

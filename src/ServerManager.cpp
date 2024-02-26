@@ -44,48 +44,27 @@ void ServerManager::acceptClient(int ListenSocket)
   int clientFD;
   struct sockaddr_in client_address;
   long client_address_size = sizeof(client_address);
+
   clientFD = accept(ListenSocket, (struct sockaddr *)&client_address, (socklen_t *)&client_address_size);
   if (clientFD < 0)
   {
     perror("accept");
   }
-  // std::cout << "accepted: " << conn_fd << std::endl;
-  // Add the new socket to kqueue
-  updateEvent(clientFD, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-  updateEvent(clientFD, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+
+
   if (fcntl(clientFD, F_SETFL, O_NONBLOCK) < 0)
   {
     std::cout << "fcntl error: closing: " << clientFD << std::endl;
     close(clientFD);
     return;
   }
+
   Client *cl = new Client(clientFD, ListenSocket, client_address);
   _clients.insert(std::pair<int, Client *>(clientFD, cl));
-}
 
-// void ServerManager::acceptClient(int indexListenSocket)
-// {
-//   int clientFD;
-//   struct sockaddr_in client_address;
-//   long client_address_size = sizeof(client_address);
-//   clientFD = accept(_servers[indexListenSocket].getSockFd(), (struct sockaddr *)&client_address, (socklen_t *)&client_address_size);
-//   if (clientFD < 0)
-//   {
-//     perror("accept");
-//   }
-//   // std::cout << "accepted: " << conn_fd << std::endl;
-//   // Add the new socket to kqueue
-//   updateEvent(clientFD, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-//   updateEvent(clientFD, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-//   if (fcntl(clientFD, F_SETFL, O_NONBLOCK) < 0)
-//   {
-//     std::cout << "fcntl error: closing: " << clientFD << std::endl;
-//     close(clientFD);
-//     return;
-//   }
-//   Client *cl = new Client(clientFD, _servers[indexListenSocket].getSockFd(), client_address);
-//   _clients.insert(std::pair<int, Client *>(clientFD, cl));
-// }
+  updateEvent(clientFD, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+  updateEvent(clientFD, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+}
 
 Client *ServerManager::getClient(int fd)
 {
@@ -147,12 +126,8 @@ Client *ServerManager::getCgiWrite(int fd)
 bool ServerManager::isListeningSocket(int socket_fd)
 {
   for (size_t i = 0; i < _servers.size(); i++)
-  {
     if (_servers[i].getSockFd() == socket_fd)
-    {
       return true;
-    }
-  }
   return false;
 }
 
@@ -187,7 +162,6 @@ void ServerManager::handleEOF(Client *cl, int fd, bool &isRead, bool &isWrite)
 
 void ServerManager::runKQ()
 {
-  // Client *myClient;
   bool isCgiRead = false;
   bool isCgiWrite = false;
 
@@ -227,8 +201,8 @@ void ServerManager::runKQ()
       }
       if (isCgiWrite)
       {
-        if (!CgiWriteHandler(myClient, ev_list[i]))
-          isCgiWrite = false;
+        CgiWriteHandler(myClient, ev_list[i]);
+        isCgiWrite = false;
       }
       else if (isCgiRead)
       {
@@ -271,7 +245,7 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
 
   if (bytesRead == 0)
   {
-    updateEvent(ev_list.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+    updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     close(cl->pipe_from_cgi[0]);
     close(cl->pipe_to_cgi[0]);
     wait(NULL);
@@ -282,7 +256,8 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
   }
   else if (bytesRead < 0)
   {
-    updateEvent(ev_list.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+    updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    std::cout << "closing: " << cl->pipe_from_cgi[0] << " " << cl->pipe_to_cgi[0] << "\n";
     close(cl->pipe_from_cgi[0]);
     close(cl->pipe_to_cgi[0]);
     std::cerr << "something really bad happenned\n\n";
@@ -293,7 +268,8 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
     message += buffer;
     message.append("\0", 1);
     memset(buffer, 0, sizeof(buffer));
-    updateEvent(ev_list.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+    updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    std::cout << "closing: " << cl->pipe_from_cgi[0] << " " << cl->pipe_to_cgi[0] << "\n";
     close(cl->pipe_from_cgi[0]);
     close(cl->pipe_to_cgi[0]);
     wait(NULL);
@@ -316,69 +292,36 @@ bool ServerManager::CgiWriteHandler(Client *cl, struct kevent ev_list)
     if (cl == NULL)
         return false;
 
-    static size_t allSend = 0;
     Message message = cl->getMessage();
 
-    if (allSend >= message.getMessage().size())
+    if ((size_t)message.getBufferSent() >= message.getMessage().size())
     {
         updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+        updateEvent(cl->pipe_from_cgi[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+        std::cout << "closing: " << cl->pipe_from_cgi[1] << " " << cl->pipe_to_cgi[1] << "\n";
         close(cl->pipe_from_cgi[1]);
         close(cl->pipe_to_cgi[1]);
         return false;
     }
     std::cout<<message.getMessage().size()<<"\n";
     // size_t writeLen = send(ev_list.ident, message.getMessage().c_str() + allSend, message.getMessage().size() - allSend, 0);
-    size_t writeLen = write(ev_list.ident, message.getMessage().c_str() + allSend, message.getMessage().size() - allSend);
+    size_t writeLen = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), message.getMessage().size() - message.getBufferSent());
 
     if (writeLen < 0)
     {
         updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+        updateEvent(cl->pipe_from_cgi[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+        std::cout << "closing: " << cl->pipe_from_cgi[1] << " " << cl->pipe_to_cgi[1] << "\n";
         close(cl->pipe_from_cgi[1]);
         close(cl->pipe_to_cgi[1]);
         std::cerr << "Send error: " << strerror(errno) << std::endl;
         return false;
     }
 
-    allSend += writeLen;
+    message.setBufferSent(writeLen);
     cl->setMessage(message);
     return true;
 }
-
-
-// bool ServerManager::CgiWriteHandler(Client *cl, struct kevent ev_list)
-// {
-//   if (cl == NULL)
-//     return false;
-
-
-//   static size_t allSend = 0;
-//   Message message = cl->getMessage();
-//   // std::string dataToSend = "username=mehdi&password=mirzaie";
-//   if (allSend == message.getMessage().size())
-//   {
-//     updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-//     close(cl->pipe_from_cgi[1]);
-//     close(cl->pipe_to_cgi[1]);
-//     return false;
-//   }
-//   size_t writeLen = send(ev_list.ident, message.getMessage().c_str(), message.getMessage().size(), 0);
-
-
-//   // size_t writeLen = write(ev_list.ident, dataToSend.c_str(), dataToSend.size());
-//   if (writeLen < 0)
-//   {
-//     updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-//     close(cl->pipe_from_cgi[1]);
-//     close(cl->pipe_to_cgi[1]);
-//     std::cerr << errno << std::endl;
-//     return true;
-//   }
-//   if (writeLen >= allSend)
-//     allSend = writeLen;
-//   cl->setMessage(message);
-//   // return false;
-//   return true;
-// }
 
 void ServerManager::closeConnection(Client *cl)
 {
@@ -433,6 +376,8 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
       closeConnection(cl);
       return false;
     }
+    if (_req->getUri() == "/favicon.ico")
+      std::cout << "\n";
 
     if (_req->getMethod() == POST)
     {
@@ -601,7 +546,7 @@ void ServerManager::launchCgi(HTTPRequest const &request, Client *cl)
   else if (pid > 0)
   {
     updateEvent(cl->pipe_to_cgi[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    updateEvent(cl->pipe_from_cgi[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    updateEvent(cl->pipe_from_cgi[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
 
     _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_to_cgi[1], cl));
     _cgiRead.insert(std::pair<int, Client *>(cl->pipe_from_cgi[0], cl));

@@ -8,7 +8,104 @@
 // Ref: https://stackoverflow.com/questions/56369138/moving-an-object-with-a-file-descriptor
 // Ref: https://stackoverflow.com/questions/4172722/what-is-the-rule-of-three#:~:text=The%20rule%20of%203%2F5,functions%20when%20creating%20your%20class.
 
-Server::Server(std::string port) {
+static int safe_dup(int fd) {
+  if (fd == -1) {
+    return -1;
+  }
+  int copy = dup(fd);
+  if (copy < 0) {
+    throw std::runtime_error(strerror(errno));
+  }
+  return copy;
+}
+
+/*------------------------------------------*\
+|              CONSTRUCTORS                  |
+\*------------------------------------------*/
+
+    // std::string                 _listen;
+    // std::string                 _host;
+    // std::string                 _server_name;
+    // std::string                 _root;
+    // std::string                 _index;
+    // int                         _sockfd;
+    // size_t                      _client_max_body_size;
+    // bool                        _autoindex;
+    // std::map<int, std::string>  _err_pages;
+    // std::vector<Connection>     _connections;
+    // Location                    _location;
+
+
+Server::Server() {
+  _listen = ""; // Port
+  _host = ""; // IP.
+  _server_name = "";  //default localhost on most systems.
+  _root = "";  //root directory of server.
+  _index = "";  
+  _sockfd = -1; //server FD.
+  _client_max_body_size = MAX_CONTENT_LENGTH;
+  _autoindex = false;
+  this->initialiseErrorPages();
+  std::cout << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+}
+
+Server::Server(const Server& other) {
+  _sockfd = safe_dup(other._sockfd);
+  _host = other._host;
+  _listen = other._listen;
+  std::cout << "copy constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+}
+
+Server& Server::operator=(const Server& other) {
+  int new_fd = safe_dup(other._sockfd);
+  if (_sockfd != -1) {
+    close(_sockfd);
+  }
+  _sockfd = new_fd;
+  _host = other._host;
+  _listen = other._listen;
+  std::cout << "assignment constructor ran. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
+  return *this;
+}
+
+Server::~Server() {
+  // TODO. Do teardown stuff
+  std::cout << "destructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  if (_sockfd != -1) {
+    shutdown(_sockfd, 2); 
+  }
+}
+
+
+/*------------------------------------------*\
+|                 SETTERS                    |
+\*------------------------------------------*/
+
+void Server::initialiseErrorPages(void)
+{
+	_err_pages[301] = "";
+	_err_pages[302] = "";
+	_err_pages[400] = "";
+	_err_pages[401] = "";
+	_err_pages[402] = "";
+	_err_pages[403] = "";
+	_err_pages[404] = "";
+	_err_pages[405] = "";
+	_err_pages[406] = "";
+	_err_pages[500] = "";
+	_err_pages[501] = "";
+	_err_pages[502] = "";
+	_err_pages[503] = "";
+	_err_pages[505] = "";
+	_err_pages[505] = "";
+}
+
+
+/*------------------------------------------*\
+|             OTHER METHODS                  |
+\*------------------------------------------*/
+
+void Server::startServer(void) {
   struct addrinfo hints;
   memset(&hints, 0, sizeof hints);
 
@@ -18,7 +115,8 @@ Server::Server(std::string port) {
 
   struct addrinfo *servinfo;
   int error_return;
-  error_return = getaddrinfo(NULL, port.c_str(), &hints, &servinfo);
+ // error_return = getaddrinfo(NULL, _listen.c_str(), &hints, &servinfo);
+  error_return = getaddrinfo(_host.c_str(), _listen.c_str(), &hints, &servinfo);
 
   if (error_return != 0) {
     // gai_strerror(error_return) ?? something with this error value // TODO: May be forbidden function
@@ -51,7 +149,6 @@ Server::Server(std::string port) {
   if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
       perror("fcntl F_SETFL O_NONBLOCK");
 
-
   error_return = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
   if (error_return != 0) {
     perror("Server: bind");
@@ -65,71 +162,46 @@ Server::Server(std::string port) {
   }
 
   _sockfd = sockfd;
-  _port = port;
-  _ip = ipstr;
+  _host = ipstr;
 
-  std::cout << "parameterised constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
+  std::cout << "parameterised constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
 
   freeaddrinfo(servinfo);
-}
-
-static int safe_dup(int fd) {
-  if (fd == -1) {
-    return -1;
-  }
-
-  int copy = dup(fd);
-  if (copy < 0) {
-    throw std::runtime_error(strerror(errno));
-  }
-  return copy;
-}
-
-Server::Server(const Server& other) {
-  _sockfd = safe_dup(other._sockfd);
-  _ip = other._ip;
-  _port = other._port;
-  std::cout << "copy constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
-}
-
-Server& Server::operator=(const Server& other) {
-  int new_fd = safe_dup(other._sockfd);
-  if (_sockfd != -1) {
-    close(_sockfd);
-  }
-  _sockfd = new_fd;
-  _ip = other._ip;
-  _port = other._port;
-  std::cout << "assignment constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
-  return *this;
-}
-
-Server::~Server() {
-  // TODO. Do teardown stuff
-  std::cout << "destructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
-  if (_sockfd != -1) {
-    shutdown(_sockfd, 2); // WHICH ONE?!
-    // close(_sockfd);
-  }
 }
 
 int Server::getSockFd() {
   return _sockfd;
 }
 
-Server::Server() {
-  _sockfd = -1;
-  _ip = "";
-  _port = "";
-  std::cout << "default constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
-}
-
 void Server::acceptNewConnection() {
   Connection newConnection = Connection(_sockfd);
-  _connections->push_back(newConnection);
+  _connections.push_back(newConnection);
   std::cout << "connection accepted" << std::endl;
 }
 
+void Server::acceptNewLocation(Location newLocation) {
+  _locations.push_back(newLocation);
+}
+
 std::vector<Connection>& Server::getConnections() {
-  return *_connections;
+  return _connections;
+}
+
+void Server::addDirective(const std::string& name, const std::string& value) {
+  if (name == "listen") 
+  {
+    _listen = value;
+  } 
+  else if (name == "server_name")
+  {
+    _server_name = value;
+  } 
+  else if (name == "host")
+  {
+    _host = value;
+  } 
+  else if (name == "root")
+  {
+    _root = value;
+  }
 }

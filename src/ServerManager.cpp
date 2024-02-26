@@ -1,5 +1,6 @@
 #include "ServerManager.hpp"
 #include "Cout.hpp"
+#include <fstream>
 
 ServerManager::ServerManager()
 {
@@ -556,4 +557,160 @@ void ServerManager::launchCgi(HTTPRequest const &request, Client *cl)
   }
   else
     perror("fork");
+}
+
+
+/*------------------------------------------*\
+|              ISAAC'S STUFF                 |
+\*------------------------------------------*/
+
+#include "ServerManager.hpp"
+
+bool ServerManager::isValidDirectiveName(const std::string &src) {
+    static const std::string validDirectiveNames[] = {
+        "listen",
+        "server_name",
+        "host",
+        "root",
+        "index",
+        "error_page",
+        "allow_methods",
+        "autoindex",
+        "return",
+        "cgi_path",
+        "cgi_ext",
+    };
+
+    static const size_t numDirectives = sizeof(validDirectiveNames) / sizeof(validDirectiveNames[0]);
+    for (size_t i = 0; i < numDirectives; ++i) {
+        if (validDirectiveNames[i] == src) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/*
+* @Brief: ns_addDirectives(ConfigParser &src)
+* Adds Directives, Contexts, and Locations to a new Server block
+* before starting said server.
+*/
+void ServerManager::ns_addDirectives(ConfigParser &src)
+{
+   // std::cout << "ServerManager: printDirectives called." << std::endl;
+    size_t i = 0;
+    static size_t server_id = 0;
+
+    if (src.getName() == "server")
+    {
+        //adding Directives to the current server block.
+        std::cout << "Server: " << server_id++ <<" Init: " << std::endl;
+        Server newServ = Server();
+        std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
+        if (temp.empty())
+        {
+            return;
+        }
+        for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
+        {
+            #ifdef _PRINT_
+            std::cout <<"\t " << src.getName() << ": ";
+            std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
+            #endif
+            if (isValidDirectiveName(it->first))
+            {
+              #ifdef _PRINT_
+                std::cout << "Adding " << it->first << " to Server " << (server_id - 1) << ". " << std::endl;
+                newServ.addDirective(it->first, it->second);
+              #endif
+            }
+            i++;
+        }
+
+      //adding contexts/locations to the current Server block
+      size_t i = 0;
+      std::vector< ConfigParser > src_contexts = src.get_contexts();
+      if (temp.empty())
+      {
+        return;
+      }
+      for(std::vector< ConfigParser >::iterator it = src_contexts.begin(); it != src_contexts.end(); ++it)
+      {
+          #ifdef _PRINT_
+          Utils::setColour("red");
+          std::cout << src.getName() << ": ";
+          std::cout << "NSAD: context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
+          Utils::setColour("reset");
+          #endif
+          if (Utils::getFirst(it->getName())=="location")
+          {
+            #ifdef _PRINT_
+            Utils::setColour("red");
+            std::cout << "Adding Location: " << Utils::getSecond(it->getName()) << std::endl;
+            Utils::setColour("reset");
+            #endif
+            Location newLocation = Location(Utils::getSecond(it->getName()));
+            newLocation.initLocationDirectives(*it);
+            //newLocation.printMethodPermissions();
+            newServ.acceptNewLocation(newLocation);
+          }
+
+          p_c(*it);
+        i++;
+      }
+      //starting the server now that the required fields have been populated.
+      newServ.startServer();
+      this->addServer(newServ);
+    }
+}
+
+void    ServerManager::p_c(ConfigParser &src)
+{
+    size_t i = 0;
+
+    std::vector< ConfigParser > temp = src.get_contexts();
+    ns_addDirectives(src);
+    if (temp.empty())
+    {
+      return;
+    }
+    for(std::vector< ConfigParser >::iterator it = temp.begin(); it != temp.end(); ++it)
+    {
+      #ifdef _PRINT_
+        Utils::setColour("red");
+        std::cout << src.getName() << ": ";
+        std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
+        Utils::setColour("reset");
+      #endif
+        p_c(*it);
+        i++;
+    }
+}
+
+void ServerManager::setStateFromParser(ConfigParser &src)
+{
+
+    //Out of server directives
+    if (src.get_directives().empty()) {
+        std::cout << "No directives to print." << std::endl;
+    }
+    else
+    {
+      ns_addDirectives(src);
+    }
+
+    //Context check:
+    if (src.get_contexts().empty()) {
+      #ifdef _PRINT_
+      std::cout << "No contexts to print." << std::endl;
+      #endif
+    }
+    else
+    {
+      #ifdef _PRINT_
+      std::cout << "Calling server: Print contexts: " << std::endl;
+      #endif
+      p_c(src);
+    }
 }

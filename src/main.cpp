@@ -9,7 +9,8 @@ int main(int argc, char **argv) {
     if (argc == 1)
     { 
       std::string defaultConfigParser = "config/default.conf";
-      std::cout << "(Default ConfigParser file used): see <" << defaultConfigParser << ">. " << std::endl;
+      std::cout << BLUE << "Main\t: " << RESET
+      << "(Default ConfigParser file used): see <" << defaultConfigParser << ">. " << std::endl;
       parser.setContent(defaultConfigParser);
     }
     else
@@ -18,7 +19,8 @@ int main(int argc, char **argv) {
     }
     parser.setStateFromContent(0, false);
     sm.setStateFromParser(parser);
-    std::cout << BLUE << "<!---Site_ready---!>" << RESET << std::endl;
+    std::cout << BLUE << "Main\t: "<< RESET 
+    <<"Site ready..." << std::endl;
     sm.runKQ();
     std::cout << "all done!" << std::endl;
   }

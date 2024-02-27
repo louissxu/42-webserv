@@ -38,14 +38,16 @@ Server::Server() {
   _client_max_body_size = MAX_CONTENT_LENGTH;
   _autoindex = false;
   this->initialiseErrorPages();
-  std::cout << "Server: default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  std::cout << YELLOW << "Server\t: " << RESET 
+  << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
 }
 
 Server::Server(const Server& other) {
   _sockfd = safe_dup(other._sockfd);
   _host = other._host;
   _listen = other._listen;
-  std::cout << "Server: copy constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  std::cout << YELLOW << "Server\t: " << RESET 
+  <<"Copy constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
 }
 
 Server& Server::operator=(const Server& other) {
@@ -56,13 +58,15 @@ Server& Server::operator=(const Server& other) {
   _sockfd = new_fd;
   _host = other._host;
   _listen = other._listen;
-  std::cout << "Server: assignment constructor ran. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
+  std::cout << YELLOW << "Server\t: " << RESET 
+  <<"assignment constructor ran. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
   return *this;
 }
 
 Server::~Server() {
   // TODO. Do teardown stuff
-  std::cout << "Server: destructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  std::cout << YELLOW << "Server\t: " << RESET
+  <<"destructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
   if (_sockfd != -1) {
     shutdown(_sockfd, 2); 
   }
@@ -112,7 +116,7 @@ void Server::startServer(void) {
 
   if (error_return != 0) {
     // gai_strerror(error_return) ?? something with this error value // TODO: May be forbidden function
-    throw std::runtime_error("Server: getaddrinfo: failed");
+    throw std::runtime_error("Server\t: getaddrinfo: failed");
   }
 
   // debug print the ip and port
@@ -125,7 +129,7 @@ void Server::startServer(void) {
   int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
   if (sockfd < 0) {
     perror("Server: socket");
-    throw std::runtime_error("Server: socket: failed");
+    throw std::runtime_error("Server\t: socket: failed");
   }
 
   // set to allow port reuse? or something
@@ -155,7 +159,8 @@ void Server::startServer(void) {
   _sockfd = sockfd;
   _host = ipstr;
 
-  std::cout << "Server: starting on " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  std::cout << YELLOW << "Server\t: " << RESET
+  <<"starting on " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
   freeaddrinfo(servinfo);
 }
 

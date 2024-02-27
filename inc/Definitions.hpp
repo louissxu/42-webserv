@@ -1,6 +1,0 @@
-#ifndef DEFINITIONS_HPP
-# define DEFINITIONS_HPP
-
-#define MAX_CONTENT_LENGTH 30000000
-
-#endif

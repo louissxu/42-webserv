@@ -19,6 +19,8 @@ void Location::initMethodPermissions()
 
 Location::Location()
 {
+    std::cout << RED << "Location\t: " << RESET
+    <<"Default constructor called." << std::endl;
 	this->_path = "";
 	this->_root = "";
 	this->_index = "";
@@ -31,9 +33,9 @@ Location::Location()
 //PARAMETERISED CONSTRUCTOR: USING THE PATH.
 Location::Location(const std::string & path)
 {
-    #ifdef _PRINT_
-    std::cout << "Location: path constructor: " << path << std::endl;
-    #endif
+    std::cout << RED << "Location: " << RESET
+    <<"path constructor called: "<< path << std::endl;
+
 	this->_path = path;
 	this->_root = "";
 	this->_index = "";

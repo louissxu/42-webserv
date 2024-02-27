@@ -63,6 +63,7 @@ if url /kapouet is rooted to /tmp/www, url /kapouet/pouic/toto/pouet is
 class Server {
   public:
     Server();
+    Server(size_t serverId);
     Server(const Server& other);
     Server& operator=(const Server& other);
     ~Server();
@@ -79,6 +80,7 @@ class Server {
     void addDirective(const std::string& name, const std::string& value);
 
   private:
+    size_t                      _id;
     std::string                 _listen;
     std::string                 _host;
     std::string                 _server_name;

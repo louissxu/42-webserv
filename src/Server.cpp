@@ -39,7 +39,22 @@ Server::Server() {
   _autoindex = false;
   this->initialiseErrorPages();
   std::cout << YELLOW << "Server\t: " << RESET 
-  << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  << "default constructor called. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+}
+
+Server::Server(size_t serverId) {
+  _listen = ""; // Port
+  _host = ""; // IP.
+  _server_name = "";  //default localhost on most systems.
+  _root = "";  //root directory of server.
+  _index = "";  
+  _sockfd = -1; //server FD.
+  _client_max_body_size = MAX_CONTENT_LENGTH;
+  _autoindex = false;
+  this->initialiseErrorPages();
+  _id = serverId;
+  std::cout << YELLOW << "Server\t: " << RESET 
+  << "id constructor called, id: " << _id << std::endl;
 }
 
 Server::Server(const Server& other) {
@@ -47,7 +62,7 @@ Server::Server(const Server& other) {
   _host = other._host;
   _listen = other._listen;
   std::cout << YELLOW << "Server\t: " << RESET 
-  <<"Copy constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  <<"Copy constructor called. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
 }
 
 Server& Server::operator=(const Server& other) {
@@ -59,14 +74,14 @@ Server& Server::operator=(const Server& other) {
   _host = other._host;
   _listen = other._listen;
   std::cout << YELLOW << "Server\t: " << RESET 
-  <<"assignment constructor ran. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
+  <<"assignment constructor called. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
   return *this;
 }
 
 Server::~Server() {
   // TODO. Do teardown stuff
   std::cout << YELLOW << "Server\t: " << RESET
-  <<"destructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  <<"destructor called. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
   if (_sockfd != -1) {
     shutdown(_sockfd, 2); 
   }

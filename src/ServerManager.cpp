@@ -598,10 +598,10 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
 
     if (src.getName() == "server")
     {
+        Server newServ = Server(server_id);
         //adding Directives to the current server block.
         std::cout << GREEN << "SManage\t: " << RESET
         "Server " << server_id++ <<" Initialising: " << std::endl;
-        Server newServ = Server();
         std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
         if (temp.empty())
         {

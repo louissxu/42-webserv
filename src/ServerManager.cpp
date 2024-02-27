@@ -623,8 +623,8 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
             {
               #ifdef _PRINT_
                 std::cout << "Adding " << it->first << " to Server " << (server_id - 1) << ". " << std::endl;
-                newServ.addDirective(it->first, it->second);
               #endif
+              newServ.addDirective(it->first, it->second);
             }
             i++;
         }

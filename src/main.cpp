@@ -17,9 +17,8 @@ int main(int argc, char **argv) {
             parser.setContent(argv[1]);
     }
     parser.setStateFromContent(0, false);
-    std::cout << YELLOW << "PIKA!" << RESET << std::endl;
     sm.setStateFromParser(parser);
-    std::cout << BLUE << "SQUIIIRTLE!" << RESET << std::endl;
+    std::cout << BLUE << "<!---Site_ready---!>" << RESET << std::endl;
     sm.runKQ();
     std::cout << "all done!" << std::endl;
   }

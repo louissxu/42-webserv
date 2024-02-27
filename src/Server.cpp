@@ -128,7 +128,7 @@ void Server::startServer(void) {
   sai = reinterpret_cast<struct sockaddr_in *>(servinfo->ai_addr);
   char ipstr[INET6_ADDRSTRLEN];
   inet_ntop(servinfo->ai_family, &sai->sin_addr, ipstr, sizeof ipstr);
-  std::cout << "Server: Starting on " << ipstr << ":" << ntohs(sai->sin_port) << std::endl;
+  //std::cout << "Server: Starting on " << ipstr << ":" << ntohs(sai->sin_port) << std::endl;
 
   int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
   if (sockfd < 0) {
@@ -160,12 +160,10 @@ void Server::startServer(void) {
     perror("Server: listen");
     throw std::runtime_error("Server: listen: failed");
   }
-
   _sockfd = sockfd;
   _host = ipstr;
 
-  std::cout << "parameterised constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
-
+  std::cout << "Server starting on " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
   freeaddrinfo(servinfo);
 }
 

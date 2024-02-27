@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <fstream>
 
 #include <sys/types.h>
 #include <sys/event.h>
@@ -27,12 +28,16 @@
 #include "Utils.hpp"
 #include "Cout.hpp"
 
+
+
+
 class Utils;
 class ConfigParser;
 class Server;
 
 #define MAX_EVENTS 200 // random value
 #define BUFFER_SIZE 3000
+#define BUFFERSIZE 10000
 
 class ServerManager
 {

@@ -23,19 +23,11 @@ static int safe_dup(int fd) {
 |              CONSTRUCTORS                  |
 \*------------------------------------------*/
 
-    // std::string                 _listen;
-    // std::string                 _host;
-    // std::string                 _server_name;
-    // std::string                 _root;
-    // std::string                 _index;
-    // int                         _sockfd;
-    // size_t                      _client_max_body_size;
-    // bool                        _autoindex;
-    // std::map<int, std::string>  _err_pages;
-    // std::vector<Connection>     _connections;
-    // Location                    _location;
-
-
+/* The only attributes not handled in constructor:
+ * std::vector<Connection>     _connections;
+ * std::vector<Location> 		_locations;
+ * Do they need to be?
+*/
 Server::Server() {
   _listen = ""; // Port
   _host = ""; // IP.
@@ -46,14 +38,14 @@ Server::Server() {
   _client_max_body_size = MAX_CONTENT_LENGTH;
   _autoindex = false;
   this->initialiseErrorPages();
-  std::cout << "default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  std::cout << "Server: default constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
 }
 
 Server::Server(const Server& other) {
   _sockfd = safe_dup(other._sockfd);
   _host = other._host;
   _listen = other._listen;
-  std::cout << "copy constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  std::cout << "Server: copy constructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
 }
 
 Server& Server::operator=(const Server& other) {
@@ -64,13 +56,13 @@ Server& Server::operator=(const Server& other) {
   _sockfd = new_fd;
   _host = other._host;
   _listen = other._listen;
-  std::cout << "assignment constructor ran. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
+  std::cout << "Server: assignment constructor ran. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
   return *this;
 }
 
 Server::~Server() {
   // TODO. Do teardown stuff
-  std::cout << "destructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  std::cout << "Server: destructor ran. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
   if (_sockfd != -1) {
     shutdown(_sockfd, 2); 
   }
@@ -163,7 +155,7 @@ void Server::startServer(void) {
   _sockfd = sockfd;
   _host = ipstr;
 
-  std::cout << "Server starting on " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  std::cout << "Server: starting on " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
   freeaddrinfo(servinfo);
 }
 

@@ -1,6 +1,4 @@
 #include "ServerManager.hpp"
-#include "Cout.hpp"
-#include <fstream>
 
 ServerManager::ServerManager()
 {
@@ -122,8 +120,6 @@ Client *ServerManager::getCgiWrite(int fd)
   return nullptr;
 }
 
-// #include <fstream>
-
 bool ServerManager::isListeningSocket(int socket_fd)
 {
   for (size_t i = 0; i < _servers.size(); i++)
@@ -167,7 +163,6 @@ void ServerManager::runKQ()
   bool isCgiWrite = false;
 
   createQ();
-
   while (true)
   {
     int nev = kevent(kq, NULL, 0, ev_list, MAX_EVENTS, nullptr);
@@ -336,7 +331,6 @@ void ServerManager::closeConnection(Client *cl)
   delete cl;
 }
 
-#define BUFFERSIZE 10000
 // *unsure if recv will always read all the avialable data, need to learn.
 int ServerManager::handleReadEvent(Client *cl, int dataLen)
 {

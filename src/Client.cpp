@@ -69,12 +69,12 @@ std::string const &Client::getRecvMessage() const
 
 void Client::setPipeFrom(int *pipe)
 {
-	this->pipe_from_cgi[0] = pipe[0];
-	this->pipe_from_cgi[1] = pipe[1];
+	this->pipe_in[0] = pipe[0];
+	this->pipe_in[1] = pipe[1];
 }
 
 void Client::setPipeTo(int *pipe)
 {
-	this->pipe_to_cgi[0] = pipe[0];
-	this->pipe_to_cgi[1] = pipe[1];
+	this->pipe_out[0] = pipe[0];
+	this->pipe_out[1] = pipe[1];
 }

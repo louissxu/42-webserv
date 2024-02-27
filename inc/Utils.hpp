@@ -13,7 +13,6 @@ class Utils {
 	public: 
         static std::string getFirst(const std::string& str);
         static std::string getSecond(const std::string& str);
-        static void setColour(const std::string& colour);
 };
 
 #endif

@@ -7,6 +7,7 @@
 #include <map>
 #include <iostream>
 
+#include "Cout.hpp"
 #include "Definitions.hpp"
 #include "ConfigParser.hpp"
 #include "Utils.hpp"

@@ -213,10 +213,9 @@ void Location::setDirective(const std::string& name, const std::string& value) {
     _return = value;
   }
   #ifdef _PRINT_
-  Utils::setColour("yellow");
-  std::cout << "Location " << this->getPath() << ": added: <" << value <<"> to <" << name 
-  << ">" <<std::endl;
-  Utils::setColour("reset");
+  std::cout << YELLOW << "Location " << this->getPath() 
+  << ": added: <" << value <<"> to <" << name 
+  << ">" << RESET << std::endl;
   #endif
 }
 
@@ -225,8 +224,7 @@ void Location::setDirective(const std::string& name, const std::string& value) {
 \*------------------------------------------*/
 
  void Location::printMethodPermissions() const {
-        Utils::setColour("blue");
-        std::cout << "Method Permissions:\n";
+        std::cout << BLUE << "Method Permissions:\n";
         std::map<enum e_HRM, bool>::const_iterator it;
         for (it = _methodPermissions.begin(); it != _methodPermissions.end(); ++it) {
             const char* method;
@@ -244,14 +242,13 @@ void Location::setDirective(const std::string& name, const std::string& value) {
             }
             std::cout << method << ": " << (it->second ? "true" : "false") << "\n";
         }
-        Utils::setColour("reset");
+        std::cout << RESET << std::endl;
     }
 /*------------------------------------------*\
 |                 TODO                       |
 \*------------------------------------------*/
 
 void Location::setAllowMethods(const std::string& methods) {
-    Utils::setColour("blue");
     std::map<std::string, e_HRM> methodMap;
     methodMap["GET"] = r_GET;
     methodMap["POST"] = r_POST;
@@ -269,16 +266,14 @@ void Location::setAllowMethods(const std::string& methods) {
         std::map<std::string, e_HRM>::iterator it = methodMap.find(method);
         if (it != methodMap.end()) {
             #ifdef _PRINT_
-            Utils::setColour("green");
-            std::cout << "Location: "<< getPath() <<" setting "<<it->first<<" to true." << std::endl;
-            Utils::setColour("reset");
+            std::cout << GREEN <<  "Location: "<< getPath() <<" setting "
+            <<it->first<<" to true." << RESET << std::endl;
             #endif
             _methodPermissions[it->second] = true;
         } else {
             std::cout << "Unknown method: " << method << std::endl;
         }
     }
-    Utils::setColour("reset");
 }
 
 void Location::setAutoIndex(std::string stateString)
@@ -326,9 +321,6 @@ void Location::initLocationDirectives(ConfigParser &src)
     }
     for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
     {
-       // Utils::setColour("yellow");
-       // std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
-       // Utils::setColour("reset");
         if (isValidLocationDirective(it->first))
         {
             this->setDirective(it->first, it->second);
@@ -336,9 +328,8 @@ void Location::initLocationDirectives(ConfigParser &src)
         else
         {
             #ifdef _PRINT_
-            Utils::setColour("magenta");
-            std::cout << it->first << "is not a Location directive I am aware of.." << std::endl;
-            Utils::setColour("reset");
+            std::cout << MAGENTA << it->first << "is not a Location directive I am aware of.." 
+            << RESET << std::endl;
             #endif
         }
         i++;

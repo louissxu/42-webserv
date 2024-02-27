@@ -32,24 +32,3 @@ std::string Utils::getSecond(const std::string& str) {
     // Otherwise, return the substring between the two spaces
     return str.substr(firstSpacePos + 1, secondSpacePos - firstSpacePos - 1);
 }
-
-void Utils::setColour(const std::string& colour) {
-    std::map<std::string, std::string> colourCodes;
-    colourCodes["red"] = "\033[31m";
-    colourCodes["green"] = "\033[32m";
-    colourCodes["yellow"] = "\033[33m";
-    colourCodes["blue"] = "\033[34m";
-    colourCodes["magenta"] = "\033[35m"; // Closest to pink
-    colourCodes["cyan"] = "\033[36m";
-    colourCodes["reset"] = "\033[0m"; // Reset to default
-
-    if (colourCodes.find(colour) != colourCodes.end()) {
-        std::cout << colourCodes[colour];
-    } else {
-        std::cout << "Unknown colour: " << colour << std::endl;
-    }
-}
-
-
-
-

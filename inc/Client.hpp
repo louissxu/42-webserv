@@ -23,6 +23,8 @@ public:
 	Client(int _sockFD, int _FDconnectedTo, sockaddr_in _client_addr);
 	~Client();
 
+	// void areFdsOpen(void);
+
 	int getSockFD() const;
 	int getSockFDconnectedTo() const;
 	sockaddr_in getClinetAddr() const;

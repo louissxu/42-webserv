@@ -17,8 +17,8 @@ private:
 	Message message;
 
 public:
-	int pipe_from_cgi[2];
-	int pipe_to_cgi[2];
+	int pipe_in[2];
+	int pipe_out[2];
 	Client();
 	Client(int _sockFD, int _FDconnectedTo, sockaddr_in _client_addr);
 	~Client();

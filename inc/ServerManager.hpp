@@ -24,6 +24,7 @@ class Server;
 
 #define MAX_EVENTS 200 // random value
 #define BUFFER_SIZE 3000
+#define BUFFERSIZE 10000
 class ServerManager
 {
 private:

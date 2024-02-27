@@ -8,7 +8,7 @@ Message::Message(Message const &src) { *this = src; };
 
 Message &Message::operator=(Message const &src)
 {
-    this->message.clear();
+    // this->message.clear();
     this->message = src.message;
     this->bufferSent = src.bufferSent;
     return *this;
@@ -26,7 +26,7 @@ const std::string &Message::getMessage() const
     return this->message;
 }
 
-int Message::getMessageSize() const
+int Message::size() const
 {
     return this->message.size();
 }
@@ -34,6 +34,11 @@ int Message::getMessageSize() const
 const int &Message::getBufferSent() const
 {
 	return this->bufferSent;
+}
+
+void Message::setMessage(std::string const &_message)
+{
+    this->message = _message;
 }
 
 void Message::setBufferSent(int buffer)

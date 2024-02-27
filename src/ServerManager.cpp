@@ -246,8 +246,8 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
   if (bytesRead == 0)
   {
     updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    close(cl->pipe_from_cgi[0]);
-    close(cl->pipe_to_cgi[0]);
+    close(cl->pipe_in[0]);
+    close(cl->pipe_out[0]);
     wait(NULL);
     HTTPResponse cgiResponse;
     cgiResponse.setBody(message);
@@ -257,9 +257,9 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
   else if (bytesRead < 0)
   {
     updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    std::cout << "closing: " << cl->pipe_from_cgi[0] << " " << cl->pipe_to_cgi[0] << "\n";
-    close(cl->pipe_from_cgi[0]);
-    close(cl->pipe_to_cgi[0]);
+    std::cout << "closing: " << cl->pipe_in[0] << " " << cl->pipe_out[0] << "\n";
+    close(cl->pipe_in[0]);
+    close(cl->pipe_out[0]);
     std::cerr << "something really bad happenned\n\n";
   }
   else
@@ -269,9 +269,9 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
     message.append("\0", 1);
     memset(buffer, 0, sizeof(buffer));
     updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    std::cout << "closing: " << cl->pipe_from_cgi[0] << " " << cl->pipe_to_cgi[0] << "\n";
-    close(cl->pipe_from_cgi[0]);
-    close(cl->pipe_to_cgi[0]);
+    std::cout << "closing: " << cl->pipe_in[0] << " " << cl->pipe_out[0] << "\n";
+    close(cl->pipe_in[0]);
+    close(cl->pipe_out[0]);
     wait(NULL);
     HTTPResponse cgiResponse;
     cgiResponse.setBody(message);
@@ -289,53 +289,120 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
 
 bool ServerManager::CgiWriteHandler(Client *cl, struct kevent ev_list)
 {
+    int bytes_sent;
     if (cl == NULL)
         return false;
 
     Message message = cl->getMessage();
 
-    if ((size_t)message.getBufferSent() >= message.getMessage().size())
-    {
-        updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-        updateEvent(cl->pipe_from_cgi[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
-        std::cout << "closing: " << cl->pipe_from_cgi[1] << " " << cl->pipe_to_cgi[1] << "\n";
-        close(cl->pipe_from_cgi[1]);
-        close(cl->pipe_to_cgi[1]);
-        return false;
-    }
-    std::cout<<message.getMessage().size()<<"\n";
-    // size_t writeLen = send(ev_list.ident, message.getMessage().c_str() + allSend, message.getMessage().size() - allSend, 0);
-    size_t writeLen = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), message.getMessage().size() - message.getBufferSent());
+    if (message.size() == 0)
+      bytes_sent = 0;
+    else if (message.size() >= BUFFERSIZE)
+      bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), BUFFERSIZE);
+    else
+      bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), message.size());
 
-    if (writeLen < 0)
+    if (bytes_sent < 0)
     {
-        updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-        updateEvent(cl->pipe_from_cgi[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
-        std::cout << "closing: " << cl->pipe_from_cgi[1] << " " << cl->pipe_to_cgi[1] << "\n";
-        close(cl->pipe_from_cgi[1]);
-        close(cl->pipe_to_cgi[1]);
-        std::cerr << "Send error: " << strerror(errno) << std::endl;
-        return false;
+      std::cerr << "ERROR: sending body to cgi\n" << RESET;
+      updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+      close(cl->pipe_in[1]);
+      close(cl->pipe_out[1]);
     }
 
-    message.setBufferSent(writeLen);
+    else if (bytes_sent == 0 || bytes_sent == message.size())
+    {
+      updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+      close(cl->pipe_in[1]);
+      close(cl->pipe_out[1]);
+    }
+    else
+    {
+      message.setMessage(message.getMessage().substr(bytes_sent));
+    }
+    // if ((size_t)message.getBufferSent() >= message.getMessage().size())
+    // {
+    //     updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    //     std::cout << "closing: " << cl->pipe_in[1] << " " << cl->pipe_out[1] << "\n";
+    //     close(cl->pipe_in[1]);
+    //     close(cl->pipe_out[1]);
+    //     return false;
+    // }
+    // std::cout<<message.getMessage().size()<<"\n";
+    // // size_t writeLen = send(ev_list.ident, message.getMessage().c_str() + allSend, message.getMessage().size() - allSend, 0);
+    // size_t writeLen = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), message.getMessage().size() - message.getBufferSent());
+
+    // if (writeLen < 0)
+    // {
+    //     updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    //     updateEvent(cl->pipe_in[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+    //     std::cout << "closing: " << cl->pipe_in[1] << " " << cl->pipe_out[1] << "\n";
+    //     close(cl->pipe_in[1]);
+    //     close(cl->pipe_out[1]);
+    //     std::cerr << "Send error: " << strerror(errno) << std::endl;
+    //     return false;
+    // }
+
+    // message.setBufferSent(writeLen);
     cl->setMessage(message);
     return true;
 }
+
+
+// bool ServerManager::CgiWriteHandler(Client *cl, struct kevent ev_list)
+// {
+//     if (cl == NULL)
+//         return false;
+
+//     Message message = cl->getMessage();
+
+//     if ((size_t)message.getBufferSent() >= message.getMessage().size())
+//     {
+//         updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+//         std::cout << "closing: " << cl->pipe_in[1] << " " << cl->pipe_out[1] << "\n";
+//         close(cl->pipe_in[1]);
+//         close(cl->pipe_out[1]);
+//         return false;
+//     }
+//     std::cout<<message.getMessage().size()<<"\n";
+//     // size_t writeLen = send(ev_list.ident, message.getMessage().c_str() + allSend, message.getMessage().size() - allSend, 0);
+//     size_t writeLen = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), message.getMessage().size() - message.getBufferSent());
+
+//     if (writeLen < 0)
+//     {
+//         updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+//         updateEvent(cl->pipe_in[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+//         std::cout << "closing: " << cl->pipe_in[1] << " " << cl->pipe_out[1] << "\n";
+//         close(cl->pipe_in[1]);
+//         close(cl->pipe_out[1]);
+//         std::cerr << "Send error: " << strerror(errno) << std::endl;
+//         return false;
+//     }
+
+//     message.setBufferSent(writeLen);
+//     cl->setMessage(message);
+//     return true;
+// }
 
 void ServerManager::closeConnection(Client *cl)
 {
   if (cl == NULL)
     return;
+  std::cout << BOLDYELLOW << "closing connection with: " << cl->getSockFD() << RESET << "\n";
   updateEvent(cl->getSockFD(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
   updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
   close(cl->getSockFD());
-  _clients.erase(cl->getSockFD());
-  std::cout << BOLDYELLOW << "closing connection with: " << cl->getSockFD() << RESET << "\n";
-  delete cl;
+  std::map<int, Client *>::iterator it = _clients.find(cl->getSockFD());
+  if (it != _clients.end())
+  {
+    delete it->second;
+    _clients.erase(it);
+  }
+  // _clients.erase(cl->getSockFD());
+  // delete cl;
 }
 
-#define BUFFERSIZE 10000
+
 // *unsure if recv will always read all the avialable data, need to learn.
 int ServerManager::handleReadEvent(Client *cl, int dataLen)
 {
@@ -410,7 +477,7 @@ bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
   (void)dataLen;
   Message message = cl->getMessage();
 
-  int attempSend = message.getMessageSize();
+  int attempSend = message.size();
   if (message.getBufferSent() == attempSend)
   {
     // message.setBufferSent(0);
@@ -517,24 +584,33 @@ void ServerManager::launchCgi(HTTPRequest const &request, Client *cl)
 {
   (void)request;
   std::cout << "POSTHandler" << std::endl;
-  // int pipe_to_cgi[2];
-  // int pipe_from_cgi[2];
+  // int pipe_out[2];
+  // int pipe_in[2];
 
-  pipe(cl->pipe_to_cgi);
-  pipe(cl->pipe_from_cgi);
-  // cl->setPipeFrom(pipe_from_cgi);
-  // cl->setPipeTo(pipe_to_cgi);
+  if (pipe(cl->pipe_out) < 0)
+  {
+    std::cerr << RED << "failed to pipe to cgi\n" << RESET;
+    return ;
+  }
+
+  if (pipe(cl->pipe_in) < 0)
+  {
+    std::cerr << RED << "failed to pipe to cgi\n" << RESET;
+    return ;
+  }
+  // cl->setPipeFrom(pipe_in);
+  // cl->setPipeTo(pipe_out);
 
   // Fork to create a child process for the CGI script
   pid_t pid = fork();
   if (pid == 0)
   {
-    dup2(cl->pipe_to_cgi[0], STDIN_FILENO);
-    dup2(cl->pipe_from_cgi[1], STDOUT_FILENO);
-    close(cl->pipe_to_cgi[0]);
-    close(cl->pipe_to_cgi[1]);
-    close(cl->pipe_from_cgi[0]);
-    close(cl->pipe_from_cgi[1]);
+    dup2(cl->pipe_in[0], STDIN_FILENO);
+    dup2(cl->pipe_out[1], STDOUT_FILENO);
+    close(cl->pipe_out[0]);
+    close(cl->pipe_out[1]);
+    close(cl->pipe_in[0]);
+    close(cl->pipe_in[1]);
 
     // Execute the CGI script
     execl("application/cgiBin/login.sh", "application/cgiBin/login.sh", NULL);
@@ -542,18 +618,22 @@ void ServerManager::launchCgi(HTTPRequest const &request, Client *cl)
     // If execl fails
     perror("execl");
     std::cerr << "something happeneed to cgi\n";
+    exit(EXIT_FAILURE);
   }
   else if (pid > 0)
   {
-    updateEvent(cl->pipe_to_cgi[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    updateEvent(cl->pipe_from_cgi[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
+    updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 
-    _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_to_cgi[1], cl));
-    _cgiRead.insert(std::pair<int, Client *>(cl->pipe_from_cgi[0], cl));
+    _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
+    _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
 
-    std::cout << "write end = " << cl->pipe_to_cgi[1] << "\n";
-    std::cout << "read end = " << cl->pipe_from_cgi[0] << "\n";
+    std::cout << "pipe_in[1] = " << cl->pipe_in[1] << "\n";
+    std::cout << "pipe_out[0] = " << cl->pipe_out[0] << "\n";
   }
   else
-    perror("fork");
+  {
+    std::cerr << RED << "forking failed\n" << RESET;
+  }
+    // perror("fork");
 }

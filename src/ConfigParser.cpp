@@ -366,11 +366,8 @@ void ConfigParser::setStateFromContent(size_t myContextLvl, bool print)
         std::cout << "error: contents not set!" << std::endl;
         return ;
     }
-
-   // std::cout << "CONTENTS = " << _contents << "!" << std::endl;
-   std::istringstream config_file(_contents);
-   size_t lineNumber = 0;
-
+    std::istringstream config_file(_contents);
+    size_t lineNumber = 0;
     while (std::getline(config_file, line))
     {
         e_lineType j = getLineType (line);
@@ -399,10 +396,6 @@ void ConfigParser::setStateFromContent(size_t myContextLvl, bool print)
                     newConfigParser->setContextContent(_contents, lineNumber);
                     newConfigParser->setContextLvl(myContextLvl + 1);
                     newConfigParser->setStateFromContent(myContextLvl + 1, false);
-                   // std::cout << newConfigParser->_name << " contents:" << std::endl << "<\n" << newConfigParser->_contents << ">" << std::endl;
-                   // std::cout << newConfigParser->_name << " directives:" << std::endl;
-                   // newConfigParser->printDirectives();
-                    //std::cout << std::endl;
                     _contexts.push_back(*newConfigParser);
                 }
                 _contextLvl++;
@@ -690,18 +683,14 @@ int ConfigParser::printServerInformation()
 |             OTHER METHODS                 |
 \------------------------------------------*/
 
-void    ConfigParser::removeWhiteSpace(std::string &content)
-{
-    size_t i = 0;
-    while (content[i] && std::isspace(content[i]))
-    {
-        i++;
-    }
-    content = content.substr(i);
-    i = content.length() - 1;
-    while (i > 0 && std::isspace(content[i]))
-        i--;
-    content = content.substr(0, i + 1);
+void ConfigParser::removeWhiteSpace(std::string& content) {
+    size_t start = content.find_first_not_of(" \t\n\v\f\r");
+    if (start == std::string::npos) start = 0;
+
+    size_t end = content.find_last_not_of(" \t\n\v\f\r");
+    if (end != std::string::npos) end += 1;
+
+    content = content.substr(start, end - start);
 }
 
 void    ConfigParser::removeComments(std::string &content)

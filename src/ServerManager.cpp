@@ -610,6 +610,7 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
         std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
         if (temp.empty())
         {
+            std::cout << RED <<": No directives to print." << RESET << std::endl;
             return;
         }
         for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
@@ -635,6 +636,7 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
       {
         return;
       }
+
       for(std::vector< ConfigParser >::iterator it = src_contexts.begin(); it != src_contexts.end(); ++it)
       {
           #ifdef _PRINT_
@@ -693,7 +695,9 @@ void ServerManager::setStateFromParser(ConfigParser &src)
 
     //Out of server directives
     if (src.get_directives().empty()) {
+        #ifdef _PRINT_
         std::cout << "No directives to print." << std::endl;
+        #endif
     }
     else
     {

@@ -25,6 +25,7 @@
 #include "ConfigParser.hpp"
 #include "Location.hpp"
 #include "Utils.hpp"
+#include "Cout.hpp"
 
 class Utils;
 class ConfigParser;

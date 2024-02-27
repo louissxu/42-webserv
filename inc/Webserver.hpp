@@ -11,7 +11,9 @@
 # include <vector>
 
 # include "HTTPRequest.hpp"
+# include "HTTPResponse.hpp"
 # include "Server.hpp"
 # include "ServerManager.hpp"
+# include "Cout.hpp"
 
 #endif

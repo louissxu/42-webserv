@@ -1,47 +1,4 @@
-#include "Server.hpp"
-#include "ServerManager.hpp"
-// #include "HTTPRequest.hpp"
-#include "HTTPResponse.hpp"
-
-int main()
-{
-	std::cout << "MERGE STEP ONE" << std::endl;
-	return (0);
-}
-
-
-
-
-// MEHDI'S MAIN:
-// Ref: https://beej.us/guide/bgnet/html/#structs
-/*
-int main(void) {
-  std::string port1 = "2345";
-  // std::string port2 = "3456";
-
-  Server a = Server(port1);
-  // Server b = Server(port2);
-
-  std::cout << "adding socket manager" << std::endl;
-  ServerManager sm;
-
-  sm.addServer(a);
-  // sm.addServer(b);
-
-  sm.runKQ();
-
-  // sm.runPoll();
-  std::cout << "all done!" << std::endl;
-
-  return(0);
-}
-*/
-
-/*
-// ISAAC'S MAIN
 #include "Webserver.hpp"
-
-// Ref: https://beej.us/guide/bgnet/html/#structs
 
 int main(int argc, char **argv) {
   try
@@ -59,9 +16,10 @@ int main(int argc, char **argv) {
     {
             parser.setContent(argv[1]);
     }
-
     parser.setStateFromContent(0, false);
-    sm.setStateFromParser(parser);	
+    std::cout << YELLOW << "PIKA!" << RESET << std::endl;
+    sm.setStateFromParser(parser);
+    std::cout << BLUE << "SQUIIIRTLE!" << RESET << std::endl;
     sm.runKQ();
     std::cout << "all done!" << std::endl;
   }
@@ -72,4 +30,4 @@ int main(int argc, char **argv) {
   }
   return(0);
 }
-*/
+

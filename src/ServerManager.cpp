@@ -58,9 +58,7 @@ void ServerManager::createQ()
   kq = kqueue();
   if (kq == -1)
   {
-    // ERR("Ke")
     ERR("Kqueue: %s", strerror(errno));
-    // perror("kqueue");
     exit(EXIT_FAILURE);
   }
 
@@ -69,7 +67,6 @@ void ServerManager::createQ()
     EV_SET(&ev_set[i], _servers[i].getSockFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
     if (kevent(kq, &ev_set[i], 1, NULL, 0, NULL) == -1)
     {
-      // perror("kevent");
       ERR("Kqueue: %s", strerror(errno));
       exit(EXIT_FAILURE);
     }
@@ -186,8 +183,6 @@ Client *ServerManager::getCgiWrite(int fd)
   return nullptr;
 }
 
-// #include <fstream>
-
 bool ServerManager::isListeningSocket(int socket_fd)
 {
   for (size_t i = 0; i < _servers.size(); i++)
@@ -205,38 +200,21 @@ void ServerManager::updateEvent(int ident, short filter, u_short flags, u_int ff
 
 void ServerManager::handleEOF(Client *cl, int fd, bool &isCgiRead, bool &isCgiWrite)
 {
-  // std::cout << "\n\nclosing connection with: " << fd << "\n\n";
   if (isCgiRead)
   {
-    // WARN("closing read : %d disconnected!", cl->getSockFD());
     updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
     updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
     deleteCgi(_cgiRead, fd, EVFILT_READ);
-    // std::map<int, Client *>::iterator it = _cgiRead.find(fd);
-    // if (it != _cgiRead.end())
-    // {
-    //   updateEvent(it->first, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    //   close(it->first);
-    //   _cgiRead.erase(it);
-    // }
     isCgiRead = false;
   }
   else if (isCgiWrite)
   {
     deleteCgi(_cgiRead, fd, EVFILT_READ);
-    // std::map<int, Client *>::iterator it = _cgiWrite.find(fd);
-    // if (it != _cgiWrite.end())
-    // {
-    //   updateEvent(it->first, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-    //   close(it->first);
-    //   _cgiWrite.erase(it);
-    // }
     isCgiWrite = false;
   }
   else
   {
     closeConnection(cl);
-    // std::cout << "\n\nclosing connection with: " << fd << "\n\n";
   }
 }
 
@@ -277,8 +255,6 @@ void ServerManager::runKQ()
       }
       if (ev_list[i].flags & EV_EOF)
       {
-        // std::cout << "hello\n";
-        // isFdOpen(ev_list[i].ident);
         handleEOF(myClient, ev_list[i].ident, isCgiRead, isCgiWrite);
         continue;
       }
@@ -312,8 +288,8 @@ void ServerManager::runKQ()
       {
         if (!handleWriteEvent(myClient, ev_list[i].data))
         {
-          updateEvent(ev_list[i].ident, EVFILT_READ, EV_ENABLE, 0, 0, NULL);
-          updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+          // updateEvent(ev_list[i].ident, EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+          // updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
         }
       }
     }
@@ -326,13 +302,10 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
   memset(buffer, 0, sizeof(buffer));
   int bytesRead = 0;
   static std::string message = "";
-  // std::cout << "cgi listenning socket was: " << ev_list.ident << std::endl;
   bytesRead = read(ev_list.ident, buffer, BUFFER_SIZE * 2);
-  // std::cerr << "READ: " << MAGENTA << buffer << RESET << "\n";
   DEBUG("cgiReadHandler: Read: %s", buffer);
   if (bytesRead == 0)
   {
-    // std::cerr << BOLDWHITE << "bytes READ = 0\n" << RESET;
     DEBUG("cgiReadHandler: Bytes Read = 0");
     updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     close(cl->pipe_in[0]);
@@ -350,17 +323,14 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
   }
   else if (bytesRead < 0)
   {
-    // std::cerr << RED << "ERROR: cgiReadHandler: " << strerror(errno) << RESET << "\n";
     ERR("cgiReadHandler: %s", strerror(errno));
     updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     close(cl->pipe_in[0]);
     close(cl->pipe_out[0]);
-    // std::cout << "closing: " << cl->pipe_in[0] << " " << cl->pipe_out[0] << "\n";
     DEBUG("PIPES ends closing: %d %d", cl->pipe_in[0], cl->pipe_out[0]);
   }
   else
   {
-    // std::cerr << BOLDWHITE << "bytes READ: " << bytesRead << "\n" << RESET;
     DEBUG("Bytes Read: %d", bytesRead);
     message.append(buffer);
 
@@ -390,33 +360,22 @@ bool ServerManager::CgiWriteHandler(Client *cl, struct kevent ev_list)
     {
       bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), BUFFERSIZE);
       DEBUG("Body sent to CGI-Script: %s", message.getMessage().c_str() + message.getBufferSent());
-      // std::cerr << "WROTE: " << MAGENTA << message.getMessage().c_str() + message.getBufferSent() << RESET << "\n";
     }
     else
     {
       bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), message.size());
       DEBUG("Body sent to CGI-Script: %s", message.getMessage().c_str() + message.getBufferSent());
-      // std::cerr << MAGENTA << message.getMessage().c_str() + message.getBufferSent() << RESET << "\n";
     }
 
     if (bytes_sent < 0)
     {
       ERR("Unable to send Body to CGI-Script");
-      // std::cerr << "ERROR: sending body to cgi\n" << RESET;
       deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
-      // updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-      // close(cl->pipe_in[1]);
-      // close(cl->pipe_out[1]);
     }
 
     else if (bytes_sent == 0 || bytes_sent == message.size())
     {
       deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
-      // bool isWrite = true;
-      // bool isRead = false;
-      // close(cl->pipe_in[1]);
-      // close(cl->pipe_out[1]);
-      // handleEOF(cl, ev_list.ident, isRead, isWrite);
       updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
     }
     else
@@ -429,11 +388,10 @@ bool ServerManager::CgiWriteHandler(Client *cl, struct kevent ev_list)
 
 void ServerManager::closeConnection(Client *cl)
 {
-  static int i = 0;
-  DEBUG("number of times gone in closeConnection: %d", ++i);
+  // int i = 0;
+  // DEBUG("number of times gone in closeConnection: %d", ++i);
   if (cl == NULL)
     return;
-  // std::cout << BOLDYELLOW << "closing connection with: " << cl->getSockFD() << RESET << "\n";
   WARN("Client: %d disconnected!", cl->getSockFD());
   updateEvent(cl->getSockFD(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
   updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
@@ -459,24 +417,18 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
   if (cl == NULL)
     return false;
 
-  // char ClientMessage[dataLen - cl->getBufferRead()];
   char ClientMessage[BUFFERSIZE];
 
   int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
 
   if (readLen == 0)
   {
-    // WARN("Client: %d disconnected!", cl->getSockFD());
-    // std::cout << RED << "Client disconnected\n"
-              // << RESET;
     closeConnection(cl);
     return false;
   }
   else if (readLen < 0)
   {
     ERR("unable to recv from %d", cl->getSockFD());
-    // std::cout << RED << "Something went wrong when reading\n"
-    //           << RESET;
     closeConnection(cl);
     return false;
   }
@@ -484,7 +436,6 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
   cl->setBufferRead(readLen);
   ClientMessage[readLen] = '\0';
   DEBUG("Recived from: %d\n%s%s%s", cl->getSockFD(), BLUE, ClientMessage, RESET);
-  // std::cout << "received: " YELLOW << ClientMessage << RESET << std::endl;
 
   if (cl->getBufferRead() == dataLen)
   {
@@ -492,8 +443,6 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
     if (_req == NULL)
     {
       ERR("Failed to parse request from %d: ", cl->getSockFD());
-      // std::cerr << RED << "Failed to parse request\n"
-      //           << RESET;
       closeConnection(cl);
       return false;
     }
@@ -528,22 +477,18 @@ if not we have to send it in the second try.
 */
 bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
 {
+  std::cout << "writing response\n";
   (void)dataLen;
   Message message = cl->getMessage();
 
   int attempSend = message.size();
   if (message.getBufferSent() == attempSend)
   {
-    // message.setBufferSent(0);
-    // cl->setMessage(message);
     closeConnection(cl);
     return false;
   }
-  // std::cout << message.getMessage() << std::endl;
   int actualSend = send(cl->getSockFD(), message.getMessage().c_str(), attempSend, 0);
   DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
-  // std::cout << GREEN << "send the httpResponse\n"
-            // << RESET;
   if (actualSend >= attempSend)
     message.setBufferSent(actualSend);
   cl->setMessage(message);

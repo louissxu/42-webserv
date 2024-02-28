@@ -1,6 +1,6 @@
 #pragma once
 
-#define LOG_LEVEL 3 // for printing logs.
+#define LOG_LEVEL 2 // for printing logs.
 
 #include <poll.h>
 #include <cstdio>

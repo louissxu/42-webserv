@@ -142,8 +142,8 @@ Client *ServerManager::getCgiRead(int fd)
 
 void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter)
 {
-  std::map<int, Client *>::iterator it = fdmap.begin();
-  for (; it != fdmap.end(); ++it)
+  std::map<int, Client *>::iterator it;
+  for (it = fdmap.begin(); it != fdmap.end(); ++it)
   {
     if (it->second == cl)
     {
@@ -151,6 +151,8 @@ void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short 
       close(it->first);
       fdmap.erase(it);
     }
+    if (fdmap.empty())
+      return;
   }
 }
 
@@ -401,18 +403,20 @@ bool ServerManager::CgiWriteHandler(Client *cl, struct kevent ev_list)
     {
       ERR("Unable to send Body to CGI-Script");
       // std::cerr << "ERROR: sending body to cgi\n" << RESET;
-      updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-      close(cl->pipe_in[1]);
-      close(cl->pipe_out[1]);
+      deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
+      // updateEvent(ev_list.ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+      // close(cl->pipe_in[1]);
+      // close(cl->pipe_out[1]);
     }
 
     else if (bytes_sent == 0 || bytes_sent == message.size())
     {
-      bool isWrite = true;
-      bool isRead = false;
-      close(cl->pipe_in[1]);
-      close(cl->pipe_out[1]);
-      handleEOF(cl, ev_list.ident, isRead, isWrite);
+      deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
+      // bool isWrite = true;
+      // bool isRead = false;
+      // close(cl->pipe_in[1]);
+      // close(cl->pipe_out[1]);
+      // handleEOF(cl, ev_list.ident, isRead, isWrite);
       updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
     }
     else

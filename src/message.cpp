@@ -65,7 +65,7 @@ void Message::serialize(const HTTPResponse &_resp)
     // Serialize body
     this->message += _resp.getBody();
 
-	std::cout << "\033[31m" << this->message << "\033[0m" << std::endl;
+	// std::cout << "\033[31m" << this->message << "\033[0m" << std::endl;
 }
 
 

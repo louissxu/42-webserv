@@ -1,5 +1,7 @@
 #pragma once
 
+#define LOG_LEVEL 3 // for printing logs.
+
 #include <poll.h>
 #include <cstdio>
 #include <cstring>
@@ -78,4 +80,6 @@ public:
 
 private:
   void launchCgi(HTTPRequest const &request, Client *cl);
+  void deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter);
+  void deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter);
 };

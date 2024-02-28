@@ -21,7 +21,7 @@ Server::Server(std::string port) {
   error_return = getaddrinfo(NULL, port.c_str(), &hints, &servinfo);
 
   if (error_return != 0) {
-    // gai_strerror(error_return) ?? something with this error value // TODO: May be forbidden function
+    gai_strerror(error_return);
     throw std::runtime_error("Server: getaddrinfo: failed");
   }
 

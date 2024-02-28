@@ -1,19 +1,24 @@
 #include <string.h>
 #include <stdio.h>
-
+#include "Cout.hpp"
 #define __PFILE__ (strrchr(__FILE__, '/')           \
 					   ? strrchr(__FILE__, '/') + 1 \
 					   : __FILE__)
 
 #define LOG(level, format, ...)                                        \
-	if (level == "err")                                                \
+	if (strcmp(level,"err") == 0)                                      \
 	{                                                                  \
-		fprintf(stderr, "[\033[31m%s\033[0m] %s: " format "\n", level, \
+		fprintf(stderr, "\033[31m[%s]\033[0m %s: " format "\n", level, \
 				__PFILE__, ##__VA_ARGS__);                             \
-	}                                                                  \
+	}																	\
+	else if (strcmp(level, "deb") == 0)                                \
+	{                                                                  \
+		printf("%s[%s]%s %s: " format "\n", CYAN, level, RESET, __PFILE__,           \
+			   ##__VA_ARGS__);                                         \
+	}																\
 	else                                                               \
 	{                                                                  \
-		printf("[%s] %s: " format "\n", level, __PFILE__,              \
+		printf("%s[%s]%s %s: " format "\n", YELLOW, level, RESET, __PFILE__,           \
 			   ##__VA_ARGS__);                                         \
 	}
 

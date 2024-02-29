@@ -230,8 +230,6 @@ void ServerManager::runKQ()
     if (nev <= 0)
     {
       ERR("Kevent: %s", strerror(errno));
-      std::cerr << RED << "kevent error\n"
-                << RESET;
       continue;
     }
     for (int i = 0; i < nev; i++)
@@ -248,8 +246,6 @@ void ServerManager::runKQ()
         if (myClient == nullptr)
         {
           ERR("Client: %d does not exist!", (int)ev_list[i].ident);
-          std::cout << RED << ev_list[i].ident << ": client does not exist\n"
-                    << RESET;
           continue;
         }
       }
@@ -592,7 +588,7 @@ void ServerManager::launchCgi(HTTPRequest const &request, Client *cl)
   if (pipe(cl->pipe_out) < 0)
   {
     ERR("Failed pipe_out cgi");
-    std::cerr << RED << "failed pipe_out cgi\n" << RESET;
+    // std::cerr << RED << "failed pipe_out cgi\n" << RESET;
     return ;
   }
 
@@ -617,11 +613,14 @@ void ServerManager::launchCgi(HTTPRequest const &request, Client *cl)
     close(cl->pipe_in[1]);
 
     // Execute the CGI script
-    execl("application/cgiBin/login.sh", "application/cgiBin/login.sh", NULL);
+    // execl("application/cgi-bin/register.py", "application/cgi-bin/register.py", NULL);
+    execl("/Library/Frameworks/Python.framework/Versions/3.10/bin/python3", "python3", "application/cgi-bin/register.py", NULL);
+
 
     // If execl fails
-    perror("execl");
-    std::cerr << "something happeneed to cgi\n";
+    ERR("excel: %s", strerror(errno));
+    // perror("execl");
+    // std::cerr << "something happeneed to cgi\n";
     exit(EXIT_FAILURE);
   }
   else if (pid > 0)

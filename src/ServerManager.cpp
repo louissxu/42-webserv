@@ -413,9 +413,10 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
   if (cl == NULL)
     return false;
 
-  char ClientMessage[BUFFERSIZE];
+  char ClientMessage[4000];
 
-  int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
+  // int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
+  int readLen = read(cl->getSockFD(), ClientMessage, 4000);
 
   if (readLen == 0)
   {

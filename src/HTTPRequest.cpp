@@ -21,6 +21,14 @@ std::map<std::string, std::string> const &HTTPRequest::getHeaders() const
 	return this->headers;
 }
 
+std::string const &HTTPRequest::getHeader(std::string const &key) const
+{
+	std::map<std::string, std::string>::const_iterator it = headers.find(key);
+	if (it != headers.end())
+		return it->second;
+	return "";
+}
+
 std::string const &HTTPRequest::getBody() const
 {
 	return this->body;
@@ -33,6 +41,42 @@ std::string const &HTTPRequest::getUri() const
 Method const &HTTPRequest::getMethod() const
 {
 	return this->method;
+}
+
+std::string const &HTTPRequest::getMethodString() const
+{
+	switch (this->method)
+	{
+	case POST:
+		return "POST";
+		break;
+	case GET:
+		return "GET";
+		break;
+	case HEAD:
+		return "HEAD";
+		break;
+	case PUT:
+		return "PUT";
+		break;
+	case DELETE:
+		return "DELETE";
+	case TRACE:
+		return "TRACE";
+		break;
+	case OPTIONS:
+		return "OPTIONS";
+		break;
+	case CONNECT:
+		return "CONNECT";
+		break;
+	case PATCH:
+		return "PATCH";
+		break;
+	default:
+		return "";
+		break;
+	}
 }
 
 Version const &HTTPRequest::getVersion() const

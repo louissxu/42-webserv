@@ -32,3 +32,6 @@
 *.app
 
 .vscode
+
+#python
+__pycache__

@@ -42,8 +42,10 @@ public:
 	~HTTPRequest();
 
 	std::map<std::string, std::string> const &getHeaders() const;
+	std::string const &getHeader(std::string const &key) const;
 	std::string const &getBody() const;
 	std::string const &getUri() const;
 	Method const &getMethod() const;
+	std::string const &getMethodString() const;
 	Version const &getVersion() const;
 };

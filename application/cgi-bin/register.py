@@ -1,11 +1,20 @@
-# from login import User
+import user
 
-body = input()
+try:
+	body = input()
+except EOFError:
+	print("hello")
+	exit()
+
+if (body == ""):
+	exit()
 
 username, password, firstname = body.split('&')
 username = username.removeprefix("username=")
 password = password.removeprefix("password=")
 firstname = firstname.removeprefix("firstname=")
+
+newUser = user(username, password, firstname)
 
 
 print("<!DOCTYPE html>")

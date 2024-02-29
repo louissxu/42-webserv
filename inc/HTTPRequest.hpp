@@ -46,6 +46,6 @@ public:
 	std::string const &getBody() const;
 	std::string const &getUri() const;
 	Method const &getMethod() const;
-	std::string const &getMethodString() const;
+	std::string getMethodString() const;
 	Version const &getVersion() const;
 };

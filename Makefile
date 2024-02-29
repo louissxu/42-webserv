@@ -39,6 +39,7 @@ SRC_FILES = \
 	Message.cpp \
 	HTTPRequest.cpp \
 	HTTPResponse.cpp \
+	cgi.cpp
 
 SRC_DIR = src
 

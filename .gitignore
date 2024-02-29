@@ -35,3 +35,4 @@
 
 #python
 __pycache__
+*.db

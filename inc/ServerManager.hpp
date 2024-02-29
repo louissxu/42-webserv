@@ -20,6 +20,7 @@
 
 #include "HTTPResponse.hpp"
 #include "HTTPRequest.hpp"
+#include "cgi.hpp"
 #include "log.hpp"
 
 class Server;
@@ -79,7 +80,7 @@ public:
 
 
 private:
-  void launchCgi(HTTPRequest const &request, Client *cl);
+  // void launchCgi(HTTPRequest const &request, Client *cl);
   void deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter);
   void deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter);
 };

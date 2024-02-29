@@ -23,10 +23,11 @@ std::map<std::string, std::string> const &HTTPRequest::getHeaders() const
 
 std::string const &HTTPRequest::getHeader(std::string const &key) const
 {
+	static std::string emptystring;
 	std::map<std::string, std::string>::const_iterator it = headers.find(key);
 	if (it != headers.end())
 		return it->second;
-	return "";
+	return emptystring;
 }
 
 std::string const &HTTPRequest::getBody() const
@@ -43,7 +44,7 @@ Method const &HTTPRequest::getMethod() const
 	return this->method;
 }
 
-std::string const &HTTPRequest::getMethodString() const
+std::string HTTPRequest::getMethodString() const
 {
 	switch (this->method)
 	{
@@ -74,7 +75,7 @@ std::string const &HTTPRequest::getMethodString() const
 		return "PATCH";
 		break;
 	default:
-		return "";
+		return std::string();
 		break;
 	}
 }

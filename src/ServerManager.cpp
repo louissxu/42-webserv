@@ -1,9 +1,10 @@
 #include "ServerManager.hpp"
 #include "Cout.hpp"
 
-static void areFdsOpen(int pipein[2], int pipeout[2]) {
+static void areFdsOpen(int pipein[2], int pipeout[2])
+{
   if (pipein == NULL || pipeout == NULL)
-    return ;
+    return;
   int fd = pipein[0];
   for (int i = 0; i < 2; i++)
   {
@@ -86,7 +87,6 @@ void ServerManager::acceptClient(int ListenSocket)
     perror("accept");
   }
 
-
   if (fcntl(clientFD, F_SETFL, O_NONBLOCK) < 0)
   {
     std::cout << "fcntl error: closing: " << clientFD << std::endl;
@@ -158,9 +158,9 @@ void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, int fd, short filt
   std::map<int, Client *>::iterator it = fdmap.find(fd);
   if (it != fdmap.end())
   {
-      updateEvent(it->first, filter, EV_DELETE, 0, 0, NULL);
-      close(it->first);
-      fdmap.erase(it);
+    updateEvent(it->first, filter, EV_DELETE, 0, 0, NULL);
+    close(it->first);
+    fdmap.erase(it);
   }
 }
 
@@ -330,7 +330,6 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
     DEBUG("Bytes Read: %d", bytesRead);
     message.append(buffer);
 
-
     HTTPResponse cgiResponse;
     cgiResponse.setBody(message);
     cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
@@ -344,42 +343,42 @@ void ServerManager::CgiReadHandler(Client *cl, struct kevent ev_list)
 
 bool ServerManager::CgiWriteHandler(Client *cl, struct kevent ev_list)
 {
-    int bytes_sent;
-    if (cl == NULL)
-        return false;
+  int bytes_sent;
+  if (cl == NULL)
+    return false;
 
-    Message message = cl->getMessage();
+  Message message = cl->getMessage();
 
-    if (message.size() == 0)
-      bytes_sent = 0;
-    else if (message.size() >= BUFFERSIZE)
-    {
-      bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), BUFFERSIZE);
-      DEBUG("Body sent to CGI-Script: %s", message.getMessage().c_str() + message.getBufferSent());
-    }
-    else
-    {
-      bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), message.size());
-      DEBUG("Body sent to CGI-Script: %s", message.getMessage().c_str() + message.getBufferSent());
-    }
+  if (message.size() == 0)
+    bytes_sent = 0;
+  else if (message.size() >= BUFFERSIZE)
+  {
+    bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), BUFFERSIZE);
+    DEBUG("Body sent to CGI-Script: %s", message.getMessage().c_str() + message.getBufferSent());
+  }
+  else
+  {
+    bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), message.size());
+    DEBUG("Body sent to CGI-Script: %s", message.getMessage().c_str() + message.getBufferSent());
+  }
 
-    if (bytes_sent < 0)
-    {
-      ERR("Unable to send Body to CGI-Script");
-      deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
-    }
+  if (bytes_sent < 0)
+  {
+    ERR("Unable to send Body to CGI-Script");
+    deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
+  }
 
-    else if (bytes_sent == 0 || bytes_sent == message.size())
-    {
-      deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
-      updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
-    }
-    else
-    {
-      message.setMessage(message.getMessage().substr(bytes_sent));
-      cl->setMessage(message);
-    }
-    return true;
+  else if (bytes_sent == 0 || bytes_sent == message.size())
+  {
+    deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
+    updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+  }
+  else
+  {
+    message.setMessage(message.getMessage().substr(bytes_sent));
+    cl->setMessage(message);
+  }
+  return true;
 }
 
 void ServerManager::closeConnection(Client *cl)
@@ -405,7 +404,6 @@ void ServerManager::closeConnection(Client *cl)
     _clients.erase(it);
   }
 }
-
 
 // *unsure if recv will always read all the avialable data, need to learn.
 int ServerManager::handleReadEvent(Client *cl, int dataLen)
@@ -446,9 +444,17 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
     if (_req->getUri() == "/favicon.ico")
       std::cout << "\n";
 
+    // TODO change to cgi not POST
     if (_req->getMethod() == POST)
     {
-      launchCgi(*_req, cl);
+      Cgi *cgi = new Cgi();
+      cgi->launchCgi(*_req, cl);
+
+      updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+      updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
+      _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
+      _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
+
       Message message(_req->getBody());
       cl->setMessage(message);
       delete _req; // Clean up dynamically allocated memory
@@ -514,7 +520,7 @@ std::string ServerManager::getFileContents(std::string uri)
       {
         ERR("Could not find: %s", uri.c_str());
         // std::cout << "Could not find error page\n"
-                  // << std::endl;
+        // << std::endl;
       }
       file.read(contents, len);
       return (contents);
@@ -578,69 +584,68 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
   return (new HTTPRequest(headers, body, meth, uri, HTTP_1_1));
 }
 
-void ServerManager::launchCgi(HTTPRequest const &request, Client *cl)
-{
-  (void)request;
-  DEBUG("stepping into launchCgi");
-  // std::cout << "POSTHandler" << std::endl;
-  // int pipe_out[2];
-  // int pipe_in[2];
+// void ServerManager::launchCgi(HTTPRequest const &request, Client *cl)
+// {
+//   (void)request;
+//   DEBUG("stepping into launchCgi");
+//   // std::cout << "POSTHandler" << std::endl;
+//   // int pipe_out[2];
+//   // int pipe_in[2];
 
-  if (pipe(cl->pipe_out) < 0)
-  {
-    ERR("Failed pipe_out cgi");
-    // std::cerr << RED << "failed pipe_out cgi\n" << RESET;
-    return ;
-  }
+//   if (pipe(cl->pipe_out) < 0)
+//   {
+//     ERR("Failed pipe_out cgi");
+//     // std::cerr << RED << "failed pipe_out cgi\n" << RESET;
+//     return;
+//   }
 
-  if (pipe(cl->pipe_in) < 0)
-  {
-    // std::cerr << RED << "failed to pipe to cgi\n" << RESET;
-    ERR("Failed pipe_in cgi");
-    return ;
-  }
-  // cl->setPipeFrom(pipe_in);
-  // cl->setPipeTo(pipe_out);
+//   if (pipe(cl->pipe_in) < 0)
+//   {
+//     // std::cerr << RED << "failed to pipe to cgi\n" << RESET;
+//     ERR("Failed pipe_in cgi");
+//     return;
+//   }
+//   // cl->setPipeFrom(pipe_in);
+//   // cl->setPipeTo(pipe_out);
 
-  // Fork to create a child process for the CGI script
-  pid_t pid = fork();
-  if (pid == 0)
-  {
-    dup2(cl->pipe_in[0], STDIN_FILENO);
-    dup2(cl->pipe_out[1], STDOUT_FILENO);
-    close(cl->pipe_out[0]);
-    close(cl->pipe_out[1]);
-    close(cl->pipe_in[0]);
-    close(cl->pipe_in[1]);
+//   // Fork to create a child process for the CGI script
+//   pid_t pid = fork();
+//   if (pid == 0)
+//   {
+//     dup2(cl->pipe_in[0], STDIN_FILENO);
+//     dup2(cl->pipe_out[1], STDOUT_FILENO);
+//     close(cl->pipe_out[0]);
+//     close(cl->pipe_out[1]);
+//     close(cl->pipe_in[0]);
+//     close(cl->pipe_in[1]);
 
-    // Execute the CGI script
-    // execl("application/cgi-bin/register.py", "application/cgi-bin/register.py", NULL);
-    execl("/Library/Frameworks/Python.framework/Versions/3.10/bin/python3", "python3", "application/cgi-bin/register.py", NULL);
+//     // Execute the CGI script
+//     // execl("application/cgi-bin/register.py", "application/cgi-bin/register.py", NULL);
+//     execl("/Library/Frameworks/Python.framework/Versions/3.10/bin/python3", "python3", "application/cgi-bin/register.py", NULL);
 
+//     // If execl fails
+//     ERR("excel: %s", strerror(errno));
+//     // perror("execl");
+//     // std::cerr << "something happeneed to cgi\n";
+//     exit(EXIT_FAILURE);
+//   }
+//   else if (pid > 0)
+//   {
+//     updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+//     updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
+//     close(cl->pipe_in[0]);
+//     close(cl->pipe_out[1]);
+//     _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
+//     _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
 
-    // If execl fails
-    ERR("excel: %s", strerror(errno));
-    // perror("execl");
-    // std::cerr << "something happeneed to cgi\n";
-    exit(EXIT_FAILURE);
-  }
-  else if (pid > 0)
-  {
-    updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
-    close(cl->pipe_in[0]);
-    close(cl->pipe_out[1]);
-    _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
-    _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
-
-    DEBUG("%s %d", "pipe_in[0] = ", cl->pipe_in[0]);
-    DEBUG("%s %d", "pipe_in[1] = ", cl->pipe_in[1]);
-    DEBUG("%s %d", "pipe_out[0] = ", cl->pipe_out[0]);
-    DEBUG("%s %d", "pipe_out[1] = ", cl->pipe_out[1]);
-  }
-  else
-  {
-    ERR("Failed to fork: %s", strerror(errno));
-  }
-    // perror("fork");
-}
+//     DEBUG("%s %d", "pipe_in[0] = ", cl->pipe_in[0]);
+//     DEBUG("%s %d", "pipe_in[1] = ", cl->pipe_in[1]);
+//     DEBUG("%s %d", "pipe_out[0] = ", cl->pipe_out[0]);
+//     DEBUG("%s %d", "pipe_out[1] = ", cl->pipe_out[1]);
+//   }
+//   else
+//   {
+//     ERR("Failed to fork: %s", strerror(errno));
+//   }
+//   // perror("fork");
+// }

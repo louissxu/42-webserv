@@ -14,7 +14,7 @@ username = username.removeprefix("username=")
 password = password.removeprefix("password=")
 firstname = firstname.removeprefix("firstname=")
 
-newUser = user(username, password, firstname)
+# newUser = user(username, password, firstname)
 
 
 print("<!DOCTYPE html>")

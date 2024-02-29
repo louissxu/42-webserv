@@ -5,21 +5,27 @@
 #include <stdlib.h>
 
 #include "HTTPRequest.hpp"
+#include "Client.hpp"
 
 #define LOG_LEVEL 3
 #include "log.hpp"
 
 class Cgi
 {
-	private:
-		std::vector<std::string> _env; 
-		char **_argv;
-		// char **_env;
+private:
+	std::vector<std::string> _envVec;
+	std::vector<char *> _argv;
+	std::vector<char *> _env;
+	// char **_argv;
+	// char **_env;
+	// char **_env;
 
-	public:
-		Cgi();
-		~Cgi();
+public:
+	Cgi();
+	~Cgi();
 
-		void setArgv(HTTPRequest const &_req);
-		void setEnv(HTTPRequest const &_req);
+	void setArgv(HTTPRequest const &req);
+	void setEnv(HTTPRequest const &req);
+
+	void launchCgi(HTTPRequest const &req, Client *cl);
 };

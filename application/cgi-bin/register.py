@@ -1,3 +1,4 @@
+import os
 import user
 
 try:
@@ -14,8 +15,15 @@ username = username.removeprefix("username=")
 password = password.removeprefix("password=")
 firstname = firstname.removeprefix("firstname=")
 
-# newUser = user(username, password, firstname)
+session_id = os.getenv("session_id")
+newUser = user.User(session_id, username, password, firstname)
 
+# print ("HTTP/1.1 200 OK")
+# print ("Connection: Keep-Alive")
+# print ("Content-Length: 221")
+# print ("Content-Type: text/html")
+# print ("Server: mehdi's_webserv")
+# print 
 
 print("<!DOCTYPE html>")
 print("<html>")

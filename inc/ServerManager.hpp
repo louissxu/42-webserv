@@ -65,8 +65,11 @@ public:
   int handleReadEvent(Client *cl, int dataLen);
   bool handleWriteEvent(Client *cl, int dataLen);
 
-  void CgiReadHandler(Client *cl, struct kevent ev_list);
-  bool CgiWriteHandler(Client *cl, struct kevent ev_list);
+  // std::map<int, Client *> &get_cgiWrite();
+  // std::map<int, Client *> &get_cgiRead();
+
+  // void CgiReadHandler(Client *cl, struct kevent ev_list);
+  // bool CgiWriteHandler(Client *cl, struct kevent ev_list);
 
   void handleEOF(Client *cl, int fd, bool &isRead, bool &isWrite);
 

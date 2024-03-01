@@ -84,12 +84,13 @@ void ServerManager::acceptClient(int ListenSocket)
   clientFD = accept(ListenSocket, (struct sockaddr *)&client_address, (socklen_t *)&client_address_size);
   if (clientFD < 0)
   {
-    perror("accept");
+    ERR("Accpet: %s", strerror(errno));
+    // perror("accept");
   }
 
   if (fcntl(clientFD, F_SETFL, O_NONBLOCK) < 0)
   {
-    std::cout << "fcntl error: closing: " << clientFD << std::endl;
+    ERR("fcntl error: closing: %d\n errno: %s", clientFD, strerror(errno));
     close(clientFD);
     return;
   }
@@ -289,8 +290,8 @@ void ServerManager::runKQ()
       {
         if (!handleWriteEvent(myClient, ev_list[i].data))
         {
-          // updateEvent(ev_list[i].ident, EVFILT_READ, EV_ENABLE, 0, 0, NULL);
-          // updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+          updateEvent(ev_list[i].ident, EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+          updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
         }
       }
     }
@@ -330,6 +331,7 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
   char ClientMessage[4000];
 
   // int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
+  
   int readLen = read(cl->getSockFD(), ClientMessage, 4000);
 
   if (readLen == 0)
@@ -357,8 +359,8 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
       closeConnection(cl);
       return false;
     }
-    if (_req->getUri() == "/favicon.ico")
-      std::cout << "\n";
+    // if (_req->getUri() == "/favicon.ico")
+    //   std::cout << "\n";
 
     // TODO change to cgi not POST
     if (_req->getMethod() == POST)
@@ -371,6 +373,8 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
       _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
       _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
 
+      this->_resp = HTTPResponse(*_req);
+
       Message message(_req->getBody());
       cl->setMessage(message);
       delete _req; // Clean up dynamically allocated memory
@@ -378,6 +382,8 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
       return 2;
     }
 
+    
+    
     HTTPResponse _resp(*_req);
     Message message(_resp);
     cl->setMessage(message);
@@ -397,14 +403,14 @@ if not we have to send it in the second try.
 */
 bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
 {
-  std::cout << "writing response\n";
+  DEBUG("writing response\n");
   (void)dataLen;
   Message message = cl->getMessage();
 
   int attempSend = message.size();
   if (message.getBufferSent() == attempSend)
   {
-    closeConnection(cl);
+    // closeConnection(cl);
     return false;
   }
   int actualSend = send(cl->getSockFD(), message.getMessage().c_str(), attempSend, 0);
@@ -436,8 +442,6 @@ std::string ServerManager::getFileContents(std::string uri)
       if (!file.is_open())
       {
         ERR("Could not find: %s", uri.c_str());
-        // std::cout << "Could not find error page\n"
-        // << std::endl;
       }
       file.read(contents, len);
       return (contents);
@@ -500,69 +504,3 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
     meth = POST;
   return (new HTTPRequest(headers, body, meth, uri, HTTP_1_1));
 }
-
-// void ServerManager::launchCgi(HTTPRequest const &request, Client *cl)
-// {
-//   (void)request;
-//   DEBUG("stepping into launchCgi");
-//   // std::cout << "POSTHandler" << std::endl;
-//   // int pipe_out[2];
-//   // int pipe_in[2];
-
-//   if (pipe(cl->pipe_out) < 0)
-//   {
-//     ERR("Failed pipe_out cgi");
-//     // std::cerr << RED << "failed pipe_out cgi\n" << RESET;
-//     return;
-//   }
-
-//   if (pipe(cl->pipe_in) < 0)
-//   {
-//     // std::cerr << RED << "failed to pipe to cgi\n" << RESET;
-//     ERR("Failed pipe_in cgi");
-//     return;
-//   }
-//   // cl->setPipeFrom(pipe_in);
-//   // cl->setPipeTo(pipe_out);
-
-//   // Fork to create a child process for the CGI script
-//   pid_t pid = fork();
-//   if (pid == 0)
-//   {
-//     dup2(cl->pipe_in[0], STDIN_FILENO);
-//     dup2(cl->pipe_out[1], STDOUT_FILENO);
-//     close(cl->pipe_out[0]);
-//     close(cl->pipe_out[1]);
-//     close(cl->pipe_in[0]);
-//     close(cl->pipe_in[1]);
-
-//     // Execute the CGI script
-//     // execl("application/cgi-bin/register.py", "application/cgi-bin/register.py", NULL);
-//     execl("/Library/Frameworks/Python.framework/Versions/3.10/bin/python3", "python3", "application/cgi-bin/register.py", NULL);
-
-//     // If execl fails
-//     ERR("excel: %s", strerror(errno));
-//     // perror("execl");
-//     // std::cerr << "something happeneed to cgi\n";
-//     exit(EXIT_FAILURE);
-//   }
-//   else if (pid > 0)
-//   {
-//     updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-//     updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
-//     close(cl->pipe_in[0]);
-//     close(cl->pipe_out[1]);
-//     _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
-//     _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
-
-//     DEBUG("%s %d", "pipe_in[0] = ", cl->pipe_in[0]);
-//     DEBUG("%s %d", "pipe_in[1] = ", cl->pipe_in[1]);
-//     DEBUG("%s %d", "pipe_out[0] = ", cl->pipe_out[0]);
-//     DEBUG("%s %d", "pipe_out[1] = ", cl->pipe_out[1]);
-//   }
-//   else
-//   {
-//     ERR("Failed to fork: %s", strerror(errno));
-//   }
-//   // perror("fork");
-// }

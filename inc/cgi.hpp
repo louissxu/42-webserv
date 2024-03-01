@@ -28,10 +28,10 @@ public:
 	~Cgi();
 
 	void setArgv(HTTPRequest const &req);
-	void setEnv(HTTPRequest const &req);
+	void setEnv(HTTPRequest &req);
 
 	void CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list);
 	bool CgiWriteHandler(ServerManager &sm, Client *cl, struct kevent ev_list);
 
-	void launchCgi(HTTPRequest const &req, Client *cl);
+	void launchCgi(HTTPRequest &req, Client *cl);
 };

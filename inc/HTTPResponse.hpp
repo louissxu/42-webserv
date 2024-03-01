@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 
 #include "HTTPRequest.hpp"
+#include "log.hpp"
 
 enum Status
 {

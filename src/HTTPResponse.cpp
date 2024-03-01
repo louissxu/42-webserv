@@ -202,26 +202,55 @@ void HTTPResponse::setDefaultBody()
 }
 #include "Cout.hpp"
 // !helper functions
+
 bool HTTPResponse::getResourse(std::string const &path, int const &len)
 {
-	char contents[len + 1];
-	std::ifstream file;
-
-	file.open(path, std::ios::in | std::ios::binary);
+	(void)len;
+	// char contents[len + 1];
+	std::ifstream file(path, std::ios::in | std::ios::binary);
 	if (!file.is_open())
 	{
-		strerror(errno);
-		std::cout << "could not file error page\n"
-				  << std::endl;
+		ERR("Open: %s", strerror(errno));
 		return false;
 	}
-	file.read(contents, len);
-	contents[file.gcount()] = '\0';
-	this->body = contents;
+
+	std::ostringstream oss;
+    oss << file.rdbuf();
+    this->body = oss.str();
+
 	this->addHeader("Content-Length", std::to_string(this->body.size()));
-	this->addHeader("Content-Type", "text/" + path.substr(path.find(".") + 1, path.size()));
+	std::string filetype = path.substr(path.find(".") + 1, path.size());
+	if (filetype != "png")
+		this->addHeader("Content-Type", "text/" + filetype);
+	else
+		this->addHeader("Content-Type", "image/" + path.substr(path.find(".") + 1, path.size()));
+	// this->addHeader("Content-Type", "text/" + path.substr(path.find(".") + 1, path.size()));
 	return true;
 }
+
+// bool HTTPResponse::getResourse(std::string const &path, int const &len)
+// {
+// 	char contents[len + 1];
+// 	std::ifstream file;
+
+// 	file.open(path, std::ios::in | std::ios::binary);
+// 	if (!file.is_open())
+// 	{
+// 		ERR("Open: %s", strerror(errno));
+// 		return false;
+// 	}
+// 	file.read(contents, len);
+// 	contents[file.gcount()] = '\0';
+// 	this->body = contents;
+// 	this->addHeader("Content-Length", std::to_string(this->body.size()));
+// 	std::string filetype = path.substr(path.find(".") + 1, path.size());
+// 	if (filetype != "png")
+// 		this->addHeader("Content-Type", "text/" + filetype);
+// 	else
+// 		this->addHeader("Content-Type", "image/" + path.substr(path.find(".") + 1, path.size()));
+// 	// this->addHeader("Content-Type", "text/" + path.substr(path.find(".") + 1, path.size()));
+// 	return true;
+// }
 
 void HTTPResponse::getDefaultResourse()
 {

@@ -41,6 +41,10 @@ public:
 	HTTPRequest();
 	~HTTPRequest();
 
+	// setters
+	void setHeader(std::string const &key, std::string const &value);
+
+	// getters
 	std::map<std::string, std::string> const &getHeaders() const;
 	std::string const &getHeader(std::string const &key) const;
 	std::string const &getBody() const;

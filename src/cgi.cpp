@@ -35,7 +35,7 @@ Cgi::Cgi() {}
 
 Cgi::~Cgi() {}
 
-void Cgi::setEnv(HTTPRequest const &req)
+void Cgi::setEnv(HTTPRequest &req)
 {
 	_envVec.push_back("Content-Length=" + req.getHeader("Content-Length"));
 	_envVec.push_back("User-Agent=" + req.getHeader("User-Agent"));
@@ -45,7 +45,9 @@ void Cgi::setEnv(HTTPRequest const &req)
 
 	if (req.getHeader("session_id") == std::string())
 	{
-		_envVec.push_back("session_id=" + genSessionID(32, 5));
+		std::string id = genSessionID(32, 5);
+		req.setHeader("session-id", id);
+		_envVec.push_back("session_id=" + id);
 	}
 	// _env = (char **)malloc(sizeof(char *) * (_envVec.size() + 1));
 	_env = std::vector<char*>(_envVec.size() + 1);
@@ -166,10 +168,10 @@ bool Cgi::CgiWriteHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 
 
 // !unsure when to free _argv and _env
-void Cgi::launchCgi(HTTPRequest const &req, Client *cl)
+void Cgi::launchCgi(HTTPRequest &req, Client *cl)
 {
 	setArgv(req);
-	// setEnv(req);
+	setEnv(req);
 
 	//   (void)request;
 	DEBUG("stepping into launchCgi");
@@ -192,7 +194,9 @@ void Cgi::launchCgi(HTTPRequest const &req, Client *cl)
 	}
 	// cl->setPipeFrom(pipe_in);
 	// cl->setPipeTo(pipe_out);
-
+	std::vector<char *>::iterator it;
+	for (it = _env.begin(); it != _env.end(); ++it)
+		DEBUG("%s", *it);
 	// Fork to create a child process for the CGI script
 	pid_t pid = fork();
 	if (pid == 0)

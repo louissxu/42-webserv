@@ -1,16 +1,16 @@
 import sqlite3
 
-connection = sqlite3.connect("database.db")
-cursor = connection.cursor()
+# connection = sqlite3.connect("database.db")
+# cursor = connection.cursor()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-			   sessionID INTEGER,
-			   userName TEXT,
-			   password TEXT,
-			   firstName TEXT
-)
-""")
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS users (
+# 			   sessionID INTEGER,
+# 			   userName TEXT,
+# 			   password TEXT,
+# 			   firstName TEXT
+# )
+# """)
 
 class User:
 	def __init__(self, sessionID, userName="", password="", firstName=""):
@@ -20,7 +20,16 @@ class User:
 		self.firstName = firstName
 	
 		self.connection = sqlite3.connect("database.db")
-		self.cursor = connection.cursor()
+		self.cursor = self.connection.cursor()
+
+		self.cursor.execute("""
+		CREATE TABLE IF NOT EXISTS users (
+					sessionID INTEGER,
+					userName TEXT,
+					password TEXT,
+					firstName TEXT
+		)
+		""")
 
 	def getUser(self, sessionID):
 		self.cursor.execute("""
@@ -30,11 +39,13 @@ class User:
 
 		results = self.cursor.fetchone()
 		if results:
+			return True
 			self.sessionID = results[0]
 			self.username = results[1]
 			self.password = results[2]
 			self.firstname = results[3]
 		else:
+			return False
 			print("User not found.")
 
 	def addUser(self):
@@ -44,7 +55,7 @@ class User:
 			""".format(self.sessionID, self.userName, self.password, self.firstName))
 		
 		self.connection.commit()
-		self.connection.close()
+		# self.connection.close()
 
 # p1 = User(123445, "mehdi1", "pss",  "medhi")
 # p1.addUser()

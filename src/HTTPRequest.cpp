@@ -16,6 +16,16 @@ HTTPRequest::~HTTPRequest()
 {
 }
 
+// !Might have to append value in some cases research further
+void HTTPRequest::setHeader(std::string const &key, std::string const &value)
+{
+	std::map<std::string, std::string>::iterator it = headers.find(key);
+	if (it == headers.end())
+		headers.insert(std::pair<std::string, std::string>(key, value));
+	else
+		it->second = value;
+}
+
 std::map<std::string, std::string> const &HTTPRequest::getHeaders() const
 {
 	return this->headers;

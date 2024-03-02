@@ -152,6 +152,9 @@ void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short 
     if (fdmap.empty())
       return;
   }
+  DEBUG("\n\n");
+  areFdsOpen(cl->pipe_in, cl->pipe_out);
+  DEBUG("\n\n");
 }
 
 void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter)
@@ -161,6 +164,9 @@ void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, int fd, short filt
   {
     updateEvent(it->first, filter, EV_DELETE, 0, 0, NULL);
     close(it->first);
+    DEBUG("\n\n");
+    areFdsOpen(it->second->pipe_in, it->second->pipe_out);
+    DEBUG("\n\n");
     fdmap.erase(it);
   }
 }
@@ -503,4 +509,10 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
   if (method == "POST")
     meth = POST;
   return (new HTTPRequest(headers, body, meth, uri, HTTP_1_1));
+}
+
+
+HTTPResponse &ServerManager::getResponse()
+{
+  return this->_resp;
 }

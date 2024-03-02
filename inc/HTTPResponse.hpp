@@ -61,7 +61,6 @@ public:
 	std::map<std::string, std::string> const &getHeaders() const;
 	std::string const &getBody() const;
 
-	void setBodyUri(std::string const &uri);
 
 	void buildDefaultResponse();
 	void setDefaultHeaders();
@@ -71,6 +70,7 @@ private:
 	bool getResourse(std::string const &path, int const &len);
 	void getDefaultResourse();
 
+	void GETHandler(std::string const &uri);
 	int const &POSTHandler(HTTPRequest const &request);
 };
 

@@ -22,7 +22,7 @@ if (session_id == None):
 # print (session_id)
 newUser = user.User(session_id, username, password, firstname)
 
-if (newUser.getUser(session_id) == False):
+if (newUser.getUserByUsername(username) == False):
 	newUser.addUser()
 	print("<!DOCTYPE html>")
 	print("<html>")
@@ -32,7 +32,7 @@ if (newUser.getUser(session_id) == False):
 	print("</head>")
 	print("<body>")
 	print("<h1>Form Submission Result</h1>")
-	print("<pre>welcome: " + firstname + "</pre>")
+	print("<pre>thanks for registering: " + firstname + "</pre>")
 	print("</body>")
 	print("</html>")
 else:
@@ -44,7 +44,7 @@ else:
 	print("</head>")
 	print("<body>")
 	print("<h1>Form Submission Result</h1>")
-	print("<pre>welcome back: " + firstname + "</pre>")
+	print("<pre>welcome back you are already a member: " + firstname + "</pre>")
 	print("</body>")
 	print("</html>")
 

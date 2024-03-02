@@ -46,7 +46,7 @@ void Cgi::setEnv(HTTPRequest &req)
 	if (req.getHeader("session_id") == std::string())
 	{
 		std::string id = genSessionID(32, 5);
-		req.setHeader("session-id", id);
+		req.setHeader("Set-Cookie", "session-id=" + id);
 		_envVec.push_back("session_id=" + id);
 	}
 	// _env = (char **)malloc(sizeof(char *) * (_envVec.size() + 1));
@@ -113,9 +113,12 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
     DEBUG("Bytes Read: %d", bytesRead);
     message.append(buffer);
 
-    HTTPResponse cgiResponse;
+    HTTPResponse cgiResponse = sm.getResponse();
+	cgiResponse.setVersion("HTTP/1.1");
     cgiResponse.setBody(message);
+
     cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
+	// cgiResponse.addHeader("session-id", )
     Message cgiMessage = Message(cgiResponse);
     cl->setMessage(cgiMessage);
     message.clear();

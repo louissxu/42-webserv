@@ -31,7 +31,7 @@ class User:
 		)
 		""")
 
-	def getUser(self, sessionID):
+	def getUserByID(self, sessionID):
 		self.cursor.execute("""
 		SELECT * FROM users
 		WHERE sessionID = ?
@@ -47,7 +47,22 @@ class User:
 		else:
 			return False
 			print("User not found.")
+	def getUserByUsername(self, userName=""):
+		self.cursor.execute("""
+		SELECT * FROM users
+		WHERE userName = ?
+		""", (userName,))
 
+		results = self.cursor.fetchone()
+		if results:
+			self.sessionID = results[0]
+			self.username = results[1]
+			self.password = results[2]
+			self.firstname = results[3]
+			return True
+		else:
+			return False
+			print("User not found.")
 	def addUser(self):
 		self.cursor.execute("""
 			INSERT INTO users VALUES

@@ -76,6 +76,7 @@ public:
   void closeConnection(Client *cl);
   bool isListeningSocket(int socket_fd);
 
+  HTTPResponse &getResponse();
 
 private:
   // void launchCgi(HTTPRequest const &request, Client *cl);

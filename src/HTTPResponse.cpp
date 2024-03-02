@@ -27,15 +27,17 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 HTTPResponse::HTTPResponse(HTTPRequest const &request)
 {
 	buildDefaultResponse();
+	if (request.getHeader("Set-Cookie") != std::string())
+		headers.insert(std::pair<std::string, std::string>("Set-Cookie", request.getHeader("Set-Cookie")));
 	std::cout << "method was: " << request.getMethod() << std::endl;
 	switch (request.getMethod())
 	{
 	case Method(GET):
-		setBodyUri(request.getUri());
+		GETHandler(request.getUri());
 		return ;
-	// case Method(POST):
-	// 	POSTHandler(request);
-		// return ;
+	case Method(POST):
+		POSTHandler(request);
+		return ;
 	default:
 		return ;
 	}
@@ -134,9 +136,9 @@ std::string const &HTTPResponse::getBody() const
 	return this->body;
 }
 
-void HTTPResponse::setBodyUri(std::string const &uri)
+void HTTPResponse::GETHandler(std::string const &uri)
 {
-	std::cout << "went in setBodyUri" << std::endl;
+	std::cout << "went in GETHandler" << std::endl;
 	if (uri.empty())
 	{
 		this->body = "";
@@ -173,7 +175,7 @@ void HTTPResponse::setBodyUri(std::string const &uri)
 	else
 	{
 		this->getDefaultResourse();
-		// this->setBodyUri("error404/errorPage.html");
+		// this->GETHandler("error404/errorPage.html");
 	}
 	//   return "";
 	// this->body = "";

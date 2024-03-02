@@ -14,7 +14,40 @@ username, password = body.split('&')
 username = username.removeprefix("username=")
 password = password.removeprefix("password=")
 
-session_id = os.getenv("session_id")
+# session_id = os.getenv("session_id")
+# if (session_id == None):
+# 	session_id = 12345
+
+oldUser = user.User(0, username, password, "")
+if (oldUser.getUserByUsername(username) == True):
+	print("<!DOCTYPE html>")
+	print("<html>")
+	print("<head>")
+	print("<title>Form Submission Result</title>")
+	print("<style>h1{ text-align: center; }pre{ text-align: center; }</style>")
+	print("</head>")
+	print("<body>")
+	print("<h1>Form Submission Result</h1>")
+	print("<pre>welcome back: " + username + "</pre>")
+	print("</body>")
+	print("</html>")
+else:
+	print("<!DOCTYPE html>")
+	print("<html>")
+	print("<head>")
+	print("<title>Form Submission Result</title>")
+	print("<style>h1{ text-align: center; }pre{ text-align: center; }</style>")
+	print("</head>")
+	print("<body>")
+	print("<h1>Form Submission Result</h1>")
+	print("<pre>no such user found: " + username + "</pre>")
+	print("</body>")
+	print("</html>")
+
+
+
+
+# session_id = os.getenv("session_id")
 # newUser = user.User(session_id, username, password, firstname)
 
 # print ("HTTP/1.1 200 OK")
@@ -24,14 +57,3 @@ session_id = os.getenv("session_id")
 # print ("Server: mehdi's_webserv")
 # print 
 
-print("<!DOCTYPE html>")
-print("<html>")
-print("<head>")
-print("<title>Form Submission Result</title>")
-print("<style>h1{ text-align: center; }pre{ text-align: center; }</style>")
-print("</head>")
-print("<body>")
-print("<h1>Form Submission Result</h1>")
-print("<pre>welcome: " + username + "</pre>")
-print("</body>")
-print("</html>")

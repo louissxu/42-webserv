@@ -27,16 +27,19 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 HTTPResponse::HTTPResponse(HTTPRequest const &request)
 {
 	buildDefaultResponse();
-	if (request.getHeader("Set-Cookie") != std::string())
-		headers.insert(std::pair<std::string, std::string>("Set-Cookie", request.getHeader("Set-Cookie")));
-	std::cout << "method was: " << request.getMethod() << std::endl;
+
+	// std::cout << "method was: " << request.getMethod() << std::endl;
+	// if (request.getHeader("Cookie") != std::string())
+	// 		headers.insert(std::pair<std::string, std::string>("Set-Cookie", request.getHeader("Set-Cookie")));
+
 	switch (request.getMethod())
 	{
 	case Method(GET):
 		GETHandler(request.getUri());
 		return ;
 	case Method(POST):
-		POSTHandler(request);
+		if (request.getHeader("Set-Cookie") != std::string())
+			headers.insert(std::pair<std::string, std::string>("Set-Cookie", request.getHeader("Set-Cookie")));
 		return ;
 	default:
 		return ;

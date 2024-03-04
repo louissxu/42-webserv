@@ -337,7 +337,7 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
   char ClientMessage[4000];
 
   // int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
-  
+
   int readLen = read(cl->getSockFD(), ClientMessage, 4000);
 
   if (readLen == 0)
@@ -383,13 +383,15 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
 
       Message message(_req->getBody());
       cl->setMessage(message);
+      cl->setBufferRead(0);
+      cl->resetRecvMessage();
       delete _req; // Clean up dynamically allocated memory
       delete cgi;
       return 2;
     }
 
-    
-    
+
+
     HTTPResponse _resp(*_req);
     Message message(_resp);
     cl->setMessage(message);
@@ -409,7 +411,7 @@ if not we have to send it in the second try.
 */
 bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
 {
-  DEBUG("writing response\n");
+  // DEBUG("writing response\n");
   (void)dataLen;
   Message message = cl->getMessage();
 

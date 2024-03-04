@@ -4,7 +4,7 @@ import user
 try:
 	body = input()
 except EOFError:
-	print("hello")
+	print("Login.py read error\n")
 	exit()
 
 if (body == ""):
@@ -55,5 +55,5 @@ else:
 # print ("Content-Length: 221")
 # print ("Content-Type: text/html")
 # print ("Server: mehdi's_webserv")
-# print 
+# print
 

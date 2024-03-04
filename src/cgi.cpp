@@ -64,7 +64,8 @@ void Cgi::setEnv(HTTPRequest &req)
 void Cgi::setArgv(HTTPRequest const &req)
 {
 	_argv = std::vector<char*>(3);
-	std::string pythonPath = "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3";
+	// std::string pythonPath = "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3";
+	std::string pythonPath = "/usr/local/bin/python3";
 	std::string cgiScript = "application" + req.getUri();
 
 	_argv[0] = new char[pythonPath.size() + 1];
@@ -217,7 +218,7 @@ void Cgi::launchCgi(HTTPRequest &req, Client *cl)
 		// execl("/Library/Frameworks/Python.framework/Versions/3.10/bin/python3", "python3", "application/cgi-bin/register.py", NULL);
 		execve(_argv[0], _argv.data(), _env.data());
 		// If execl fails
-		ERR("execve: %s", strerror(errno));
+		ERR("execve: %s %s", _argv[1], strerror(errno));
 		// perror("execl");
 		// std::cerr << "something happeneed to cgi\n";
 		exit(EXIT_FAILURE);

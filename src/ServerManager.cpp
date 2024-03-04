@@ -205,18 +205,22 @@ void ServerManager::updateEvent(int ident, short filter, u_short flags, u_int ff
   kevent(kq, &kev, 1, NULL, 0, NULL);
 }
 
-void ServerManager::handleEOF(Client *cl, int fd, bool &isCgiRead, bool &isCgiWrite)
+void ServerManager::handleEOF(Client *cl, struct kevent fd, bool &isCgiRead, bool &isCgiWrite)
 {
+  std::cout << BOLDRED << "closing read " << fd.ident << RESET << std::endl;
+
   if (isCgiRead)
   {
+    // updateEvent(ev_list[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+    // updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
     updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
     updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-    deleteCgi(_cgiRead, fd, EVFILT_READ);
+    deleteCgi(_cgiRead, fd.ident, EVFILT_READ);
     isCgiRead = false;
   }
   else if (isCgiWrite)
   {
-    deleteCgi(_cgiRead, fd, EVFILT_READ);
+    deleteCgi(_cgiRead, fd.ident, EVFILT_READ);
     isCgiWrite = false;
   }
   else
@@ -229,12 +233,75 @@ void ServerManager::runKQ()
 {
   bool isCgiRead = false;
   bool isCgiWrite = false;
+  struct timespec timeout = {1, 0};
+  std::stack<int> readingFds;
 
   createQ();
   while (true)
   {
-    int nev = kevent(kq, NULL, 0, ev_list, MAX_EVENTS, nullptr);
-    if (nev <= 0)
+    int nev = kevent(kq, NULL, 0, ev_list, MAX_EVENTS, &timeout);
+    if (nev == 0)
+    {
+      while (!readingFds.empty())
+      {
+        Client *myClient = getClient(readingFds.top());
+
+        HTTPRequest *_req = parseRequest(myClient, myClient->getRecvMessage());
+        if (_req == NULL)
+        {
+          ERR("Failed to parse request from %d: ", myClient->getSockFD());
+          closeConnection(myClient);
+          continue;
+          // return false;
+        }
+        // if (_req->getUri() == "/favicon.ico")
+        //   std::cout << "\n";
+
+        // TODO change to cgi not POST
+        if (_req->getMethod() == POST)
+        {
+          updateEvent(myClient->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+          updateEvent(myClient->getSockFD(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+
+          Cgi *cgi = new Cgi();
+          cgi->launchCgi(*_req, myClient);
+
+          updateEvent(myClient->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+          updateEvent(myClient->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
+          _cgiWrite.insert(std::pair<int, Client *>(myClient->pipe_in[1], myClient));
+          _cgiRead.insert(std::pair<int, Client *>(myClient->pipe_out[0], myClient));
+
+          this->_resp = HTTPResponse(*_req);
+
+          Message message(_req->getBody());
+          myClient->setMessage(message);
+          myClient->setBufferRead(0);
+          myClient->resetRecvMessage();
+          delete _req; // Clean up dynamically allocated memory
+          delete cgi;
+          // return 2;
+        }
+        else
+        {
+
+          HTTPResponse _resp(*_req);
+          Message message(_resp);
+          myClient->setMessage(message);
+          myClient->setBufferRead(0);
+          myClient->resetRecvMessage();
+          delete _req; // Clean up dynamically allocated memory
+          updateEvent(readingFds.top(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+          updateEvent(readingFds.top(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+          // return false;
+        }
+
+        // cout << stack.top() << " ";
+        readingFds.pop();
+      }
+
+      continue;
+    }
+    else if (nev < 0)
     {
       ERR("Kevent: %s", strerror(errno));
       continue;
@@ -258,7 +325,7 @@ void ServerManager::runKQ()
       }
       if (ev_list[i].flags & EV_EOF)
       {
-        handleEOF(myClient, ev_list[i].ident, isCgiRead, isCgiWrite);
+        handleEOF(myClient, ev_list[i], isCgiRead, isCgiWrite);
         continue;
       }
       if (isCgiWrite)
@@ -280,12 +347,21 @@ void ServerManager::runKQ()
       }
       else if (ev_list[i].filter == EVFILT_READ)
       {
+        readingFds.push(ev_list[i].ident);
         int r = handleReadEvent(myClient, ev_list[i].data);
-        if (r == 0)
-        {
-          updateEvent(ev_list[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-          updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-        }
+        if (r == 0 || r == 1)
+          continue;
+        // if (r == 0)
+        // {
+        //   updateEvent(ev_list[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+        //   updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+        // }
+        // if (r == 1)
+        // {
+        //   continue;
+        //   // updateEvent(ev_list[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+        //   // updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+        // }
         else if (r == 2)
         {
           updateEvent(ev_list[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
@@ -331,21 +407,19 @@ void ServerManager::closeConnection(Client *cl)
 // *unsure if recv will always read all the avialable data, need to learn.
 int ServerManager::handleReadEvent(Client *cl, int dataLen)
 {
+  (void)dataLen;
   if (cl == NULL)
     return false;
 
   char ClientMessage[4000];
-
-  // int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
-
   int readLen = read(cl->getSockFD(), ClientMessage, 4000);
 
-  if (readLen == 0)
-  {
-    closeConnection(cl);
-    return false;
-  }
-  else if (readLen < 0)
+  // if (readLen == 0)
+  // {
+  //   closeConnection(cl);
+  //   return false;
+  // }
+  if (readLen < 0)
   {
     ERR("unable to recv from %d", cl->getSockFD());
     closeConnection(cl);
@@ -356,52 +430,50 @@ int ServerManager::handleReadEvent(Client *cl, int dataLen)
   ClientMessage[readLen] = '\0';
   DEBUG("Recived from: %d\n%s%s%s", cl->getSockFD(), BLUE, ClientMessage, RESET);
 
-  if (cl->getBufferRead() == dataLen)
-  {
-    HTTPRequest *_req = parseRequest(cl, cl->getRecvMessage());
-    if (_req == NULL)
-    {
-      ERR("Failed to parse request from %d: ", cl->getSockFD());
-      closeConnection(cl);
-      return false;
-    }
-    // if (_req->getUri() == "/favicon.ico")
-    //   std::cout << "\n";
+  // if (cl->getBufferRead() == dataLen)
+  // {
+  //   HTTPRequest *_req = parseRequest(cl, cl->getRecvMessage());
+  //   if (_req == NULL)
+  //   {
+  //     ERR("Failed to parse request from %d: ", cl->getSockFD());
+  //     closeConnection(cl);
+  //     return false;
+  //   }
+  //   // if (_req->getUri() == "/favicon.ico")
+  //   //   std::cout << "\n";
 
-    // TODO change to cgi not POST
-    if (_req->getMethod() == POST)
-    {
-      Cgi *cgi = new Cgi();
-      cgi->launchCgi(*_req, cl);
+  //   // TODO change to cgi not POST
+  //   if (_req->getMethod() == POST)
+  //   {
+  //     Cgi *cgi = new Cgi();
+  //     cgi->launchCgi(*_req, cl);
 
-      updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-      updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
-      _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
-      _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
+  //     updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+  //     updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
+  //     _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
+  //     _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
 
-      this->_resp = HTTPResponse(*_req);
+  //     this->_resp = HTTPResponse(*_req);
 
-      Message message(_req->getBody());
-      cl->setMessage(message);
-      cl->setBufferRead(0);
-      cl->resetRecvMessage();
-      delete _req; // Clean up dynamically allocated memory
-      delete cgi;
-      return 2;
-    }
+  //     Message message(_req->getBody());
+  //     cl->setMessage(message);
+  //     cl->setBufferRead(0);
+  //     cl->resetRecvMessage();
+  //     delete _req; // Clean up dynamically allocated memory
+  //     delete cgi;
+  //     return 2;
+  //   }
 
+  //   HTTPResponse _resp(*_req);
+  //   Message message(_resp);
+  //   cl->setMessage(message);
+  //   cl->setBufferRead(0);
+  //   cl->resetRecvMessage();
+  //   delete _req; // Clean up dynamically allocated memory
+  //   return false;
+  // }
 
-
-    HTTPResponse _resp(*_req);
-    Message message(_resp);
-    cl->setMessage(message);
-    cl->setBufferRead(0);
-    cl->resetRecvMessage();
-    delete _req; // Clean up dynamically allocated memory
-    return false;
-  }
-
-  return true;
+  return 1;
 }
 
 /*
@@ -469,6 +541,8 @@ std::string ServerManager::getFileContents(std::string uri)
 
 HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
 {
+  if (message.empty())
+    return NULL;
   (void)cl;
   std::string key, value; // header, value
   std::string method;
@@ -487,7 +561,7 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
   std::getline(line_stream, version, '\r');
 
   // Parse headers
-  while (std::getline(ss, line) && !line.empty())
+  while (std::getline(ss, line) && !line.empty() && line != "\r")
   {
     size_t colonPos = line.find(':');
     if (colonPos != std::string::npos)
@@ -497,6 +571,8 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
       headers[key] = value;
     }
   }
+
+  // Parse body
   std::getline(ss, line);
   body = line;
   // Get the rest as the body
@@ -512,7 +588,6 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
     meth = POST;
   return (new HTTPRequest(headers, body, meth, uri, HTTP_1_1));
 }
-
 
 HTTPResponse &ServerManager::getResponse()
 {

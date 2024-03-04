@@ -15,6 +15,7 @@ private:
 	int bufferRead;
 	std::string recvMessage;
 	Message message;
+	bool isCgi;
 
 public:
 	int pipe_in[2];

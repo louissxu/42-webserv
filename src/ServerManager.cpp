@@ -228,7 +228,7 @@ void ServerManager::handleEOF(Client *cl, struct kevent fd, bool &isCgiRead, boo
     closeConnection(cl);
   }
 }
-
+#include <stack>
 void ServerManager::runKQ()
 {
   bool isCgiRead = false;
@@ -250,7 +250,8 @@ void ServerManager::runKQ()
         if (_req == NULL)
         {
           ERR("Failed to parse request from %d: ", myClient->getSockFD());
-          closeConnection(myClient);
+          // closeConnection(myClient);
+          readingFds.pop();
           continue;
           // return false;
         }
@@ -296,10 +297,9 @@ void ServerManager::runKQ()
         }
 
         // cout << stack.top() << " ";
-        readingFds.pop();
-      }
 
-      continue;
+      readingFds.pop();
+      }
     }
     else if (nev < 0)
     {

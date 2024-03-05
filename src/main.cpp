@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
 
     if (argc == 1)
     { 
-      std::string defaultConfigParser = "config/default.conf";
+      std::string defaultConfigParser = "config/default.config";
       std::cout << BLUE << "Main\t: " << RESET
       << "(Default ConfigParser file used): see <" << defaultConfigParser << ">. " << std::endl;
       parser.setContent(defaultConfigParser);

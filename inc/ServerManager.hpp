@@ -63,11 +63,11 @@ public:
   Client *getCgiRead(int fd);
   int getCgiReadFd(Client *cl);
   Client *getCgiWrite(int fd);
-  int handleReadEvent(Client *cl, int dataLen);
+  int handleReadEvent(Client *cl, struct kevent event);
   bool handleWriteEvent(Client *cl, int dataLen);
 
 
-  void handleEOF(Client *cl, struct kevent fd, bool &isRead, bool &isWrite);
+  void handleEOF(Client *cl, int fd, bool &isRead, bool &isWrite);
 
   HTTPRequest *parseRequest(Client *cl, std::string const &message);
 

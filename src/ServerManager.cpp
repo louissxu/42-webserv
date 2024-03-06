@@ -49,59 +49,6 @@ void ServerManager::addServer(const Server &server)
   return;
 }
 
-/*
-*purpose
-add all the listening sockets(servers) to the empty queue (kq);
-*/
-void ServerManager::createQ()
-{
-  ev_set = new struct kevent[_servers.size()];
-  kq = kqueue();
-  if (kq == -1)
-  {
-    ERR("Kqueue: %s", strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-
-  for (size_t i = 0; i < _servers.size(); i++)
-  {
-    EV_SET(&ev_set[i], _servers[i].getSockFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-    if (kevent(kq, &ev_set[i], 1, NULL, 0, NULL) == -1)
-    {
-      ERR("Kqueue: %s", strerror(errno));
-      exit(EXIT_FAILURE);
-    }
-  }
-  std::cout << "\n\n";
-}
-
-void ServerManager::acceptClient(int ListenSocket)
-{
-  int clientFD;
-  struct sockaddr_in client_address;
-  long client_address_size = sizeof(client_address);
-
-  clientFD = accept(ListenSocket, (struct sockaddr *)&client_address, (socklen_t *)&client_address_size);
-  if (clientFD < 0)
-  {
-    ERR("Accpet: %s", strerror(errno));
-    return;
-  }
-  RECORD("LISTENER: %d\t ACCEPTED: %d", ListenSocket, clientFD);
-  if (fcntl(clientFD, F_SETFL, O_NONBLOCK) < 0)
-  {
-    ERR("fcntl error: closing: %d\n errno: %s", clientFD, strerror(errno));
-    close(clientFD);
-    return;
-  }
-
-  Client *cl = new Client(clientFD, ListenSocket, client_address);
-  _clients.insert(std::pair<int, Client *>(clientFD, cl));
-
-  updateEvent(clientFD, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-  updateEvent(clientFD, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-}
-
 Client *ServerManager::getClient(int fd)
 {
   std::map<int, Client *>::iterator it = _clients.find(fd);
@@ -205,172 +152,6 @@ void ServerManager::updateEvent(int ident, short filter, u_short flags, u_int ff
   kevent(kq, &kev, 1, NULL, 0, NULL);
 }
 
-void ServerManager::handleEOF(Client *cl, int fd, bool &isCgiRead, bool &isCgiWrite)
-{
-  if (isCgiRead)
-  {
-    updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-    updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-    deleteCgi(_cgiRead, fd, EVFILT_READ);
-    isCgiRead = false;
-  }
-  else if (isCgiWrite)
-  {
-    deleteCgi(_cgiRead, fd, EVFILT_READ);
-    isCgiWrite = false;
-  }
-  else
-  {
-    closeConnection(cl);
-  }
-}
-
-#define NOMOREDATA 0
-#define MOREDATA 1
-#define ERRORDATA 2
-
-void ServerManager::runKQ()
-{
-  bool isCgiRead = false;
-  bool isCgiWrite = false;
-
-  createQ();
-  while (true)
-  {
-    int nev = kevent(kq, NULL, 0, ev_list, MAX_EVENTS, nullptr);
-    if (nev <= 0)
-    {
-      ERR("Kevent: %s", strerror(errno));
-      continue;
-    }
-    for (int i = 0; i < nev; i++)
-    {
-      if (isListeningSocket(ev_list[i].ident))
-      {
-        acceptClient(ev_list[i].ident);
-        continue;
-      }
-      Client *cl = getClient(ev_list[i].ident);
-      if (cl == nullptr)
-      {
-        cl = getCgiClient(ev_list[i].ident, isCgiRead, isCgiWrite);
-        if (cl == nullptr)
-        {
-          ERR("Client: %d does not exist!", (int)ev_list[i].ident);
-          continue;
-        }
-      }
-      if (ev_list[i].flags & EV_EOF)
-      {
-        handleEOF(cl, ev_list[i].ident, isCgiRead, isCgiWrite);
-        continue;
-      }
-      if (isCgiWrite)
-      {
-        Cgi cgi;
-        areFdsOpen(cl->pipe_in, cl->pipe_out);
-        if (!cgi.CgiWriteHandler(*this, cl, ev_list[i]))
-        {
-          deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
-        }
-        isCgiWrite = false;
-      }
-      else if (isCgiRead)
-      {
-        Cgi cgi;
-        areFdsOpen(cl->pipe_in, cl->pipe_out);
-        cgi.CgiReadHandler(*this, cl, ev_list[i]);
-        isCgiRead = false;
-      }
-      else if (ev_list[i].filter == EVFILT_READ)
-      {
-        int r = handleReadEvent(cl, ev_list[i]);
-
-        if (r == NOMOREDATA)
-        {
-          HTTPRequest *_req = parseRequest(cl, cl->getRecvMessage());
-          if (_req == NULL)
-          {
-            ERR("Failed to parse request from %d: ", cl->getSockFD());
-            closeConnection(cl);
-            // return false;
-          }
-
-          // TODO change to cgi not POST
-          if (_req->getCGIStatus() == true)
-          {
-
-            if (_req->getBody() != std::string())
-            {
-              if (std::stoi(_req->getHeader("Content-Length")) == (int)_req->getBody().size())
-              {
-                Cgi *cgi = new Cgi();
-                cgi->launchCgi(*_req, cl);
-
-                updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-                updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
-                _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
-                _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
-
-                this->_resp = HTTPResponse(*_req);
-
-                Message message(_req->getBody());
-                cl->setMessage(message);
-                cl->setBufferRead(0);
-                cl->resetRecvMessage();
-
-                DEBUG("Content is equel")
-                updateEvent(ev_list[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-                updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-
-                RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev_list[i].ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
-                delete _req; // Clean up dynamically allocated memory
-                delete cgi;
-              }
-            }
-            else
-            {
-              DEBUG("Content is not equel");
-            }
-            continue;
-          }
-
-          HTTPResponse _resp(*_req);
-          Message message(_resp);
-          cl->setMessage(message);
-          cl->setBufferRead(0);
-          cl->resetRecvMessage();
-          if (_req->getHeader("Content-Length") == std::string())
-          {
-            updateEvent(ev_list[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-            updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-            RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev_list[i].ident, _req->getMethodString().c_str(), _req->getUri().c_str());
-          }
-          else
-          {
-            if (std::stoi(_req->getHeader("Content-Length")) == (int)_req->getBody().size())
-            {
-              updateEvent(ev_list[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-              updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-              RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev_list[i].ident, _req->getMethodString().c_str(), _req->getUri().c_str());
-            }
-          }
-          delete _req; // Clean up dynamically allocated memory
-        }
-      }
-      else if (ev_list[i].filter == EVFILT_WRITE)
-      {
-        if (!handleWriteEvent(cl, ev_list[i].data))
-        {
-          updateEvent(ev_list[i].ident, EVFILT_READ, EV_ENABLE, 0, 0, NULL);
-          updateEvent(ev_list[i].ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-        }
-      }
-    }
-  }
-}
-// }
-
 void ServerManager::closeConnection(Client *cl)
 {
   // int i = 0;
@@ -392,6 +173,223 @@ void ServerManager::closeConnection(Client *cl)
     deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
     delete it->second;
     _clients.erase(it);
+  }
+}
+
+void ServerManager::handleEOF(Client *cl, int fd, bool &isCgiRead, bool &isCgiWrite)
+{
+  if (isCgiRead)
+  {
+    updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+    updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+    deleteCgi(_cgiRead, fd, EVFILT_READ);
+    isCgiRead = false;
+  }
+  else if (isCgiWrite)
+  {
+    deleteCgi(_cgiRead, fd, EVFILT_READ);
+    isCgiWrite = false;
+  }
+  else
+  {
+    closeConnection(cl);
+  }
+}
+
+/*
+*purpose
+add all the listening sockets(servers) to the empty queue (kq);
+*/
+void ServerManager::createQ()
+{
+  ev_set = new struct kevent[_servers.size()];
+  kq = kqueue();
+  if (kq == -1)
+  {
+    ERR("Kqueue: %s", strerror(errno));
+    exit(EXIT_FAILURE);
+  }
+
+  for (size_t i = 0; i < _servers.size(); i++)
+  {
+    EV_SET(&ev_set[i], _servers[i].getSockFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+    if (kevent(kq, &ev_set[i], 1, NULL, 0, NULL) == -1)
+    {
+      ERR("Kqueue: %s", strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+  }
+  std::cout << "\n\n";
+}
+
+void ServerManager::acceptClient(int ListenSocket)
+{
+  int clientFD;
+  struct sockaddr_in client_address;
+  long client_address_size = sizeof(client_address);
+
+  clientFD = accept(ListenSocket, (struct sockaddr *)&client_address, (socklen_t *)&client_address_size);
+  if (clientFD < 0)
+  {
+    ERR("Accpet: %s", strerror(errno));
+    return;
+  }
+  RECORD("LISTENER: %d\t ACCEPTED: %d", ListenSocket, clientFD);
+  if (fcntl(clientFD, F_SETFL, O_NONBLOCK) < 0)
+  {
+    ERR("fcntl error: closing: %d\n errno: %s", clientFD, strerror(errno));
+    close(clientFD);
+    return;
+  }
+
+  Client *cl = new Client(clientFD, ListenSocket, client_address);
+  _clients.insert(std::pair<int, Client *>(clientFD, cl));
+
+  updateEvent(clientFD, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+  updateEvent(clientFD, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+}
+
+void ServerManager::runKQ()
+{
+  createQ();
+  while (true)
+  {
+    int nev = kevent(kq, NULL, 0, ev_list, MAX_EVENTS, nullptr);
+    if (nev <= 0)
+    {
+      ERR("Kevent: %s", strerror(errno));
+      continue;
+    }
+    for (int i = 0; i < nev; i++)
+    {
+      if (isListeningSocket(ev_list[i].ident))
+      {
+        acceptClient(ev_list[i].ident);
+        continue;
+      }
+      handleEvent(ev_list[i]);
+    }
+  }
+}
+
+void ServerManager::handleEvent(struct kevent const &ev)
+{
+  bool isCgiRead = false;
+  bool isCgiWrite = false;
+  Client *cl = getClient(ev.ident);
+
+  if (cl == nullptr)
+  {
+    cl = getCgiClient(ev.ident, isCgiRead, isCgiWrite);
+    if (cl == nullptr)
+    {
+      ERR("Client: %d does not exist!", (int)ev.ident);
+      return ;
+    }
+  }
+  if (ev.flags & EV_EOF)
+  {
+    handleEOF(cl, ev.ident, isCgiRead, isCgiWrite);
+    return ;
+  }
+  if (isCgiWrite)
+  {
+    Cgi cgi;
+    areFdsOpen(cl->pipe_in, cl->pipe_out);
+    if (!cgi.CgiWriteHandler(*this, cl, ev))
+    {
+      deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
+    }
+    isCgiWrite = false;
+  }
+  else if (isCgiRead)
+  {
+    Cgi cgi;
+    areFdsOpen(cl->pipe_in, cl->pipe_out);
+    cgi.CgiReadHandler(*this, cl, ev);
+    isCgiRead = false;
+  }
+  else if (ev.filter == EVFILT_READ)
+  {
+    int r = handleReadEvent(cl, ev);
+
+    if (r == NOMOREDATA)
+    {
+      HTTPRequest *_req = parseRequest(cl, cl->getRecvMessage());
+      if (_req == NULL)
+      {
+        ERR("Failed to parse request from %d: ", cl->getSockFD());
+        closeConnection(cl);
+      }
+
+      // TODO change to cgi not POST
+      if (_req->getCGIStatus() == true)
+      {
+        if (_req->getBody() != std::string())
+        {
+          if (std::stoi(_req->getHeader("Content-Length")) == (int)_req->getBody().size())
+          {
+            Cgi *cgi = new Cgi();
+            cgi->launchCgi(*_req, cl);
+
+            updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+            updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
+            _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
+            _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
+
+            this->_resp = HTTPResponse(*_req);
+
+            Message message(_req->getBody());
+            cl->setMessage(message);
+            cl->setBufferRead(0);
+            cl->resetRecvMessage();
+
+            DEBUG("Content is equel")
+            updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+            updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+
+            RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
+            delete _req; // Clean up dynamically allocated memory
+            delete cgi;
+          }
+        }
+        else
+        {
+          DEBUG("Content is not equel");
+        }
+        return ;
+      }
+
+      HTTPResponse _resp(*_req);
+      Message message(_resp);
+      cl->setMessage(message);
+      cl->setBufferRead(0);
+      cl->resetRecvMessage();
+      if (_req->getHeader("Content-Length") == std::string())
+      {
+        updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+        updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+        RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
+      }
+      else
+      {
+        if (std::stoi(_req->getHeader("Content-Length")) == (int)_req->getBody().size())
+        {
+          updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+          updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+          RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
+        }
+      }
+      delete _req; // Clean up dynamically allocated memory
+    }
+  }
+  else if (ev.filter == EVFILT_WRITE)
+  {
+    if (!handleWriteEvent(cl, ev.data))
+    {
+      updateEvent(ev.ident, EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+      updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+    }
   }
 }
 

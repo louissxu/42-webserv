@@ -23,6 +23,10 @@
 
 class Server;
 
+#define NOMOREDATA 0
+#define MOREDATA 1
+#define ERRORDATA 2
+
 #define MAX_EVENTS 200 // random value
 #define BUFFER_SIZE 3000
 #define BUFFERSIZE 10000
@@ -61,9 +65,11 @@ public:
   Client *getCgiRead(int fd);
   int getCgiReadFd(Client *cl);
   Client *getCgiWrite(int fd);
+
+  // io handlers
+  void handleEvent(struct kevent const &ev);
   int handleReadEvent(Client *cl, struct kevent event);
   bool handleWriteEvent(Client *cl, int dataLen);
-
   void handleEOF(Client *cl, int fd, bool &isRead, bool &isWrite);
 
   HTTPRequest *parseRequest(Client *cl, std::string const &message);

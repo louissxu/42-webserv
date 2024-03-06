@@ -31,16 +31,19 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 	{
 	case Method(GET):
 		GETHandler(_req.getUri());
-		return;
+		break;
 	case Method(POST):
 		if (_req.getHeader("Set-Cookie") != std::string())
 			headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
-		return;
+		break;
 	case Method(DELETE):
 		DELETEHandler();
 	default:
-		return;
+		break;
 	}
+
+	addHeader("Content-Length", std::to_string(body.size()));
+	this->reason = getStatus();
 }
 
 std::string const &HTTPResponse::getVersion() const
@@ -139,19 +142,19 @@ std::string const &HTTPResponse::getBody() const
 void HTTPResponse::GETHandler(std::string const &uri)
 {
 	DEBUG("went in GETHandler");
-	if (uri.empty())
-	{
-		this->body = "";
-		return;
-	}
-	if (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos)
-	{
-		this->body = "";
-		return;
-	}
-
 	std::string path = "application" + uri;
 	struct stat s;
+
+	if (uri.empty() || (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos))
+	{
+		this->body = "";
+		return;
+	}
+	if (uri.compare(1, 7, "cgi-bin") == 0 && access(path.c_str(), F_OK ) != -1)
+	{
+		this->geterrorResourse("E403.html");
+		return ;
+	}
 	if (stat(path.c_str(), &s) == 0)
 	{
 		// if (s.st_mode & S_IFDIR)
@@ -163,7 +166,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 			int len = s.st_size;
 			if (!this->getResourse(path, len))
 			{
-				this->getDefaultResourse();
+				this->geterrorResourse("E404.html");
 			}
 		}
 		else
@@ -174,7 +177,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	}
 	else
 	{
-		this->getDefaultResourse();
+		this->geterrorResourse("E404.html");
 		// this->GETHandler("error404/errorPage.html");
 	}
 	//   return "";
@@ -198,17 +201,16 @@ void HTTPResponse::buildDefaultResponse()
 
 void HTTPResponse::setDefaultHeaders()
 {
-	headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(body.size())));
-	headers.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
-	headers.insert(std::pair<std::string, std::string>("Connection", "Keep-Alive"));
-	headers.insert(std::pair<std::string, std::string>("Server", "mehdi's_webserv"));
+	addHeader("Content-Length", std::to_string(body.size()));
+	addHeader("Content-Type", "text/html");
+	addHeader("Connection", "Keep-Alive");
+	addHeader("Server", "mehdi's_webserv");
 }
 
 void HTTPResponse::setDefaultBody()
 {
 	body = "<html><head><title>Test Title</title></head><body>Hello World!<br /></body></html>";
 }
-#include "Cout.hpp"
 // !helper functions
 
 bool HTTPResponse::getResourse(std::string const &path, int const &len)
@@ -227,26 +229,28 @@ bool HTTPResponse::getResourse(std::string const &path, int const &len)
 	this->body = oss.str();
 
 	this->addHeader("Content-Length", std::to_string(this->body.size()));
-	std::string filetype = path.substr(path.find(".") + 1, path.size());
-	if (filetype != "png")
-		this->addHeader("Content-Type", "text/" + filetype);
-	else
-		this->addHeader("Content-Type", "image/" + path.substr(path.find(".") + 1, path.size()));
+
+	std::string filetype = path.substr(path.find("."), path.size());
+	this->addHeader("Content-Type", MimeTypes::getMimeType(filetype));
 	return true;
 }
 
-void HTTPResponse::getDefaultResourse()
+void HTTPResponse::geterrorResourse(std::string const &filename)
 {
 	struct stat s;
-	std::string path = "application/error404/errorPage.html";
+
+	std::string path = "application/error/" + filename;
 	if (stat(path.c_str(), &s) == 0)
 	{
 		int len = s.st_size;
 		if (!this->getResourse(path, len))
 		{
-			std::cout << "unable to get resourse: " << path << std::endl;
+			ERR("unable to get error resourse: %s", path.c_str());
+			return;
 		}
 	}
-	this->status = NOT_FOUND;
-	this->reason = "NOT_FOUND";
+	if (filename.compare(0, 2, "403"))
+		this->status = FORBIDDEN;
+	else
+		this->status = NOT_FOUND;
 }

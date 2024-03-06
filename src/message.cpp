@@ -46,6 +46,11 @@ void Message::setBufferSent(int buffer)
     this->bufferSent = buffer;
 }
 
+void Message::addBufferSent(int buffer)
+{
+    this->bufferSent += buffer;
+}
+
 void Message::serialize(const HTTPResponse &_resp)
 {
     // Serialize status line

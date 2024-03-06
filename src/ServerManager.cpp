@@ -425,10 +425,11 @@ bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
     // closeConnection(cl); might need to close connection here.
     return false;
   }
-  int actualSend = send(cl->getSockFD(), message.getMessage().c_str(), attempSend, 0);
+  int actualSend = send(cl->getSockFD(), (message.getMessage()).c_str(), attempSend, 0);
+  // int actualSend = send(cl->getSockFD(), (message.getMessage()).c_str() + message.getBufferSent(), attempSend, 0);
   DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
   if (actualSend >= attempSend)
-    message.setBufferSent(actualSend);
+    message.addBufferSent(actualSend);
   cl->setMessage(message);
   return true;
 }

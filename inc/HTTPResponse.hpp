@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 
 #include "HTTPRequest.hpp"
+#include "MIME.hpp"
 #include "log.hpp"
 
 enum Status
@@ -67,34 +68,9 @@ public:
 
 private:
 	bool getResourse(std::string const &path, int const &len);
-	void getDefaultResourse();
+	void geterrorResourse(std::string const &filename);
 
 	void GETHandler(std::string const &uri);
-	int const &POSTHandler(HTTPRequest const &request);
+	// int const &POSTHandler(HTTPRequest const &request);
 	void DELETEHandler();
 };
-
-// #include "HTTPRequest.hpp"
-
-// class HTTPResponse
-// {
-// 	private:
-// 		std::string response;
-// 		std::string body;
-// 		statusCodes status;
-
-// 		int	bufferSend;
-
-// 	private:
-// 		std::string filePath;
-// 		// std::string base;
-// 		// int
-// 	public:
-// 		HTTPResponse();
-// 		HTTPResponse(std::string const &uri);
-
-// 		void setFilePath(std::string const &uri);
-
-// 		void init();
-// 		// static HTTPResponse serialize(HTTPRequest const &request);
-// };

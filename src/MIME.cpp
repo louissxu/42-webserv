@@ -1,17 +1,22 @@
 #include "MIME.hpp"
 
+std::map<std::string, std::string> createMIMEMap()
+{
+	std::map<std::string, std::string> mimeTypes;
+
+	mimeTypes[".html"] = "text/html";
+	mimeTypes[".js"] = "text/javascript";
+	mimeTypes[".css"] = "text/css";
+	mimeTypes[".jpg"] = "image/jpeg";
+	mimeTypes[".png"] = "image/png";
+	return mimeTypes;
+}
+
 std::string MimeTypes::getMimeType(const std::string &extension)
 {
-	static const std::map<std::string, std::string> mimeTypes = {
-		{".html", "text/html"},
-		{".css", "text/css"},
-		{".js", "text/javascript"},
-		{".jpg", "image/jpeg"},
-		{".png", "image/png"},
-		// Add more mappings as needed
-	};
+	static const std::map<std::string, std::string> mimeTypes = createMIMEMap();
 
-	std::map<std::string, std::string>::iterator it = mimeTypes.find(extension);
+	std::map<std::string, std::string>::const_iterator it = mimeTypes.find(extension);
 	if (it != mimeTypes.end())
 	{
 		return it->second;

@@ -24,23 +24,20 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 	return *this;
 }
 
-HTTPResponse::HTTPResponse(HTTPRequest const &request)
+HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 {
 	buildDefaultResponse();
-
-	// std::cout << "method was: " << request.getMethod() << std::endl;
-	// if (request.getHeader("Cookie") != std::string())
-	// 		headers.insert(std::pair<std::string, std::string>("Set-Cookie", request.getHeader("Set-Cookie")));
-
-	switch (request.getMethod())
+	switch (_req.getMethod())
 	{
 	case Method(GET):
-		GETHandler(request.getUri());
+		GETHandler(_req.getUri());
 		return;
 	case Method(POST):
-		if (request.getHeader("Set-Cookie") != std::string())
-			headers.insert(std::pair<std::string, std::string>("Set-Cookie", request.getHeader("Set-Cookie")));
+		if (_req.getHeader("Set-Cookie") != std::string())
+			headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
 		return;
+	case Method(DELETE):
+		DELETEHandler();
 	default:
 		return;
 	}
@@ -184,6 +181,12 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	// this->body = "";
 }
 
+void HTTPResponse::DELETEHandler()
+{
+	body = "<html><head><title>Ha Ha</title></head><body>Sorry Bud, Delete is not allowed on this server :(\n Go hack some other Server!<br /></body></html>";
+	addHeader("Content-Length", std::to_string(body.size()));
+}
+
 void HTTPResponse::buildDefaultResponse()
 {
 	this->version = "HTTP/1.1";
@@ -229,33 +232,8 @@ bool HTTPResponse::getResourse(std::string const &path, int const &len)
 		this->addHeader("Content-Type", "text/" + filetype);
 	else
 		this->addHeader("Content-Type", "image/" + path.substr(path.find(".") + 1, path.size()));
-	// this->addHeader("Content-Type", "text/" + path.substr(path.find(".") + 1, path.size()));
 	return true;
 }
-
-// bool HTTPResponse::getResourse(std::string const &path, int const &len)
-// {
-// 	char contents[len + 1];
-// 	std::ifstream file;
-
-// 	file.open(path, std::ios::in | std::ios::binary);
-// 	if (!file.is_open())
-// 	{
-// 		ERR("Open: %s", strerror(errno));
-// 		return false;
-// 	}
-// 	file.read(contents, len);
-// 	contents[file.gcount()] = '\0';
-// 	this->body = contents;
-// 	this->addHeader("Content-Length", std::to_string(this->body.size()));
-// 	std::string filetype = path.substr(path.find(".") + 1, path.size());
-// 	if (filetype != "png")
-// 		this->addHeader("Content-Type", "text/" + filetype);
-// 	else
-// 		this->addHeader("Content-Type", "image/" + path.substr(path.find(".") + 1, path.size()));
-// 	// this->addHeader("Content-Type", "text/" + path.substr(path.find(".") + 1, path.size()));
-// 	return true;
-// }
 
 void HTTPResponse::getDefaultResourse()
 {
@@ -271,77 +249,4 @@ void HTTPResponse::getDefaultResourse()
 	}
 	this->status = NOT_FOUND;
 	this->reason = "NOT_FOUND";
-	// this->addHeader("Content-Length", std::to_string(this->body.size()));
-	// this->addHeader("Content-Type", "text/html");
 }
-#include <fcntl.h>
-// int const &HTTPResponse::POSTHandler(HTTPRequest const &request)
-// {
-// 	// (void)request;
-// 	// return ;
-// 	std::cout << "POSTHandler" << std::endl;
-// 	int pipe_to_cgi[2];
-// 	int pipe_from_cgi[2];
-
-// 	pipe(pipe_to_cgi);
-// 	pipe(pipe_from_cgi);
-
-// 	// Fork to create a child process for the CGI script
-// 	pid_t pid = fork();
-// 	if (pid == 0)
-// 	{
-// 		// Child process (CGI script)
-
-// 		// Close unused pipe ends
-// 		close(pipe_to_cgi[1]);
-// 		close(pipe_from_cgi[0]);
-
-// 		// Redirect standard input and output
-// 		dup2(pipe_to_cgi[0], STDIN_FILENO);
-// 		dup2(pipe_from_cgi[1], STDOUT_FILENO);
-
-// 		// Execute the CGI script
-// 		execl("application/cgiBin/login.sh", "application/cgiBin/login.sh", nullptr);
-
-// 		// If execl fails
-// 		perror("execl");
-// 		exit(EXIT_FAILURE);
-// 	}
-// 	else if (pid > 0)
-// 	{
-// 		// Parent process (C++ server)
-
-// 		// Close unused pipe ends
-// 		close(pipe_to_cgi[0]);
-// 		close(pipe_from_cgi[1]);
-
-// 		// Write data to the CGI script
-// 		// const char *dataToSend = "username=mehdi&password=mirzaie";
-// 		if (write(pipe_to_cgi[1], request.getBody().c_str(), request.getBody().size()) < 0)
-// 			std::cerr << errno << std::endl;
-
-// 		close(pipe_to_cgi[1]);
-// 		// Read data from the CGI script
-// 		// std::cerr << "data was sent\n";
-// 		// char buffer[1024];
-// 		// ssize_t bytesRead;
-// 		// this->body = "";
-// 		// while ((bytesRead = read(pipe_from_cgi[0], buffer, sizeof(buffer))) > 0)
-// 		// {
-// 		// 	// std::cerr << buffer << std::endl;
-// 		// 	this->body.append(buffer, bytesRead);
-// 		// }
-// 		// this->body.append("\0", 1);
-// 		// this->addHeader("Content-Length", std::to_string(this->body.size()));
-// 		// close(pipe_from_cgi[0]);
-// 		// wait(nullptr);
-// 		return (pipe_from_cgi[0]);
-// 	}
-// 	else
-// 	{
-// 		// Fork failed
-// 		perror("fork");
-// 		exit(EXIT_FAILURE);
-// 	}
-// 	return (-1);
-// }

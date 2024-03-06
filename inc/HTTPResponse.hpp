@@ -71,6 +71,7 @@ private:
 
 	void GETHandler(std::string const &uri);
 	int const &POSTHandler(HTTPRequest const &request);
+	void DELETEHandler();
 };
 
 // #include "HTTPRequest.hpp"

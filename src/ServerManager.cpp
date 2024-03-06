@@ -278,36 +278,29 @@ void ServerManager::handleEvent(struct kevent const &ev)
   bool isCgiWrite = false;
   Client *cl = getClient(ev.ident);
 
-  if (cl == nullptr)
+  if (!(cl = getClient(ev.ident)) && !(cl = getCgiClient(ev.ident, isCgiRead, isCgiWrite)))
   {
-    cl = getCgiClient(ev.ident, isCgiRead, isCgiWrite);
-    if (cl == nullptr)
-    {
-      ERR("Client: %d does not exist!", (int)ev.ident);
-      return ;
-    }
+    ERR("Client: %d does not exist!", static_cast<int>(ev.ident));
+    return;
   }
   if (ev.flags & EV_EOF)
   {
     handleEOF(cl, ev.ident, isCgiRead, isCgiWrite);
-    return ;
+    return;
   }
-  if (isCgiWrite)
+  if (isCgiWrite || isCgiRead)
   {
     Cgi cgi;
     areFdsOpen(cl->pipe_in, cl->pipe_out);
-    if (!cgi.CgiWriteHandler(*this, cl, ev))
+
+    if (isCgiWrite && !cgi.CgiWriteHandler(*this, cl, ev))
     {
       deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
     }
-    isCgiWrite = false;
-  }
-  else if (isCgiRead)
-  {
-    Cgi cgi;
-    areFdsOpen(cl->pipe_in, cl->pipe_out);
-    cgi.CgiReadHandler(*this, cl, ev);
-    isCgiRead = false;
+    else if (isCgiRead)
+    {
+      cgi.CgiReadHandler(*this, cl, ev);
+    }
   }
   else if (ev.filter == EVFILT_READ)
   {
@@ -322,65 +315,46 @@ void ServerManager::handleEvent(struct kevent const &ev)
         closeConnection(cl);
       }
 
-      // TODO change to cgi not POST
-      if (_req->getCGIStatus() == true)
+      if (_req->getHeader("Content-Length").empty())
       {
-        if (_req->getBody() != std::string())
+        RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
+
+        this->_resp = HTTPResponse(*_req);
+        Message message(_resp);
+        cl->setMessage(message);
+        cl->setBufferRead(0);
+        cl->resetRecvMessage();
+
+        updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+        updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+      }
+      else
+      {
+        if (std::stoi(_req->getHeader("Content-Length")) == static_cast<int>(_req->getBody().size()))
         {
-          if (std::stoi(_req->getHeader("Content-Length")) == (int)_req->getBody().size())
+          this->_resp = HTTPResponse(*_req);
+          if (_req->getCGIStatus() == true)
           {
             Cgi *cgi = new Cgi();
             cgi->launchCgi(*_req, cl);
-
-            updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-            updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
             _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
             _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
 
-            this->_resp = HTTPResponse(*_req);
+            updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+            updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
 
             Message message(_req->getBody());
             cl->setMessage(message);
             cl->setBufferRead(0);
             cl->resetRecvMessage();
 
-            DEBUG("Content is equel")
             updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
             updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-
-            RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
-            delete _req; // Clean up dynamically allocated memory
-            delete cgi;
           }
-        }
-        else
-        {
-          DEBUG("Content is not equel");
-        }
-        return ;
-      }
-
-      HTTPResponse _resp(*_req);
-      Message message(_resp);
-      cl->setMessage(message);
-      cl->setBufferRead(0);
-      cl->resetRecvMessage();
-      if (_req->getHeader("Content-Length") == std::string())
-      {
-        updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-        updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-        RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
-      }
-      else
-      {
-        if (std::stoi(_req->getHeader("Content-Length")) == (int)_req->getBody().size())
-        {
-          updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-          updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-          RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
+          RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
         }
       }
-      delete _req; // Clean up dynamically allocated memory
+      delete _req;
     }
   }
   else if (ev.filter == EVFILT_WRITE)
@@ -544,6 +518,8 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
     meth = GET;
   if (method == "POST")
     meth = POST;
+  if (method == "DELETE")
+    meth = DELETE;
   return (new HTTPRequest(headers, body, meth, uri, HTTP_1_1, isCGI));
 }
 

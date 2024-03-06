@@ -1,6 +1,5 @@
 #ifndef CONFIG_HPP
-# define CONFIG_HPP
-
+#define CONFIG_HPP
 
 // * EXAMPLE config
 /*
@@ -31,14 +30,12 @@ server {
 #include <string>
 class config
 {
-	private:
-		std::string port;
-		std::string ip;
-		std::string location;
+private:
+    std::string port;
+    std::string ip;
+    std::string location;
 
-	public:
-
-
+public:
 };
 
 #endif

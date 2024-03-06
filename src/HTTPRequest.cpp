@@ -7,9 +7,10 @@ HTTPRequest::HTTPRequest()
 	uri = "/";
 }
 
-HTTPRequest::HTTPRequest(std::map<std::string, std::string> const &_headers, std::string const &_body, Method const &_method, std::string const &_uri, Version const &_version)
-	: headers(_headers), body(_body), method(_method), uri(_uri), version(_version)
+HTTPRequest::HTTPRequest(std::map<std::string, std::string> const &_headers, std::string const &_body, Method const &_method, std::string const &_uri, Version const &_version, bool _isCGI)
+	: headers(_headers), body(_body), method(_method), uri(_uri), version(_version), isCGI(_isCGI)
 {
+	// (void)isCGI;
 }
 
 HTTPRequest::~HTTPRequest()
@@ -93,4 +94,9 @@ std::string HTTPRequest::getMethodString() const
 Version const &HTTPRequest::getVersion() const
 {
 	return this->version;
+}
+
+bool const &HTTPRequest::getCGIStatus() const
+{
+	return this->isCGI;
 }

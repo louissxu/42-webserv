@@ -50,7 +50,7 @@ void Cgi::setEnv(HTTPRequest &req)
 		_envVec.push_back("session_id=" + id);
 	}
 	// _env = (char **)malloc(sizeof(char *) * (_envVec.size() + 1));
-	_env = std::vector<char*>(_envVec.size() + 1);
+	_env = std::vector<char *>(_envVec.size() + 1);
 	std::vector<std::string>::iterator it;
 	int i = 0;
 	for (it = _envVec.begin(); it != _envVec.end(); it++, i++)
@@ -63,113 +63,112 @@ void Cgi::setEnv(HTTPRequest &req)
 
 void Cgi::setArgv(HTTPRequest const &req)
 {
-	_argv = std::vector<char*>(3);
+	_argv = std::vector<char *>(3);
 	// std::string pythonPath = "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3";
 	std::string pythonPath = "/usr/local/bin/python3";
 	std::string cgiScript = "application" + req.getUri();
 
 	_argv[0] = new char[pythonPath.size() + 1];
-    _argv[1] = new char[cgiScript.size() + 1];
+	_argv[1] = new char[cgiScript.size() + 1];
 
-    strcpy(_argv[0], const_cast<char*>(pythonPath.c_str()));
-    strcpy(_argv[1], const_cast<char*>(cgiScript.c_str()));
-    _argv[2] = nullptr;
+	strcpy(_argv[0], const_cast<char *>(pythonPath.c_str()));
+	strcpy(_argv[1], const_cast<char *>(cgiScript.c_str()));
+	_argv[2] = nullptr;
 }
 
 void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 {
-  char buffer[BUFFERSIZE * 2];
-  memset(buffer, 0, sizeof(buffer));
-  int bytesRead = 0;
-  static std::string message = "";
-  bytesRead = read(ev_list.ident, buffer, BUFFERSIZE * 2);
-  DEBUG("cgiReadHandler: Read: %s", buffer);
-  if (bytesRead == 0)
-  {
-    DEBUG("cgiReadHandler: Bytes Read = 0");
-    sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    close(cl->pipe_in[0]);
-    close(cl->pipe_out[0]);
+	char buffer[BUFFERSIZE * 2];
+	memset(buffer, 0, sizeof(buffer));
+	int bytesRead = 0;
+	static std::string message = "";
+	bytesRead = read(ev_list.ident, buffer, BUFFERSIZE * 2);
+	DEBUG("cgiReadHandler: Read: %s", buffer);
+	if (bytesRead == 0)
+	{
+		DEBUG("cgiReadHandler: Bytes Read = 0");
+		sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		close(cl->pipe_in[0]);
+		close(cl->pipe_out[0]);
 
-    wait(NULL);
-    HTTPResponse cgiResponse;
-    cgiResponse.setBody(message);
-    cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
-    Message cgiMessage = Message(cgiResponse);
-    cl->setMessage(cgiMessage);
-    message.clear();
-    sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-    sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-  }
-  else if (bytesRead < 0)
-  {
-    ERR("cgiReadHandler: %s", strerror(errno));
-    sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    close(cl->pipe_in[0]);
-    close(cl->pipe_out[0]);
-    DEBUG("PIPES ends closing: %d %d", cl->pipe_in[0], cl->pipe_out[0]);
-  }
-  else
-  {
-    DEBUG("Bytes Read: %d", bytesRead);
-    message.append(buffer);
+		wait(NULL);
+		HTTPResponse cgiResponse;
+		cgiResponse.setBody(message);
+		cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
+		Message cgiMessage = Message(cgiResponse);
+		cl->setMessage(cgiMessage);
+		message.clear();
+		sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+		sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+	}
+	else if (bytesRead < 0)
+	{
+		ERR("cgiReadHandler: %s", strerror(errno));
+		sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		close(cl->pipe_in[0]);
+		close(cl->pipe_out[0]);
+		DEBUG("PIPES ends closing: %d %d", cl->pipe_in[0], cl->pipe_out[0]);
+	}
+	else
+	{
+		DEBUG("Bytes Read: %d", bytesRead);
+		message.append(buffer);
 
-    HTTPResponse cgiResponse = sm.getResponse();
-	cgiResponse.setVersion("HTTP/1.1");
-    cgiResponse.setBody(message);
+		HTTPResponse cgiResponse = sm.getResponse();
+		cgiResponse.setVersion("HTTP/1.1");
+		cgiResponse.setBody(message);
 
-    cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
-	// cgiResponse.addHeader("session-id", )
-    Message cgiMessage = Message(cgiResponse);
-    cl->setMessage(cgiMessage);
-    message.clear();
-    sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-    sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-  }
+		cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
+		// cgiResponse.addHeader("session-id", )
+		Message cgiMessage = Message(cgiResponse);
+		cl->setMessage(cgiMessage);
+		message.clear();
+		sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+		sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+	}
 }
 
 bool Cgi::CgiWriteHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 {
-  int bytes_sent;
-  if (cl == NULL)
-    return false;
+	int bytes_sent;
+	if (cl == NULL)
+		return false;
 
-  Message message = cl->getMessage();
+	Message message = cl->getMessage();
 
-  if (message.size() == 0)
-    bytes_sent = 0;
-  else if (message.size() >= BUFFERSIZE)
-  {
-    bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), BUFFERSIZE);
-    DEBUG("Body sent to CGI-Script: %s", message.getMessage().c_str() + message.getBufferSent());
-  }
-  else
-  {
-    bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), message.size());
-    DEBUG("Body sent to CGI-Script: %s", message.getMessage().c_str() + message.getBufferSent());
-  }
+	if (message.size() == 0)
+		bytes_sent = 0;
+	else if (message.size() >= BUFFERSIZE)
+	{
+		bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), BUFFERSIZE);
+		DEBUG("Body sent to CGI-Script: %s", message.getMessage().c_str() + message.getBufferSent());
+	}
+	else
+	{
+		bytes_sent = write(ev_list.ident, message.getMessage().c_str() + message.getBufferSent(), message.size());
+		DEBUG("Body sent to CGI-Script: %s", message.getMessage().c_str() + message.getBufferSent());
+	}
 
-  if (bytes_sent < 0)
-  {
-    ERR("Unable to send Body to CGI-Script");
-	return false;
-    // sm.deleteCgi(sm.get_cgiWrite(), cl, EVFILT_WRITE);
-  }
+	if (bytes_sent < 0)
+	{
+		ERR("Unable to send Body to CGI-Script");
+		return false;
+		// sm.deleteCgi(sm.get_cgiWrite(), cl, EVFILT_WRITE);
+	}
 
-  else if (bytes_sent == 0 || bytes_sent == message.size())
-  {
-    // deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
-    sm.updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
-	return false;
-  }
-  else
-  {
-    message.setMessage(message.getMessage().substr(bytes_sent));
-    cl->setMessage(message);
-  }
-  return true;
+	else if (bytes_sent == 0 || bytes_sent == message.size())
+	{
+		// deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
+		sm.updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+		return false;
+	}
+	else
+	{
+		message.setMessage(message.getMessage().substr(bytes_sent));
+		cl->setMessage(message);
+	}
+	return true;
 }
-
 
 // !unsure when to free _argv and _env
 void Cgi::launchCgi(HTTPRequest &req, Client *cl)

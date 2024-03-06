@@ -2,7 +2,7 @@
 
 Message::Message() : message(""), bufferSent(0) {}
 
-Message::Message(const std::string &_message): message(_message), bufferSent(0) {}
+Message::Message(const std::string &_message) : message(_message), bufferSent(0) {}
 
 Message::Message(Message const &src) { *this = src; };
 
@@ -33,7 +33,7 @@ int Message::size() const
 
 const int &Message::getBufferSent() const
 {
-	return this->bufferSent;
+    return this->bufferSent;
 }
 
 void Message::setMessage(std::string const &_message)
@@ -43,7 +43,7 @@ void Message::setMessage(std::string const &_message)
 
 void Message::setBufferSent(int buffer)
 {
-	this->bufferSent = buffer;
+    this->bufferSent = buffer;
 }
 
 void Message::serialize(const HTTPResponse &_resp)
@@ -53,7 +53,7 @@ void Message::serialize(const HTTPResponse &_resp)
 
     // Serialize headers
     const std::map<std::string, std::string> &headers = _resp.getHeaders();
-	std::map<std::string, std::string>::const_iterator header = headers.begin();
+    std::map<std::string, std::string>::const_iterator header = headers.begin();
     for (; header != headers.end(); ++header)
     {
         this->message += header->first + ": " + header->second + "\r\n";
@@ -65,9 +65,6 @@ void Message::serialize(const HTTPResponse &_resp)
     // Serialize body
     this->message += _resp.getBody();
 }
-
-
-
 
 // Message::Message(): message(""), bufferSend(0) {}
 
@@ -105,4 +102,3 @@ void Message::serialize(const HTTPResponse &_resp)
 // 	// message = "";
 // 	this->message += _resp.getVersion() + " " + _resp.getStatus() + " " + _resp.getReason() + "\r\n";
 // }
-

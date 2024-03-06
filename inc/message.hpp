@@ -11,7 +11,7 @@ class Message
 {
 private:
     std::string message;
-	int			bufferSent;
+    int bufferSent;
 
 public:
     Message();
@@ -24,11 +24,11 @@ public:
     // Getter
     const std::string &getMessage() const;
     int size() const;
-	const int &getBufferSent() const;
+    const int &getBufferSent() const;
 
-	// setter
+    // setter
     void setMessage(std::string const &_message);
-	void setBufferSent(int buffer);
+    void setBufferSent(int buffer);
 
     // Serialization method
     void serialize(const HTTPResponse &_resp);

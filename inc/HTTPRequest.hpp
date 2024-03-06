@@ -31,13 +31,15 @@ private:
 	Method method;
 	std::string uri;
 	Version version;
+	bool isCGI;
 
 public:
 	HTTPRequest(std::map<std::string, std::string> const &_headers,
 				std::string const &_body,
 				Method const &_method,
 				std::string const &_uri,
-				Version const &_version);
+				Version const &_version,
+				bool _isCGI);
 	HTTPRequest();
 	~HTTPRequest();
 
@@ -52,4 +54,5 @@ public:
 	Method const &getMethod() const;
 	std::string getMethodString() const;
 	Version const &getVersion() const;
+	bool const &getCGIStatus() const;
 };

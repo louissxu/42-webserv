@@ -1,7 +1,5 @@
 #pragma once
 
-#define LOG_LEVEL 3 // for printing logs.
-
 #include <poll.h>
 #include <cstdio>
 #include <cstring>
@@ -65,7 +63,6 @@ public:
   Client *getCgiWrite(int fd);
   int handleReadEvent(Client *cl, struct kevent event);
   bool handleWriteEvent(Client *cl, int dataLen);
-
 
   void handleEOF(Client *cl, int fd, bool &isRead, bool &isWrite);
 

@@ -36,13 +36,13 @@ HTTPResponse::HTTPResponse(HTTPRequest const &request)
 	{
 	case Method(GET):
 		GETHandler(request.getUri());
-		return ;
+		return;
 	case Method(POST):
 		if (request.getHeader("Set-Cookie") != std::string())
 			headers.insert(std::pair<std::string, std::string>("Set-Cookie", request.getHeader("Set-Cookie")));
-		return ;
+		return;
 	default:
-		return ;
+		return;
 	}
 }
 
@@ -141,7 +141,7 @@ std::string const &HTTPResponse::getBody() const
 
 void HTTPResponse::GETHandler(std::string const &uri)
 {
-	std::cout << "went in GETHandler" << std::endl;
+	DEBUG("went in GETHandler");
 	if (uri.empty())
 	{
 		this->body = "";
@@ -220,8 +220,8 @@ bool HTTPResponse::getResourse(std::string const &path, int const &len)
 	}
 
 	std::ostringstream oss;
-    oss << file.rdbuf();
-    this->body = oss.str();
+	oss << file.rdbuf();
+	this->body = oss.str();
 
 	this->addHeader("Content-Length", std::to_string(this->body.size()));
 	std::string filetype = path.substr(path.find(".") + 1, path.size());

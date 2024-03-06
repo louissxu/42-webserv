@@ -8,7 +8,7 @@
 #include "HTTPRequest.hpp"
 #include "Client.hpp"
 
-#define LOG_LEVEL 3
+// #define LOG_LEVEL 4
 #include "log.hpp"
 
 class ServerManager;

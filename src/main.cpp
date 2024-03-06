@@ -3,10 +3,10 @@
 // #include "HTTPRequest.hpp"
 #include "HTTPResponse.hpp"
 
-
 // Ref: https://beej.us/guide/bgnet/html/#structs
 
-int main(void) {
+int main(void)
+{
   std::string port1 = "2345";
   // std::string port2 = "3456";
 
@@ -24,5 +24,5 @@ int main(void) {
   // sm.runPoll();
   std::cout << "all done!" << std::endl;
 
-  return(0);
+  return (0);
 }

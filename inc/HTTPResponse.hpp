@@ -61,7 +61,6 @@ public:
 	std::map<std::string, std::string> const &getHeaders() const;
 	std::string const &getBody() const;
 
-
 	void buildDefaultResponse();
 	void setDefaultHeaders();
 	void setDefaultBody();

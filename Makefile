@@ -15,9 +15,10 @@ RED 			:= 	\033[38;5;160m
 
 NAME = webserv
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g
-LDFLAGS = -fsanitize=address
-# CFLAGS = -g -std=c++11 #-fsanitize=address -g
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g #-D _PRINT_
+LDFLAGS = -fsanitize=address 
+
+#CFLAGS = -Wall -Wextra -Werror -g -std=c++98 #-D _PRINT_
 
 #	o-----------------o
 #	|    INCLUDES     |
@@ -30,7 +31,6 @@ INC = inc
 #	o-----------------o
 
 SRC_FILES = \
-	main.cpp \
 	ServerManager.cpp \
 	Server.cpp \
 	Connection.cpp \
@@ -40,7 +40,11 @@ SRC_FILES = \
 	HTTPRequest.cpp \
 	HTTPResponse.cpp \
 	cgi.cpp \
-	# MIME.cpp
+	ConfigParser.cpp \
+	Cout.cpp \
+	Location.cpp \
+	Utils.cpp \
+	main.cpp
 
 SRC_DIR = src
 

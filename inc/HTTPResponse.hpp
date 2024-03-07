@@ -73,28 +73,3 @@ private:
 	int const &POSTHandler(HTTPRequest const &request);
 	void DELETEHandler();
 };
-
-// #include "HTTPRequest.hpp"
-
-// class HTTPResponse
-// {
-// 	private:
-// 		std::string response;
-// 		std::string body;
-// 		statusCodes status;
-
-// 		int	bufferSend;
-
-// 	private:
-// 		std::string filePath;
-// 		// std::string base;
-// 		// int
-// 	public:
-// 		HTTPResponse();
-// 		HTTPResponse(std::string const &uri);
-
-// 		void setFilePath(std::string const &uri);
-
-// 		void init();
-// 		// static HTTPResponse serialize(HTTPRequest const &request);
-// };

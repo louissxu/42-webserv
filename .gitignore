@@ -31,8 +31,15 @@
 *.out
 *.app
 
+<<<<<<< HEAD
 .vscode
 
 #python
 __pycache__
 *.db
+
+#other
+.DS_Store
+webserv
+.vscode/*
+

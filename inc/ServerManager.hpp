@@ -1,9 +1,12 @@
 #pragma once
+#ifndef SERVER_MANAGER_HPP
+# define SERVER_MANAGER_HPP
 
 #include <poll.h>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <fstream>
 
 #include <sys/types.h>
 #include <sys/event.h>
@@ -12,15 +15,25 @@
 
 #include <map>
 #include <vector>
+#include <set>
 
 #include "Server.hpp"
 #include "Client.hpp"
-
 #include "HTTPResponse.hpp"
 #include "HTTPRequest.hpp"
 #include "cgi.hpp"
 #include "log.hpp"
 
+#include "ConfigParser.hpp"
+#include "Location.hpp"
+#include "Utils.hpp"
+#include "Cout.hpp"
+
+
+
+
+class Utils;
+class ConfigParser;
 class Server;
 
 #define NOMOREDATA 0
@@ -30,59 +43,89 @@ class Server;
 #define MAX_EVENTS 200 // random value
 #define BUFFER_SIZE 3000
 #define BUFFERSIZE 10000
+
+
+
 class ServerManager
 {
-private:
-  std::vector<Server> _servers;
-  std::map<int, Client *> _clients;
-  std::map<int, Client *> _cgiRead;
-  std::map<int, Client *> _cgiWrite;
-  HTTPResponse _resp;
 
-  int kq;
-  bool accepting;
-  struct kevent *ev_set;
-  struct kevent ev_list[MAX_EVENTS];
-  int ev_set_count;
-  std::string defaultPath;
+	private:
+  		std::map<int, Client *> _clients;
+  		std::map<int, Client *> _cgiRead;
+  		std::map<int, Client *> _cgiWrite;
+  		HTTPResponse _resp;
 
-  ServerManager(ServerManager &other);
-  ServerManager &operator=(ServerManager &other);
+		std::vector<Server> _servers;
+  		std::vector< std::pair <std::string, std::string> > _directives;
+		std::vector < ConfigParser >  _contexts;
 
-public:
-  ServerManager();
-  ~ServerManager();
+  		int kq;
+  		bool accepting;
+  		struct kevent *ev_set;
+  		struct kevent ev_list[MAX_EVENTS];
+  		int ev_set_count;
+  		std::string defaultPath;
 
-  void addServer(const Server &server);
-  // void addConnection(Connection& connection);
+  		ServerManager(ServerManager &other);
+  		ServerManager &operator=(ServerManager &other);
 
-  void runKQ();
-  void createQ();
+  		// void launchCgi(HTTPRequest const &request, Client *cl);
+  		void deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter);
+  		void deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter);
 
-  void acceptClient(int ListenSocket);
-  Client *getClient(int fd);
-  Client *getCgiClient(int fd, bool &isRead, bool &isWrite);
-  Client *getCgiRead(int fd);
-  int getCgiReadFd(Client *cl);
-  Client *getCgiWrite(int fd);
+	public:
+  		ServerManager();
+  		~ServerManager();
 
-  // io handlers
-  void handleEvent(struct kevent const &ev);
-  int handleReadEvent(Client *cl, struct kevent event);
-  bool handleWriteEvent(Client *cl, int dataLen);
-  void handleEOF(Client *cl, int fd, bool &isRead, bool &isWrite);
+  		void addServer(const Server &server);
+  		// void addConnection(Connection& connection);
 
-  HTTPRequest *parseRequest(Client *cl, std::string const &message);
+  		void runKQ();
+  		void createQ();
 
-  std::string getFileContents(std::string uri);
-  void updateEvent(int ident, short filter, u_short flags, u_int fflags, int data, void *udata);
-  void closeConnection(Client *cl);
-  bool isListeningSocket(int socket_fd);
+  		void acceptClient(int ListenSocket);
+  		Client *getClient(int fd);
+  		Client *getCgiClient(int fd, bool &isRead, bool &isWrite);
+  		Client *getCgiRead(int fd);
+  		int getCgiReadFd(Client *cl);
+  		Client *getCgiWrite(int fd);
 
-  HTTPResponse &getResponse();
+  		// io handlers
+  		void handleEvent(struct kevent const &ev);
+  		int handleReadEvent(Client *cl, struct kevent event);
+  		bool handleWriteEvent(Client *cl, int dataLen);
+  		void handleEOF(Client *cl, int fd, bool &isRead, bool &isWrite);
 
-private:
-  // void launchCgi(HTTPRequest const &request, Client *cl);
-  void deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter);
-  void deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter);
+  		HTTPRequest *parseRequest(Client *cl, std::string const &message);
+
+  		std::string getFileContents(std::string uri);
+  		void updateEvent(int ident, short filter, u_short flags, u_int fflags, int data, void *udata);
+  		void closeConnection(Client *cl);
+  		bool isListeningSocket(int socket_fd);
+
+  		HTTPResponse &getResponse();
+
+		//Configuration handling related:
+		bool isValidDirectiveName(const std::string &src);
+		void ns_addDirectives(ConfigParser &src);
+		void ns_addContexts(ConfigParser &src);
+		void setStateFromParser(ConfigParser &src);
+
+		//Exceptions
+		class ErrorException : public std::exception
+		{
+			private:
+				std::string _message;
+			public:
+				ErrorException(std::string message) throw()
+				{
+					_message = "SERVER CONFIG ERROR: " + message;
+				}
+				virtual const char* what() const throw()
+				{
+					return (_message.c_str());
+				}
+				virtual ~ErrorException() throw() {}
+		};
 };
+#endif

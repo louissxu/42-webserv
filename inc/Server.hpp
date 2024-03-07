@@ -72,7 +72,7 @@ class Server {
     int getSockFd();
     void acceptNewConnection();
     std::vector<Connection>& getConnections();
-    void setListen(size_t newListen);
+    void setListen(std::string newListen);
     void startServer();
     void initialiseErrorPages();
     void acceptNewLocation(Location newLocation);

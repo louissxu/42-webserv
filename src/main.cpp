@@ -5,22 +5,24 @@
 
 // Ref: https://beej.us/guide/bgnet/html/#structs
 
+/*
 int main(void)
 {
 
   return (0);
 }
+*/
 
 
-
-/*
 int main(void)
 {
   std::string port1 = "2345";
   // std::string port2 = "3456";
 
-  Server a = Server(port1);
+  Server a = Server();
   // Server b = Server(port2);
+  a.setListen(port1);
+  a.startServer();
 
   std::cout << "adding socket manager" << std::endl;
   ServerManager sm;
@@ -36,7 +38,7 @@ int main(void)
   return (0);
 }
 #include "Webserver.hpp"
-*/
+
 
 
 /*

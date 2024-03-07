@@ -111,7 +111,7 @@ void Server::initialiseErrorPages(void)
 	_err_pages[505] = "";
 }
 
-void Server::setListen(size_t newListen)
+void Server::setListen(std::string newListen)
 {
   _listen = newListen;
 }

@@ -1,19 +1,6 @@
-#include "Server.hpp"
-#include "ServerManager.hpp"
-// #include "HTTPRequest.hpp"
-#include "HTTPResponse.hpp"
-
-// Ref: https://beej.us/guide/bgnet/html/#structs
+#include "Webserver.hpp"
 
 /*
-int main(void)
-{
-
-  return (0);
-}
-*/
-
-
 int main(void)
 {
   std::string port1 = "2345";
@@ -37,11 +24,8 @@ int main(void)
 
   return (0);
 }
-#include "Webserver.hpp"
+*/
 
-
-
-/*
 int main(int argc, char **argv) {
   try
   {
@@ -73,4 +57,3 @@ int main(int argc, char **argv) {
   }
   return(0);
 }
-*/

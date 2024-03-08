@@ -45,6 +45,7 @@ ServerManager::~ServerManager() {}
 void ServerManager::addServer(const Server &server)
 {
   _servers.push_back(server);
+  _portsActive.push_back(server.getListen());
   return;
 }
 
@@ -529,10 +530,24 @@ HTTPResponse &ServerManager::getResponse()
 
 
 /*------------------------------------------*\
-|              ISAAC'S STUFF                 |
+|             CONFIG READING                 |
 \*------------------------------------------*/
 
-#include "ServerManager.hpp"
+
+/*
+ * Check if a given port is already in use.
+*/
+bool ServerManager::portIsAvailable(std::string portNo)
+{
+  for(std::vector<std::string>::iterator it = _portsActive.begin(); it != _portsActive.end(); ++it)
+  {
+    if(portNo == *it)
+    {
+      return false;
+    }
+  }
+  return true;
+}
 
 bool ServerManager::isValidDirectiveName(const std::string &src) {
     static const std::string validDirectiveNames[] = {
@@ -593,6 +608,10 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
               #ifdef _PRINT_
                 std::cout << "Adding " << it->first << " to Server " << (server_id - 1) << ". " << std::endl;
               #endif
+              if (it->first == "listen" && !portIsAvailable(it->second))
+              {
+                throw ErrorException("Port already in use.");
+              }
               newServ.addDirective(it->first, it->second);
             }
             i++;
@@ -622,7 +641,6 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
             //newLocation.printMethodPermissions();
             newServ.acceptNewLocation(newLocation);
           }
-
           ns_addContexts(*it);
         i++;
       }

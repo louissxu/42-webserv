@@ -58,6 +58,7 @@ class ServerManager
 		std::vector<Server> _servers;
   		std::vector< std::pair <std::string, std::string> > _directives;
 		std::vector < ConfigParser >  _contexts;
+		std::vector <std::string> _portsActive;
 
   		int kq;
   		bool accepting;
@@ -106,6 +107,7 @@ class ServerManager
   		HTTPResponse &getResponse();
 
 		//Configuration handling related:
+		bool portIsAvailable(std::string portNo);
 		bool isValidDirectiveName(const std::string &src);
 		void ns_addDirectives(ConfigParser &src);
 		void ns_addContexts(ConfigParser &src);

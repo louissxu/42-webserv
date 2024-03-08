@@ -87,6 +87,16 @@ Server::~Server() {
   }
 }
 
+/*------------------------------------------*\
+|              BASIC GETTERS                 |
+\*------------------------------------------*/
+
+
+  std::string Server::getListen(void) const
+  {
+    return _listen;
+  }
+
 
 /*------------------------------------------*\
 |                 SETTERS                    |
@@ -115,6 +125,9 @@ void Server::setListen(std::string newListen)
 {
   _listen = newListen;
 }
+
+
+
 
 
 
@@ -167,6 +180,10 @@ void Server::startServer(void) {
   // Set the O_NONBLOCK flag
   if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
     perror("fcntl F_SETFL O_NONBLOCK");
+
+  std::cout << "DBG: sockfd: " << sockfd << std::endl;
+  std::cout << "servinfo aiaddr: " << servinfo->ai_addr << std::endl;
+  std::cout << "servinfo ai_addrlen: " << servinfo->ai_addrlen << std::endl;
 
   error_return = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
   if (error_return != 0)

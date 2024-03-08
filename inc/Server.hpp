@@ -80,6 +80,11 @@ class Server {
     //setter for multiple attributes prior to server start.
     void addDirective(const std::string& name, const std::string& value);
 
+    //Getters:
+    std::string getListen(void) const;
+
+
+
   private:
     size_t                      _id;
     std::string                 _listen;

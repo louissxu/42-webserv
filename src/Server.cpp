@@ -244,3 +244,11 @@ void Server::addDirective(const std::string& name, const std::string& value) {
     _root = value;
   }
 }
+
+/*
+HTTPResponse & Server::makeResponse(HTTPRequest &request)
+{
+
+
+}
+*/

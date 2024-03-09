@@ -305,7 +305,6 @@ void ServerManager::handleEvent(struct kevent const &ev)
   else if (ev.filter == EVFILT_READ)
   {
     int r = handleReadEvent(cl, ev);
-
     if (r == NOMOREDATA)
     {
       HTTPRequest *_req = parseRequest(cl, cl->getRecvMessage());

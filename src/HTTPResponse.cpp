@@ -238,7 +238,7 @@ bool HTTPResponse::getResourse(std::string const &path, int const &len)
 void HTTPResponse::getDefaultResourse()
 {
 	struct stat s;
-	std::string path = "application/error404/errorPage.html";
+	std::string path = "application/errorPages/404.html";
 	if (stat(path.c_str(), &s) == 0)
 	{
 		int len = s.st_size;

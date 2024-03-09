@@ -66,8 +66,8 @@ public:
 	void setDefaultBody();
 
 private:
-	bool getResourse(std::string const &path, int const &len);
-	void getDefaultResourse();
+	bool getResource(std::string const &path, int const &len);
+	void getDefaultResource();
 
 	void GETHandler(std::string const &uri);
 	int const &POSTHandler(HTTPRequest const &request);

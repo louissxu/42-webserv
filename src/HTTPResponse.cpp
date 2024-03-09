@@ -161,9 +161,9 @@ void HTTPResponse::GETHandler(std::string const &uri)
 		if (s.st_mode & S_IFREG)
 		{
 			int len = s.st_size;
-			if (!this->getResourse(path, len))
+			if (!this->getResource(path, len))
 			{
-				this->getDefaultResourse();
+				this->getDefaultResource();
 			}
 		}
 		else
@@ -174,7 +174,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	}
 	else
 	{
-		this->getDefaultResourse();
+		this->getDefaultResource();
 		// this->GETHandler("error404/errorPage.html");
 	}
 	//   return "";
@@ -211,7 +211,7 @@ void HTTPResponse::setDefaultBody()
 #include "Cout.hpp"
 // !helper functions
 
-bool HTTPResponse::getResourse(std::string const &path, int const &len)
+bool HTTPResponse::getResource(std::string const &path, int const &len)
 {
 	(void)len;
 	// char contents[len + 1];
@@ -235,14 +235,14 @@ bool HTTPResponse::getResourse(std::string const &path, int const &len)
 	return true;
 }
 
-void HTTPResponse::getDefaultResourse()
+void HTTPResponse::getDefaultResource()
 {
 	struct stat s;
 	std::string path = "application/errorPages/404.html";
 	if (stat(path.c_str(), &s) == 0)
 	{
 		int len = s.st_size;
-		if (!this->getResourse(path, len))
+		if (!this->getResource(path, len))
 		{
 			std::cout << "unable to get resourse: " << path << std::endl;
 		}

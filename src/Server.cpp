@@ -248,7 +248,6 @@ void Server::addDirective(const std::string& name, const std::string& value) {
 /*
 HTTPResponse & Server::makeResponse(HTTPRequest &request)
 {
+std::cout << "[]"
 
-
-}
-*/
+}*/

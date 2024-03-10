@@ -16,6 +16,11 @@
 #include <vector>
 #include "Connection.hpp"
 
+struct context {
+  int sk;
+  void (*handler)(struct context *obj);
+}
+
 class Server {
   public:
     Server();
@@ -28,6 +33,7 @@ class Server {
     int getSockFd();
     void acceptNewConnection();
     std::vector<Connection>& getConnections();
+    void handleKQueueEvent(struct context *o);
 
   private:
     int _sockfd;

@@ -123,3 +123,11 @@ void Server::acceptNewConnection() {
 std::vector<Connection>& Server::getConnections() {
   return _connections;
 }
+
+// void Server::handleReadEvent() {
+//   std::cout << "handling read event" << std::endl;
+// }
+
+void Server::handleKQueueEvent(struct context *obj) {
+
+}

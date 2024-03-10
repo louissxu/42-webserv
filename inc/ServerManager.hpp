@@ -3,6 +3,7 @@
 #define ServerManager_HPP
 
 #include <poll.h>
+#include <sys/event.h>
 
 #include "Server.hpp"
 
@@ -17,12 +18,15 @@ class ServerManager {
     // void addConnection(Connection& connection);
 
     void runPoll();
+    void runKQueueEventLoop();
 
   private:
     // struct pollfd *_pfds;
     // nfds_t _pfds_count;
     // nfds_t _pfds_array_size;
     std::vector<Server> _servers;
+
+    int _kq;
 
     // void extendPfdArray(int amount = 10);
 

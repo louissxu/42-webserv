@@ -21,21 +21,16 @@ int main(int argc, char** argv) {
   (void)argc;
   (void)argv;
 
-  std::cout << "Hello world" << std::endl;
+  std::cout << "Starting" << std::endl;
 
   std::string port1 = "2345";
-  std::string port2 = "3456";
 
-  // std::cout << "starting server constructor" << std::endl;
-  // Server a(port1);
-  // std::cout << "finished constructing first server" << std::endl;
-
-  Server a = Server(port1);
+  Server server1 = Server(port1);
 
   std::cout << "adding socket manager" << std::endl;
   ServerManager sm;
 
-  sm.addServer(a);
+  sm.addServer(server1);
 
 
   sm.runPoll();

@@ -136,6 +136,28 @@ std::string const &HTTPResponse::getBody() const
 	return this->body;
 }
 
+
+bool isValidURI(const std::string &uri) {
+    // List of forbidden characters or patterns. Adjust according to your needs.
+    const char* forbiddenChars = "<>{}|\\^~`";
+    
+    Check for directory traversal attempts
+    if (uri.find("../") != std::string::npos || uri.find("/..") != std::string::npos) {
+        return false;
+    }
+
+    // Check for forbidden characters
+    for (size_t i = 0; i < strlen(forbiddenChars); i++) {
+        if (uri.find(forbiddenChars[i]) != std::string::npos) {
+            return false;
+        }
+    }
+    return true; // URI passes basic validation
+}
+
+
+
+
 void HTTPResponse::GETHandler(std::string const &uri)
 {
 	DEBUG("went in GETHandler");
@@ -144,11 +166,14 @@ void HTTPResponse::GETHandler(std::string const &uri)
 		this->body = "";
 		return;
 	}
-	if (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos)
-	{
-		this->body = "";
-		return;
-	}
+
+	if (!isValidURI(uri)) {
+	//if (true) {
+        this->status = BAD_REQUEST;
+		this->reason = "BAD_REQUEST";
+        getResource("application/errorPages/400.html", 0);
+        return;
+    }
 
 	std::string path = "application" + uri;
 	struct stat s;
@@ -163,6 +188,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 			int len = s.st_size;
 			if (!this->getResource(path, len))
 			{
+				//If we fail to load the resource at path, try to load the 404 resource.
 				this->getDefaultResource();
 			}
 		}
@@ -211,6 +237,9 @@ void HTTPResponse::setDefaultBody()
 #include "Cout.hpp"
 // !helper functions
 
+
+
+
 bool HTTPResponse::getResource(std::string const &path, int const &len)
 {
 	(void)len;
@@ -244,7 +273,7 @@ void HTTPResponse::getDefaultResource()
 		int len = s.st_size;
 		if (!this->getResource(path, len))
 		{
-			std::cout << "unable to get resourse: " << path << std::endl;
+			std::cout << "unable to get resource: " << path << std::endl;
 		}
 	}
 	this->status = NOT_FOUND;

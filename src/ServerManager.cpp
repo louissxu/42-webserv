@@ -391,8 +391,6 @@ int ServerManager::handleReadEvent(Client *cl, struct kevent event)
   cl->appendRecvMessage(ClientMessage, readLen);
   cl->setBufferRead(readLen);
   ClientMessage[readLen] = '\0';
-  DEBUG("Recived from: %d\n%s%s%s", cl->getSockFD(), BLUE, ClientMessage, RESET);
-
   unsigned int left = (unsigned)event.data;
   if (left <= (unsigned)readLen)
   {

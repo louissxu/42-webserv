@@ -1,6 +1,7 @@
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest():
+  parse_line_state_(kStartLine),
   _request_method_name("NONE"),
   _request_uri("/"),
   _HTTP_version("HTTP/1.1")
@@ -21,6 +22,8 @@ HTTPRequest::HTTPRequest(HTTPRequest& other)
 }
 
 HTTPRequest& HTTPRequest::operator=(HTTPRequest& other) {
+  parse_line_state_ = other.parse_line_state_;
+
   _request_method_name = other._request_method_name;
   _request_uri = other._request_uri;
   _HTTP_version = other._HTTP_version;
@@ -74,4 +77,85 @@ void HTTPRequest::parseString(std::string str) {
 
   // first_line.getline(buff, 1024, " ");
   // _HTTP_version = buff;
+}
+
+void HTTPRequest::parseLine(std::string str) {
+  if (parse_line_state_ == kStartLine) {
+    parseStartLine(str);
+    parse_line_state_ = kHeaders;
+  } else if (parse_line_state_ == kHeaders) {
+    parseHeaderLine(str);
+    if (str == "") {
+      parse_line_state_ = kBody;
+    }
+  } else if (parse_line_state_ == kBody) {
+    parseBodyLine(str);
+    if (str == "") {
+      parse_line_state_ = kFinished;
+    }
+  } else {
+    // TODO Out of range handling
+    std::cout << "we're done" << std::endl;
+  }
+}
+
+void HTTPRequest::parseStartLine(std::string str) {
+  std::stringstream stream(str);
+
+  char buff[301];
+
+  memset(buff, '\0', 301);
+  stream.getline(buff, 300, ' ');
+
+  std::string method(buff);
+  if (method == "GET") {
+    http_method_ = kGet;
+  } else if (method == "POST") {
+    http_method_ = kPost;
+  } else if (method == "DELETE") {
+    http_method_ = kDelete;
+  } else {
+    // TODO better error handling
+    throw std::runtime_error("unrecognised http method");
+  }
+
+  memset(buff, '\0', 301);
+  stream.getline(buff, 300, ' ');
+  uri_ = buff;
+
+  memset(buff, '\0', 301);
+  stream.getline(buff, 300);
+
+  std::string version(buff);
+  std::cout << "version: <" << version << ">" << std::endl;
+  if (version == "HTTP/1.1\r" || version == "HTTP/1.1\n" || version == "HTTP/1.1") {
+    http_version_ = kHttp_1_1;
+  } else {
+    // TODO better error handling
+    throw std::runtime_error("unrecognised http version");
+  }
+}
+
+void HTTPRequest::parseHeaderLine(std::string str) {
+  std::stringstream stream(str);
+
+  char buff[1001];
+  memset(buff, '\0', 1001);
+  stream.getline(buff, 1000, ':');
+  std::string key(buff);
+  headers_[key] = "";
+
+  while (true) {
+    memset(buff, '\0', 1001);
+    stream.getline(buff, 1000);
+    headers_[key] = headers_[key] + buff;
+
+    if (stream.eof()) {
+      break;
+    }
+  }
+}
+
+void HTTPRequest::parseBodyLine(std::string str) {
+  body_ = body_ + str;
 }

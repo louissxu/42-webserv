@@ -126,17 +126,10 @@ void Connection::handleRead()
 {
   std::cout << "connection is reading data" << std::endl;
 
-  char buff[51];
-
   while (true) {
-    memset(&buff, '\0', 51);
+    char buff[51];
+    memset(buff, '\0', 51);
     int return_value = recv(connection_fd_, &buff, 50, 0);
-    (void)return_value;
-
-    std::cout << "chars received: " << " errno: " << errno << " return_value: " << return_value << std::endl;
-    std::cout << "====" << std::endl;
-    std::cout << buff << std::endl;
-    std::cout << "====" << std::endl;
 
     if (return_value < 0 && errno == EAGAIN) {
       errno = 0;
@@ -147,7 +140,23 @@ void Connection::handleRead()
       perror("Connection: recv");
       throw std::runtime_error("Connection: recv: failed");
     }
-    received_string_.append(buff);
+    incoming_message_stream_ << buff;
+    received_string_.append(buff); // for debugging
+  }
+
+  int i = 0;
+  while (true) {
+    char buff[1001]; // TODO Make this handle lines longer than 1000 better
+    memset(buff, '\0', 1001);
+    incoming_message_stream_.getline(buff, 1000);
+    std::cout << "line " << i << ": " << buff << std::endl;
+    i++;
+
+    req_.parseLine(buff);
+
+    if (incoming_message_stream_.eof()) {
+      break;
+    }
   }
 
   std::cout << "full message is " << received_string_.length() << " long and is: " << received_string_ << std::endl;

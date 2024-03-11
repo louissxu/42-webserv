@@ -46,6 +46,7 @@ void QueueManager::runEventLoop()
   while (!quit)
   {
     int n = kevent(_kq, NULL, 0, events, 100, timeout);
+    std::cout << "kevent returned " << n << " events" << std::endl;
     if (n <= 0) {
       perror("QueueManager: kevent");
       throw std::runtime_error("QueueManager: kevent: failed in loop");

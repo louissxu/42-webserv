@@ -6,6 +6,9 @@
 #include <unistd.h> // for dup
 #include <sys/event.h> // for kevent
 
+#include <iostream>
+#include <fstream>
+
 #include "IEventHandler.hpp"
 #include "HTTPRequest.hpp"
 
@@ -29,6 +32,7 @@ class Connection : public IEventHandler {
 
   private:
     int connection_fd_;
+    std::stringstream incoming_message_stream_;
     std::string received_string_;
     HTTPRequest req_;
 };

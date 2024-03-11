@@ -161,6 +161,8 @@ void Connection::handleRead()
 
   std::cout << "full message is " << received_string_.length() << " long and is: " << received_string_ << std::endl;
 
+  req_.print();
+
   // std::string input_string = buff;
   // HTTPRequest http_request(input_string);
 

@@ -34,11 +34,23 @@ HTTPRequest::~HTTPRequest() {
 }
 
 void HTTPRequest::print() {
-  std::cout << "---- Parsed HTTP Request Contents (rest was discarded) ----" << std::endl;
+  std::cout << "---- Parsed HTTP Request Contents ----" << std::endl;
   std::cout << "HTTP Request" << std::endl;
-  std::cout << "  Method name:  " << _request_method_name << std::endl;
-  std::cout << "  URI:          " << _request_uri << std::endl;
-  std::cout << "  HTTP version: " << _HTTP_version << std::endl;
+  std::cout << "  Method name:  " << GetHttpMethodAsString() << std::endl;
+  std::cout << "  URI:          " << uri_ << std::endl;
+  std::cout << "  HTTP version: " << GetHttpVersionAsString() << std::endl;
+  std::cout << "  Headers: " << headers_.size() << " count" << std::endl;
+  for (std::map<std::string, std::string>::iterator it = headers_.begin(); it != headers_.end(); ++it) {
+    std::string key = it->first;
+    std::string value = it->second;
+
+    std::cout << "    " << key << " : " << value << "" << std::endl;
+  }
+  std::cout << "  Body:" << std::endl;
+  std::cout << "    (start)" << std::endl;
+  std::cout << body_ << std::endl;
+  std::cout << "    (end)" << std::endl;
+  std::cout << "  ParseState: " << parse_line_state_ << std::endl;
   std::cout << "---- end of request ----" << std::endl;
 }
 
@@ -84,13 +96,14 @@ void HTTPRequest::parseLine(std::string str) {
     parseStartLine(str);
     parse_line_state_ = kHeaders;
   } else if (parse_line_state_ == kHeaders) {
-    parseHeaderLine(str);
-    if (str == "") {
+    if (str == "\r") {
       parse_line_state_ = kBody;
+    } else {
+      parseHeaderLine(str);
     }
   } else if (parse_line_state_ == kBody) {
     parseBodyLine(str);
-    if (str == "") {
+    if (str == "" || str == "\r" || str == "\n") {
       parse_line_state_ = kFinished;
     }
   } else {
@@ -154,8 +167,43 @@ void HTTPRequest::parseHeaderLine(std::string str) {
       break;
     }
   }
+
+  if (headers_[key].substr(0, 1) == " ") {
+    headers_[key] = headers_[key].substr(1);
+  }
+  
+  char last_char = headers_[key][headers_[key].size() - 1];
+  if (last_char == '\n' || last_char == '\r') {
+    headers_[key].pop_back();
+  }
+
+
 }
 
 void HTTPRequest::parseBodyLine(std::string str) {
   body_ = body_ + str;
+}
+
+std::string HTTPRequest::GetHttpMethodAsString() {
+  switch (http_method_) {
+    case kGet:
+      return "GET";
+    case kPost:
+      return "POST";
+    case kDelete:
+      return "DELETE";
+    default:
+      // TODO Handle default value
+      break;
+  }
+}
+
+std::string HTTPRequest::GetHttpVersionAsString() {
+  switch (http_version_) {
+    case kHttp_1_1:
+      return "HTTP/1.1";
+    default:
+      // TODO Handle default value
+      break;
+  }
 }

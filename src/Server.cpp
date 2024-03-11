@@ -102,6 +102,7 @@ Server& Server::operator=(const Server& other) {
   if (_sockfd != -1) {
     close(_sockfd);
   }
+  _qm = other._qm;
   _sockfd = new_fd;
   _ip = other._ip;
   _port = other._port;
@@ -122,12 +123,12 @@ int Server::getSockFd() {
   return _sockfd;
 }
 
-Server::Server() {
-  _sockfd = -1;
-  _ip = "";
-  _port = "";
-  std::cout << "default constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
-}
+// Server::Server() {
+//   _sockfd = -1;
+//   _ip = "";
+//   _port = "";
+//   std::cout << "default constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
+// }
 
 void Server::acceptNewConnection() {
   _connections.push_back(Connection(_sockfd));

@@ -11,7 +11,7 @@
 
 #include "HTTPRequest.hpp"
 #include "Server.hpp"
-#include "ServerManager.hpp"
+#include "QueueManager.hpp"
 
 #include <vector>
 
@@ -28,13 +28,12 @@ int main(int argc, char** argv) {
   Server server1 = Server(port1);
 
   std::cout << "adding socket manager" << std::endl;
-  ServerManager sm;
+  QueueManager qm;
 
-  sm.addServer(server1);
+  qm.registerEvents(server1.getEventsToRegister());
 
-  sm.runKQueueEventLoop();
+  qm.runEventLoop();
 
-  // sm.runPoll();
   std::cout << "all done!" << std::endl;
 
   return (0);

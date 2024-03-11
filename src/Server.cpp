@@ -8,6 +8,9 @@
 // Ref: https://stackoverflow.com/questions/56369138/moving-an-object-with-a-file-descriptor
 // Ref: https://stackoverflow.com/questions/4172722/what-is-the-rule-of-three#:~:text=The%20rule%20of%203%2F5,functions%20when%20creating%20your%20class.
 
+// Ref: Lost of kqueue inspiration from here https://habr.com/en/articles/600123/
+// Ref: And here: https://nima101.github.io/kqueue_server
+
 Server::Server(std::string port) {
   struct addrinfo hints;
   memset(&hints, 0, sizeof hints);
@@ -127,6 +130,20 @@ std::vector<Connection>& Server::getConnections() {
 // void Server::handleReadEvent() {
 //   std::cout << "handling read event" << std::endl;
 // }
+
+std::vector<struct kevent> Server::getEventsToRegister() {
+  struct kevent readEvent;
+  struct kevent writeEvent;
+
+  EV_SET(&readEvent, _sockfd, EVFILT_READ, EV_ADD | EV_CLEAR, 0, 0, this);
+  EV_SET(&writeEvent, _sockfd, EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, this);
+  
+  std::vector<struct kevent> events;
+  events.push_back(readEvent);
+  events.push_back(writeEvent);
+
+  return events;
+}
 
 void Server::handleEvent() {
   std::cout << "I have handled the event" << std::endl;

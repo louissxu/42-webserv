@@ -18,7 +18,7 @@ INC = inc
 
 SRC_FILES = \
 	HTTPRequest.cpp \
-	ServerManager.cpp \
+	QueueManager.cpp \
 	Server.cpp \
 	Connection.cpp \
 	main.cpp

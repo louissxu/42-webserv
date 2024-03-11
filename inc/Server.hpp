@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <stdio.h> // for perror
 #include <unistd.h> // for dup
+#include <sys/event.h> // for EV_SET
 
 #include <string>
 #include <iostream>
@@ -30,8 +31,8 @@ class Server : public IEventHandler {
     int getSockFd();
     void acceptNewConnection();
     std::vector<Connection>& getConnections();
+    virtual std::vector<struct kevent> getEventsToRegister();
     virtual void handleEvent();
-    // void handleKQueueEvent(struct context *o);
 
   private:
     int _sockfd;

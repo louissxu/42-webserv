@@ -61,24 +61,9 @@ received_string_("")
   // Currently immediately receive data and send a dummy message back
   // Need to actually parse the request, figure out what it wants
   // and send back the correct respoonse contents (I think?)
+
   // receiveData();
   // sendData();
-}
-
-void Connection::receiveData()
-{
-  char buff[1024];
-
-  int bytes_received = recv(connection_fd_, &buff, 1024, 0);
-  (void)bytes_received;
-  // Should use bytes_received to tell if i have all the chars and to build my string from my buff
-
-  std::string input_string = buff;
-  HTTPRequest http_request(input_string);
-
-  req_ = http_request;
-  req_.print();
-  std::cout << "bytes received: " << bytes_received << std::endl;
 }
 
 void Connection::sendData()
@@ -116,9 +101,10 @@ std::vector<struct kevent> Connection::getEventsToRegister()
 void Connection::handleEvent(struct kevent event)
 {
   std::cout << "Connection event received" << std::endl;
-  if (event.filter == EVFILT_READ)
-  {
+  if (event.filter == EVFILT_READ) {
     handleRead();
+  } else if (event.filter == EVFILT_WRITE) {
+    // sendData();
   }
 }
 
@@ -162,6 +148,10 @@ void Connection::handleRead()
   std::cout << "full message is " << received_string_.length() << " long and is: " << received_string_ << std::endl;
 
   req_.print();
+
+  if (req_.isComplete()) {
+    // sendData();
+  }
 
   // std::string input_string = buff;
   // HTTPRequest http_request(input_string);

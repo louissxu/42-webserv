@@ -35,9 +35,9 @@ class HTTPRequest {
 
     void parseLine(std::string str);
     void print();
+    bool isComplete();
 
   private:
-    void parseString(std::string str);
     void parseStartLine(std::string str);
     void parseHeaderLine(std::string str);
     void parseBodyLine(std::string str);
@@ -53,10 +53,6 @@ class HTTPRequest {
 
     std::map<std::string, std::string> headers_;
     std::string body_;
-
-    std::string _request_method_name;
-    std::string _request_uri;
-    std::string _HTTP_version;
 };
 
 #endif

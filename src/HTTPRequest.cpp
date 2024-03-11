@@ -1,19 +1,8 @@
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest():
-  parse_line_state_(kStartLine),
-  _request_method_name("NONE"),
-  _request_uri("/"),
-  _HTTP_version("HTTP/1.1")
+  parse_line_state_(kStartLine)
 {
-}
-
-HTTPRequest::HTTPRequest(std::string request):
-  _request_method_name("NONE"),
-  _request_uri("/"),
-  _HTTP_version("HTTP/1.1")
-{
-  parseString(request);
 }
 
 HTTPRequest::HTTPRequest(HTTPRequest& other)
@@ -23,10 +12,13 @@ HTTPRequest::HTTPRequest(HTTPRequest& other)
 
 HTTPRequest& HTTPRequest::operator=(HTTPRequest& other) {
   parse_line_state_ = other.parse_line_state_;
+  http_method_ = other.http_method_;
+  uri_ = other.uri_;
+  http_version_ = other.http_version_;
 
-  _request_method_name = other._request_method_name;
-  _request_uri = other._request_uri;
-  _HTTP_version = other._HTTP_version;
+  headers_ = other.headers_;
+  body_ = other.body_;
+
   return *this;
 }
 
@@ -54,43 +46,6 @@ void HTTPRequest::print() {
   std::cout << "---- end of request ----" << std::endl;
 }
 
-void HTTPRequest::parseString(std::string str) {
-  std::cout << std::endl << "---- Full Request Data is: ----" << std::endl;
-  std::cout << str << std::endl;
-  std::cout << std::endl << "---- End of request ----" << std::endl;
-
-  std::stringstream ss(str);
-  std::string line;
-
-  std::getline(ss, line, '\n');
-
-  std::stringstream line_stream(line);
-  std::string item;
-
-  std::getline(line_stream, item, ' ');
-  _request_method_name = item;
-
-  std::getline(line_stream, item, ' ');
-  _request_uri = item;
-
-  std::getline(line_stream, item, ' ');
-  _HTTP_version = item;
-
-
-  // std::stringstream first_line;
-  // first_line << buff
-
-  // first_line.getline(buff, 1024, " ");
-  
-  // _request_method_name = buff;
-  
-  // first_line.getline(buff, 1024, " ");
-  // _request_uri = buff;
-
-  // first_line.getline(buff, 1024, " ");
-  // _HTTP_version = buff;
-}
-
 void HTTPRequest::parseLine(std::string str) {
   if (parse_line_state_ == kStartLine) {
     parseStartLine(str);
@@ -108,7 +63,6 @@ void HTTPRequest::parseLine(std::string str) {
     }
   } else {
     // TODO Out of range handling
-    std::cout << "we're done" << std::endl;
   }
 }
 
@@ -140,7 +94,6 @@ void HTTPRequest::parseStartLine(std::string str) {
   stream.getline(buff, 300);
 
   std::string version(buff);
-  std::cout << "version: <" << version << ">" << std::endl;
   if (version == "HTTP/1.1\r" || version == "HTTP/1.1\n" || version == "HTTP/1.1") {
     http_version_ = kHttp_1_1;
   } else {
@@ -206,4 +159,11 @@ std::string HTTPRequest::GetHttpVersionAsString() {
       // TODO Handle default value
       break;
   }
+}
+
+bool HTTPRequest::isComplete() {
+  if (parse_line_state_ == kFinished) {
+    return true;
+  }
+  return false;
 }

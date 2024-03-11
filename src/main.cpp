@@ -23,12 +23,12 @@ int main(int argc, char** argv) {
 
   std::cout << "Starting" << std::endl;
 
+  QueueManager qm;
   std::string port1 = "2345";
 
-  Server server1 = Server(port1);
+  Server server1 = Server(qm, port1);
 
   std::cout << "adding socket manager" << std::endl;
-  QueueManager qm;
 
   qm.registerEvents(server1.getEventsToRegister());
 

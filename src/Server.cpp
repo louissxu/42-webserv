@@ -11,7 +11,10 @@
 // Ref: Lost of kqueue inspiration from here https://habr.com/en/articles/600123/
 // Ref: And here: https://nima101.github.io/kqueue_server
 
-Server::Server(std::string port) {
+Server::Server(QueueManager& qm, std::string port):
+  _qm(qm),
+  _port(port)
+ {
   struct addrinfo hints;
   memset(&hints, 0, sizeof hints);
 
@@ -65,7 +68,6 @@ Server::Server(std::string port) {
   }
 
   _sockfd = sockfd;
-  _port = port;
   _ip = ipstr;
 
   std::cout << "parameterised constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
@@ -85,7 +87,10 @@ static int safe_dup(int fd) {
   return copy;
 }
 
-Server::Server(const Server& other) {
+Server::Server(const Server& other):
+  _qm(other._qm)
+{
+  // _qm = other._qm;
   _sockfd = safe_dup(other._sockfd);
   _ip = other._ip;
   _port = other._port;
@@ -125,11 +130,12 @@ Server::Server() {
 }
 
 void Server::acceptNewConnection() {
-  Connection newConnection = Connection(_sockfd);
-  _connections.push_back(newConnection);
+  _connections.push_back(Connection(_sockfd));
   std::cout << "connection accepted" << std::endl;
-  std::cout << "the newConnection's sockFD was " << newConnection.getConnectionFd() << std::endl;
   std::cout << "the connection in the vector's Fd is: " << _connections.back().getConnectionFd() << std::endl;
+  _qm.registerEvents(_connections.back().getEventsToRegister());
+  std::cout << "the event has been registered" << std::endl;
+  
 }
 
 std::vector<Connection>& Server::getConnections() {
@@ -155,8 +161,15 @@ std::vector<struct kevent> Server::getEventsToRegister() {
   return events;
 }
 
-void Server::handleEvent() {
+void Server::handleEvent(struct kevent event) {
   std::cout << "I have handled the event" << std::endl;
   std::cout << "The socket is  " << _sockfd << std::endl;
-  acceptNewConnection();
+  if (event.filter == EVFILT_READ) {
+    std::cout << "was read event" << std::endl;
+    acceptNewConnection();
+  } else if (event.filter == EVFILT_WRITE) {
+    std::cout << "was a write event" << std::endl;
+  } else {
+    std::cout << "was another event type. error?" << std::endl;
+  }
 }

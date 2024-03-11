@@ -18,6 +18,7 @@
 #include <vector>
 #include "Connection.hpp"
 #include "IEventHandler.hpp"
+#include "QueueManager.hpp"
 
 
 class Server : public IEventHandler {
@@ -27,15 +28,16 @@ class Server : public IEventHandler {
     Server& operator=(const Server& other);
     virtual ~Server();
 
-    Server(std::string port);
+    Server(QueueManager& qm, std::string port);
 
     int getSockFd();
     void acceptNewConnection();
     std::vector<Connection>& getConnections();
     virtual std::vector<struct kevent> getEventsToRegister();
-    virtual void handleEvent();
+    virtual void handleEvent(struct kevent event);
 
   private:
+    QueueManager _qm;
     int _sockfd;
     std::string _port;
     std::string _ip;

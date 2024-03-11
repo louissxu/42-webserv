@@ -4,14 +4,19 @@
 
 #include <poll.h>
 #include <sys/event.h>
-
-#include "Server.hpp"
-
 #include <vector>
+#include <unistd.h>
+
+#include <string>
+#include <iostream>
+
+#include "IEventHandler.hpp"
 
 class QueueManager {
   public:
     QueueManager();
+    QueueManager(const QueueManager& other);
+    QueueManager& operator=(QueueManager& other);
     ~QueueManager();
 
     void registerEvents(std::vector<struct kevent> events);
@@ -19,9 +24,6 @@ class QueueManager {
 
   private:
     int _kq;
-
-    QueueManager(QueueManager& other);
-    QueueManager& operator=(QueueManager& other);
 };
 
 #endif

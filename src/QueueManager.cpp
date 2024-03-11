@@ -5,13 +5,14 @@ QueueManager::QueueManager()
   _kq = kqueue();
 }
 
-// QueueManager::QueueManager(QueueManager& other) {
+QueueManager::QueueManager(const QueueManager& other) {
+  _kq = other._kq;
+}
 
-// }
-
-// QueueManager& QueueManager::operator=(QueueManager& other) {
-
-// }
+QueueManager& QueueManager::operator=(QueueManager& other) {
+  _kq = other._kq;
+  return *this;
+}
 
 QueueManager::~QueueManager()
 {
@@ -57,7 +58,7 @@ void QueueManager::runEventLoop()
 
     for (int i = 0; i < n; i++) {
       IEventHandler *obj = static_cast<IEventHandler *>(events[i].udata);
-      obj->handleEvent();
+      obj->handleEvent(events[i]);
     }
   }
 }

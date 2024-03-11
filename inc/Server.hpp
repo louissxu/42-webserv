@@ -10,6 +10,7 @@
 #include <stdio.h> // for perror
 #include <unistd.h> // for dup
 #include <sys/event.h> // for EV_SET
+#include <fcntl.h> // for fcntl
 
 #include <string>
 #include <iostream>

@@ -41,6 +41,13 @@ Server::Server(std::string port) {
     throw std::runtime_error("Server: socket: failed");
   }
 
+  // Ref: Make socket non blocking https://stackoverflow.com/questions/1543466/how-do-i-change-a-tcp-socket-to-be-non-blocking
+  error_return = fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK);
+  if (error_return != 0) {
+    perror("Server: fcntl");
+    throw std::runtime_error("Server: fcntl: failed to set socket to non-blocking");
+  }
+
   // set to allow port reuse? or something
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
@@ -121,6 +128,8 @@ void Server::acceptNewConnection() {
   Connection newConnection = Connection(_sockfd);
   _connections.push_back(newConnection);
   std::cout << "connection accepted" << std::endl;
+  std::cout << "the newConnection's sockFD was " << newConnection.getConnectionFd() << std::endl;
+  std::cout << "the connection in the vector's Fd is: " << _connections.back().getConnectionFd() << std::endl;
 }
 
 std::vector<Connection>& Server::getConnections() {
@@ -135,6 +144,7 @@ std::vector<struct kevent> Server::getEventsToRegister() {
   struct kevent readEvent;
   struct kevent writeEvent;
 
+  //TODO DO I need this EV_CLEAR?
   EV_SET(&readEvent, _sockfd, EVFILT_READ, EV_ADD | EV_CLEAR, 0, 0, this);
   EV_SET(&writeEvent, _sockfd, EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, this);
   
@@ -148,4 +158,5 @@ std::vector<struct kevent> Server::getEventsToRegister() {
 void Server::handleEvent() {
   std::cout << "I have handled the event" << std::endl;
   std::cout << "The socket is  " << _sockfd << std::endl;
+  acceptNewConnection();
 }

@@ -23,7 +23,6 @@
 
 class Server : public IEventHandler {
   public:
-    Server();
     Server(const Server& other);
     Server& operator=(const Server& other);
     virtual ~Server();
@@ -37,11 +36,13 @@ class Server : public IEventHandler {
     virtual void handleEvent(struct kevent event);
 
   private:
-    QueueManager _qm;
+    QueueManager& _qm;
     int _sockfd;
     std::string _port;
     std::string _ip;
     std::vector<Connection> _connections;
+    
+    Server();
 };
 
 

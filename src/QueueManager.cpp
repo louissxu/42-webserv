@@ -39,19 +39,23 @@ void QueueManager::runEventLoop()
 {
   struct timespec *timeout = NULL; // wait indefinitely
   struct kevent events[100];       // TODO change this to be not manually set
+  bool quit = false;
 
   std::cout << "starting kqueue loop" << std::endl;
-  while (true)
+  while (!quit)
   {
     int n = kevent(_kq, NULL, 0, events, 100, timeout);
-    if (n <= 0)
-    {
+    if (n <= 0) {
       perror("QueueManager: kevent");
       throw std::runtime_error("QueueManager: kevent: failed in loop");
     }
+    // if (errno == EINTR) {
+    //   // Breaking out, have received an interrupt signal
+    //   quit = true;
+    //   continue;
+    // }
 
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++) {
       IEventHandler *obj = static_cast<IEventHandler *>(events[i].udata);
       obj->handleEvent();
     }

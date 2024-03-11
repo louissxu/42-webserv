@@ -1,5 +1,36 @@
 #include "HTTPResponse.hpp"
 
+// https://github.com/php/php-src/blob/master/ext/session/session.c#L279
+const int PS_MAX_SID_LENGTH = 32; // Define your maximum session ID length here
+
+static std::string genSessionID(int sid_length, int sid_bits_per_character)
+{
+	// Seed the random number generator
+	srand(static_cast<unsigned int>(time(nullptr)));
+
+	// Allocate memory for the session ID
+	unsigned char rbuf[PS_MAX_SID_LENGTH];
+
+	// Generate random bytes for the session ID
+	for (int i = 0; i < sid_length; ++i)
+	{
+		rbuf[i] = rand() % 256; // Generate a random byte (0-255)
+	}
+
+	// Convert binary data to a readable string
+	std::string outid;
+	for (int i = 0; i < sid_length; ++i)
+	{
+		// Determine the character representing this byte
+		char character = '0' + (rbuf[i] % sid_bits_per_character);
+
+		// Append the character to the output string
+		outid.push_back(character);
+	}
+
+	return outid;
+}
+
 HTTPResponse::HTTPResponse()
 {
 	buildDefaultResponse();
@@ -27,14 +58,35 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 {
 	buildDefaultResponse();
+	std::cout << _req.getUri() << std::endl;
+	if (_req.getUri() == "/cgi-bin/login.py")
+	{
+		// this->setVersion("HTTP/1.1");
+		// this->setStatus(OK);
+		// this->setReason("OK");
+		// DEBUG("\nReturning\n")
+		return ;
+	}
+	// buildDefaultResponse();
+	
+	RECORD("got cookie: %s%s%s", BOLDRED, _req.getHeader("Cookie").c_str(), RESET);
 	switch (_req.getMethod())
 	{
 	case Method(GET):
 		GETHandler(_req.getUri());
 		break;
 	case Method(POST):
-		if (_req.getHeader("Set-Cookie") != std::string())
-			headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
+		if (_req.getHeader("Cookie").empty())
+		{
+			std::string id = genSessionID(32, 5);
+			addHeader("Set-Cookie", "session-id=" + id + "; Domain=localhost; Path=/");
+			RECORD("Set new cookie: %s%s%s", BOLDRED, id.c_str(), RESET);
+			// headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
+		}
+		else
+		{
+			RECORD("got cookie: %s%s%s", BOLDRED, _req.getHeader("Cookie").c_str(), RESET);
+		}
 		break;
 	case Method(DELETE):
 		DELETEHandler();
@@ -150,10 +202,11 @@ void HTTPResponse::GETHandler(std::string const &uri)
 		this->body = "";
 		return;
 	}
-	if (uri.compare(1, 7, "cgi-bin") == 0 && access(path.c_str(), F_OK ) != -1)
+	if (uri.compare(1, 7, "cgi-bin") == 0 && access(path.c_str(), F_OK) != -1)
 	{
-		this->geterrorResourse("E403.html");
-		return ;
+		if (uri.compare(8, uri.size(), "loogin.py") != 0)
+			this->geterrorResourse("E403.html");
+		return;
 	}
 	if (stat(path.c_str(), &s) == 0)
 	{

@@ -1,7 +1,7 @@
 #include "ServerManager.hpp"
 #include "Cout.hpp"
 
-static void areFdsOpen(int pipein[2], int pipeout[2])
+void areFdsOpen(int pipein[2], int pipeout[2])
 {
   if (pipein == NULL || pipeout == NULL)
     return;
@@ -99,9 +99,9 @@ void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short 
     if (fdmap.empty())
       return;
   }
-  DEBUG("\n\n");
-  areFdsOpen(cl->pipe_in, cl->pipe_out);
-  DEBUG("\n\n");
+  // DEBUG("\n\n");
+  // areFdsOpen(cl->pipe_in, cl->pipe_out);
+  // DEBUG("\n\n");
 }
 
 void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter)
@@ -111,9 +111,9 @@ void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, int fd, short filt
   {
     updateEvent(it->first, filter, EV_DELETE, 0, 0, NULL);
     close(it->first);
-    DEBUG("\n\n");
-    areFdsOpen(it->second->pipe_in, it->second->pipe_out);
-    DEBUG("\n\n");
+    // DEBUG("\n\n");
+    // areFdsOpen(it->second->pipe_in, it->second->pipe_out);
+    // DEBUG("\n\n");
     fdmap.erase(it);
   }
 }
@@ -291,7 +291,7 @@ void ServerManager::handleEvent(struct kevent const &ev)
   if (isCgiWrite || isCgiRead)
   {
     Cgi cgi;
-    areFdsOpen(cl->pipe_in, cl->pipe_out);
+    // areFdsOpen(cl->pipe_in, cl->pipe_out);
 
     if (isCgiWrite && !cgi.CgiWriteHandler(*this, cl, ev))
     {
@@ -314,45 +314,44 @@ void ServerManager::handleEvent(struct kevent const &ev)
         ERR("Failed to parse request from %d: ", cl->getSockFD());
         closeConnection(cl);
       }
-
-      if (_req->getHeader("Content-Length").empty())
+      int len = (_req->getHeader("Content-Length").empty()) ? 0 : std::stoi(_req->getHeader("Content-Length"));
+      // if (std::stoi(_req->getHeader("Content-Length")) == static_cast<int>(_req->getBody().size()))
+      if (len == static_cast<int>(_req->getBody().size()))
       {
-        RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
-
         this->_resp = HTTPResponse(*_req);
-        Message message(_resp);
-        cl->setMessage(message);
-        cl->setBufferRead(0);
-        cl->resetRecvMessage();
-
-        updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-        updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-      }
-      else
-      {
-        if (std::stoi(_req->getHeader("Content-Length")) == static_cast<int>(_req->getBody().size()))
+        checkCgi(*_req);
+        if (_req->getCGIStatus() == true)
         {
-          this->_resp = HTTPResponse(*_req);
-          if (_req->getCGIStatus() == true)
-          {
-            Cgi *cgi = new Cgi();
-            cgi->launchCgi(*_req, cl);
-            _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
-            _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
+          Cgi *cgi = new Cgi();
+          cgi->launchCgi(*_req, cl);
+          _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
+          _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
 
-            updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-            updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
+          updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+          updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
 
-            Message message(_req->getBody());
-            cl->setMessage(message);
-            cl->setBufferRead(0);
-            cl->resetRecvMessage();
+          Message message(_req->getBody());
+          cl->setMessage(message);
+          cl->setBufferRead(0);
+          cl->resetRecvMessage();
 
-            updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-            updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-          }
-          RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
+          updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+          updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
         }
+        else if (_req->getHeader("Content-Length").empty())
+        {
+          RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
+
+          this->_resp = HTTPResponse(*_req);
+          Message message(_resp);
+          cl->setMessage(message);
+          cl->setBufferRead(0);
+          cl->resetRecvMessage();
+
+          updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+          updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+        }
+        RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
       }
       delete _req;
     }
@@ -426,6 +425,11 @@ bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
     return false;
   }
   int actualSend = send(cl->getSockFD(), (message.getMessage()).c_str(), attempSend, 0);
+  if (actualSend < 0)
+  {
+    ERR("Send: unable to send");
+    return false;
+  }
   // int actualSend = send(cl->getSockFD(), (message.getMessage()).c_str() + message.getBufferSent(), attempSend, 0);
   DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
   if (actualSend >= attempSend)
@@ -472,6 +476,26 @@ std::string ServerManager::getFileContents(std::string uri)
   return "";
 }
 
+void ServerManager::checkCgi(HTTPRequest &_req)
+{
+  std::string uri = _req.getUri();
+  std::string cookie = _req.getHeader("Cookie");
+  bool isCgi = (uri.compare(1, 7, "cgi-bin") == 0);
+
+  // if (!cookie.empty())
+  // {
+  //   if (uri == "/login-form/index.html" || uri == "/register/index.html")
+  //   {
+  //     // std::string cgiScript = (uri == "/login-form/index.html") ? "cgi-bin/login.py" : "cgi-bin/register.py";
+  //     _req.setUri("/cgi-bin/logedin.py");
+  //     _req.setBody(cookie);
+  //     isCgi = true;
+  //   }
+  // }
+  _req.setIsCgi(isCgi);
+}
+
+
 HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
 {
   (void)cl;
@@ -481,7 +505,7 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
   std::string uri;
   std::map<std::string, std::string> headers;
   std::string body;
-  bool isCGI = false;
+  // bool isCGI = false;
 
   std::stringstream ss(message);
   std::string line;
@@ -491,9 +515,6 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
   std::getline(line_stream, method, ' ');
   std::getline(line_stream, uri, ' ');
   std::getline(line_stream, version, '\r');
-
-  if (uri.compare(1, 7, "cgi-bin") == 0)
-    isCGI = true;
 
   // Parse headers
   while (std::getline(ss, line) && !line.empty() && line != "\r")
@@ -508,11 +529,6 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
   }
   std::getline(ss, line);
   body = line;
-  // Get the rest as the body
-  // body = ss.str();
-  // // Remove headers from the body
-  // body.erase(0, ss.tellg());
-  // std::cout << "\n\n\nbody: " << body << "\n\n\n\n";
 
   Method meth;
   if (method == "GET")
@@ -521,7 +537,7 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
     meth = POST;
   if (method == "DELETE")
     meth = DELETE;
-  return (new HTTPRequest(headers, body, meth, uri, HTTP_1_1, isCGI));
+  return (new HTTPRequest(headers, body, meth, uri, HTTP_1_1, false));
 }
 
 HTTPResponse &ServerManager::getResponse()

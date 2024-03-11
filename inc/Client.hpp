@@ -17,6 +17,7 @@ private:
 	Message message;
 
 public:
+	pid_t Cgipid;
 	int pipe_in[2];
 	int pipe_out[2];
 	Client();

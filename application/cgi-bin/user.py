@@ -1,20 +1,7 @@
 import sqlite3
 
-# connection = sqlite3.connect("database.db")
-# cursor = connection.cursor()
-
-# cursor.execute("""
-# CREATE TABLE IF NOT EXISTS users (
-# 			   sessionID INTEGER,
-# 			   userName TEXT,
-# 			   password TEXT,
-# 			   firstName TEXT
-# )
-# """)
-
 class User:
-	def __init__(self, sessionID, userName="", password="", firstName=""):
-		self.sessionID = sessionID
+	def __init__(self, userName="", password="", firstName=""):
 		self.userName = userName
 		self.password = password
 		self.firstName = firstName
@@ -24,7 +11,6 @@ class User:
 
 		self.cursor.execute("""
 		CREATE TABLE IF NOT EXISTS users (
-					sessionID INTEGER,
 					userName TEXT,
 					password TEXT,
 					firstName TEXT
@@ -39,13 +25,13 @@ class User:
 
 		results = self.cursor.fetchone()
 		if results:
-			return True
-			self.sessionID = results[0]
-			self.username = results[1]
-			self.password = results[2]
-			self.firstname = results[3]
+			self.username = results[0]
+			self.password = results[1]
+			self.firstname = results[2]
+			return self
+			
 		else:
-			return False
+			return None
 			print("User not found.")
 	def getUserByUsername(self, userName=""):
 		self.cursor.execute("""
@@ -55,21 +41,36 @@ class User:
 
 		results = self.cursor.fetchone()
 		if results:
-			self.sessionID = results[0]
-			self.username = results[1]
-			self.password = results[2]
-			self.firstname = results[3]
+			self.username = results[0]
+			self.password = results[1]
+			self.firstname = results[2]
+			return True
+		else:
+			# print("User not found.")
+			return False
+		
+	def getUser(self, userName="", password=""):
+		self.cursor.execute("""
+		SELECT * FROM users
+		WHERE userName = ? AND password = ?
+		""", (userName, password))
+
+		results = self.cursor.fetchone()
+		if results:
 			return True
 		else:
 			return False
-			print("User not found.")
+
 	def addUser(self):
 		self.cursor.execute("""
 			INSERT INTO users VALUES
-			({}, '{}', '{}', '{}')		  
-			""".format(self.sessionID, self.userName, self.password, self.firstName))
+			('{}', '{}', '{}')		  
+			""".format(self.userName, self.password, self.firstName))
 		
 		self.connection.commit()
+	# def updateSessionId(self, sessionID=""):
+	# 	self.sessionID = sessionID
+	# 	return ;
 		# self.connection.close()
 
 # p1 = User(123445, "mehdi1", "pss",  "medhi")

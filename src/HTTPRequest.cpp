@@ -13,10 +13,9 @@ HTTPRequest::HTTPRequest(std::map<std::string, std::string> const &_headers, std
 	// (void)isCGI;
 }
 
-HTTPRequest::~HTTPRequest()
-{
-}
+HTTPRequest::~HTTPRequest() {}
 
+// Setters
 // !Might have to append value in some cases research further
 void HTTPRequest::setHeader(std::string const &key, std::string const &value)
 {
@@ -27,6 +26,32 @@ void HTTPRequest::setHeader(std::string const &key, std::string const &value)
 		it->second = value;
 }
 
+void HTTPRequest::setBody(std::string const &body)
+{
+	this->body = body;
+}
+
+void HTTPRequest::setMethod(Method const &method)
+{
+	this->method = method;
+}
+
+void HTTPRequest::setUri(std::string const &_uri)
+{
+	this->uri = _uri;
+}
+
+void HTTPRequest::setVersion(Version const &version)
+{
+	this->version = version;
+}
+
+void HTTPRequest::setIsCgi(bool const &isCgi)
+{
+	this->isCGI = isCgi;
+}
+
+// Getters
 std::map<std::string, std::string> const &HTTPRequest::getHeaders() const
 {
 	return this->headers;

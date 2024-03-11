@@ -85,4 +85,6 @@ private:
   // void launchCgi(HTTPRequest const &request, Client *cl);
   void deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter);
   void deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter);
+
+  void checkCgi(HTTPRequest &_req);
 };

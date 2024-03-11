@@ -9,6 +9,7 @@ std::map<std::string, std::string> createMIMEMap()
 	mimeTypes[".css"] = "text/css";
 	mimeTypes[".jpg"] = "image/jpeg";
 	mimeTypes[".png"] = "image/png";
+	mimeTypes[".ico"] = "image/x-icon";
 	return mimeTypes;
 }
 

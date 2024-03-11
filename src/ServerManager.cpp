@@ -4,7 +4,7 @@ ServerManager::ServerManager() {
   // _pfds = new struct pollfd[10];
   // _pfds_count = 0;
   // _pfds_array_size = 10;
-  _kq = kqueue()
+  _kq = kqueue();
 
 }
 
@@ -20,6 +20,7 @@ ServerManager::~ServerManager() {
   // delete[] _pfds;
   // _pfds_count = 0;
   // _pfds_array_size = 0;
+  // TODO close kqueue
   std::cout << "ServerManager destructor" << std::endl;
 }
 
@@ -33,16 +34,16 @@ ServerManager::~ServerManager() {
 //   _pfds_array_size = _pfds_array_size + amount;
 // }
 
-void ServerManager::addServer(const Server& server) {
-  struct kevent events[2]
-  struct context data_for_kqueue = {};
-  data_for_kqueue.handler = server.getSockFd()
-  data_for_kqueue.handler = server.handleKQueueEvent
+void ServerManager::addServer(Server& server) {
+  struct kevent events[2];
+  // struct context data_for_kqueue = {};
+  // data_for_kqueue.fd = server.getSockFd();
+  // data_for_kqueue.handler = &server.handleEvent;
 
-  EV_SET(&events[0], server.getSockFd(), EVFILT_READ, EV_ADD | EV_CLEAR, 0, 0, data_for_kqueue)
-  EV_SET(&events[1], server.getSockFd(), EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, data_for_kqueue)
+  EV_SET(&events[0], server.getSockFd(), EVFILT_READ, EV_ADD | EV_CLEAR, 0, 0, &server);
+  EV_SET(&events[1], server.getSockFd(), EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, &server);
 
-  int error_return = kevent(_kq, events, 2, NULL, 0, NULL));
+  int error_return = kevent(_kq, events, 2, NULL, 0, NULL);
   if (error_return != 0) {
     perror("ServerManager: kevent");
     throw std::runtime_error("ServerManager: kevent: failed adding server");
@@ -64,18 +65,23 @@ void ServerManager::addServer(const Server& server) {
 
 void ServerManager::runKQueueEventLoop() {
   struct timespec *timeout = NULL; // wait indefinitely
-  struct kevent events[100] // TODO change this to be not manually set
+  struct kevent events[100]; // TODO change this to be not manually set
 
+  std::cout << "starting kqueue loop" << std::endl;
   while (true) {
-    int n = kevent(kq, NULL, 0, events, 100, timeout);
+    int n = kevent(_kq, NULL, 0, events, 100, timeout);
     if (n <= 0) {
       perror("ServerManager: kevent");
       throw std::runtime_error("ServerManager: kevent: failed in loop");
     }
 
-    for (size_t i = 0; i < n; i++) {
-      struct context *o = events[i].udata;
-      o->handler(o);
+    for (int i = 0; i < n; i++) {
+      IEventHandler *obj = static_cast<IEventHandler *>(events[i].udata);
+      obj->handleEvent();
+      // events[i].udata->handleEvent()
+
+      // struct context *o = events[i].udata;
+      // o->handler(o);
     }
   }
 }

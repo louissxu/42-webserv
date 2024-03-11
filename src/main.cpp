@@ -32,25 +32,20 @@ int main(int argc, char** argv) {
 
   sm.addServer(server1);
 
+  sm.runKQueueEventLoop();
 
-  sm.runPoll();
+  // sm.runPoll();
   std::cout << "all done!" << std::endl;
 
   return (0);
 
   // a = Server(port1);
   // Server b(port1);
-  Server c(port2);
-  Server d("5678");
 
   // std::vector<Server> vec_of_servers;
   // vec_of_servers.push_back(a);
   // vec_of_servers.push_back(c);
   // vec_of_servers.push_back(d);
-
-  std::vector<Server> blah;
-  blah.push_back(a);
-  blah.push_back(c);
 
   return(0);
 

@@ -15,25 +15,23 @@
 
 #include <vector>
 #include "Connection.hpp"
+#include "IEventHandler.hpp"
 
-struct context {
-  int sk;
-  void (*handler)(struct context *obj);
-}
 
-class Server {
+class Server : public IEventHandler {
   public:
     Server();
     Server(const Server& other);
     Server& operator=(const Server& other);
-    ~Server();
+    virtual ~Server();
 
     Server(std::string port);
 
     int getSockFd();
     void acceptNewConnection();
     std::vector<Connection>& getConnections();
-    void handleKQueueEvent(struct context *o);
+    virtual void handleEvent();
+    // void handleKQueueEvent(struct context *o);
 
   private:
     int _sockfd;

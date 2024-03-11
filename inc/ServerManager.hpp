@@ -14,7 +14,7 @@ class ServerManager {
     ServerManager();
     ~ServerManager();
 
-    void addServer(const Server& server);
+    void addServer(Server& server);
     // void addConnection(Connection& connection);
 
     void runPoll();

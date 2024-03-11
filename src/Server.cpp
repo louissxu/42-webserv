@@ -128,6 +128,7 @@ std::vector<Connection>& Server::getConnections() {
 //   std::cout << "handling read event" << std::endl;
 // }
 
-void Server::handleKQueueEvent(struct context *obj) {
-
+void Server::handleEvent() {
+  std::cout << "I have handled the event" << std::endl;
+  std::cout << "The socket is  " << _sockfd << std::endl;
 }

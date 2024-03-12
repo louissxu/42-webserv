@@ -1,5 +1,18 @@
 #include "cgi.hpp"
 
+static int calcContentLength(std::string const &message)
+{
+	std::stringstream ss(message);
+	std::string line;
+	std::getline(ss, line, '\n');
+
+	// int len = message == "" ? message.size() - 1: message.size() - (line.size() + 1);
+	// (void)len;
+	return (message == "" ? message.size() - 1: message.size() - line.size() - 2);
+		// return (message.size() - 1);
+
+}
+
 Cgi::Cgi() {}
 
 Cgi::~Cgi() {}
@@ -47,11 +60,11 @@ void Cgi::setArgv(HTTPRequest const &req)
 
 void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 {
-	char buffer[BUFFERSIZE * 2];
-	memset(buffer, 0, sizeof(buffer));
+	char buffer[ev_list.data + 1];
+	memset(buffer, 0, ev_list.data + 1);
 	int bytesRead = 0;
 	static std::string message = "";
-	bytesRead = read(ev_list.ident, buffer, BUFFERSIZE * 2);
+	bytesRead = read(ev_list.ident, buffer, ev_list.data);
 	DEBUG("cgiReadHandler: Read: %s", buffer);
 	if (bytesRead == 0)
 	{
@@ -59,19 +72,19 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 		sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 		close(cl->pipe_in[0]);
 		close(cl->pipe_out[0]);
-		
-		HTTPResponse cgiResponse;
 
+		HTTPResponse cgiResponse;
 		int status;
 		waitpid(cl->Cgipid, &status, WCONTINUED);
 		if (!WIFEXITED(status))
 		{
+			cgiResponse.setCgiStatus(false);
 			std::map<std::string, std::string> _;
 			HTTPRequest errorReq(_, "", GET, "/error/E50x.html", HTTP_1_1, false);
 			cgiResponse = HTTPResponse(errorReq);
 			return ;
 		}
-
+		cgiResponse.setCgiStatus(true);
 		cgiResponse.setBody(message);
 		cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
 		Message cgiMessage = Message(cgiResponse);
@@ -98,12 +111,15 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 		cgiResponse.setVersion("HTTP/1.1");
 		cgiResponse.setBody(message);
 		// if (cgiResponse.getUri() == "/cgi-bin/loogin.py")
-		cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
+		int contentlen = calcContentLength(message);
+		cgiResponse.addHeader("Content-Length", std::to_string(contentlen));
+		// cgiResponse.addHeader("Content-Length", std::to_string(message.size() - 1));
 		// cgiResponse.addHeader("session-id", )
+		cgiResponse.setCgiStatus(true);
 		Message cgiMessage = Message(cgiResponse);
 		cl->setMessage(cgiMessage);
 		message.clear();
-		
+
 		int status;
 		waitpid(cl->Cgipid, &status, WCONTINUED);
 		if (WIFEXITED(status))
@@ -111,6 +127,7 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 			std::cout << WEXITSTATUS(status) << std::endl;
 			if (WEXITSTATUS(status) == 1)
 			{
+				cgiResponse.setCgiStatus(false);
 				std::map<std::string, std::string> _;
 				HTTPRequest errorReq(_, "", GET, "/error/E50x.html", HTTP_1_1, false);
 				cgiResponse = HTTPResponse(errorReq);

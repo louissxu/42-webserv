@@ -1,16 +1,24 @@
 {
-	// Use IntelliSense to learn about possible attributes.
-	// Hover to view descriptions of existing attributes.
-	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 	"version": "0.2.0",
 	"configurations": [
-		{
-			"name": "Python Debugger: Current File with Arguments",
-			"type": "debugpy",
-			"request": "launch",
-			"program": "${file}",
-			"console": "integratedTerminal",
-			"args": "${command:pickArgs}"
-		}
+	  {
+		"type": "lldb",
+		"request": "launch",
+		"name": "Debug",
+		"program": "${workspaceFolder}/webserv",
+		"args": [],
+		"cwd": "${workspaceFolder}"
+	  },
+	  {
+		"name": "C/C++ Runner: Debug Session",
+		"type": "lldb",
+		"request": "launch",
+		"args": [],
+		"stopAtEntry": true,
+		"externalConsole": false,
+		"cwd": "/Users/mmirzaie/Desktop/42-webserv",
+		"program": "/Users/mmirzaie/Desktop/42-webserv/webserv",
+		"MIMode": "gdb"
+	  }
 	]
-}
+  }

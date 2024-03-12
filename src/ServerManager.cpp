@@ -527,14 +527,11 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
       headers[key] = value;
     }
   }
-
+  
   // Parse body
   body = "";
-  while(!ss.eof()) {
-    char buff[51];
-    memset(buff, '\0', 50);
-    ss.getline(buff, 50);
-    body = body + buff;
+  while(std::getline(ss, line)) {
+    body = body + line + "\n";
   }
 
   Method meth;

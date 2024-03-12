@@ -28,9 +28,9 @@ HTTPRequest::~HTTPRequest() {
 void HTTPRequest::print() {
   std::cout << "---- Parsed HTTP Request Contents ----" << std::endl;
   std::cout << "HTTP Request" << std::endl;
-  std::cout << "  Method name:  " << GetHttpMethodAsString() << std::endl;
+  std::cout << "  Method name:  " << getHttpMethodAsString() << std::endl;
   std::cout << "  URI:          " << uri_ << std::endl;
-  std::cout << "  HTTP version: " << GetHttpVersionAsString() << std::endl;
+  std::cout << "  HTTP version: " << getHttpVersionAsString() << std::endl;
   std::cout << "  Headers: " << headers_.size() << " count" << std::endl;
   for (std::map<std::string, std::string>::iterator it = headers_.begin(); it != headers_.end(); ++it) {
     std::string key = it->first;
@@ -137,7 +137,7 @@ void HTTPRequest::parseBodyLine(std::string str) {
   body_ = body_ + str;
 }
 
-std::string HTTPRequest::GetHttpMethodAsString() {
+std::string HTTPRequest::getHttpMethodAsString() {
   switch (http_method_) {
     case kGet:
       return "GET";
@@ -151,7 +151,7 @@ std::string HTTPRequest::GetHttpMethodAsString() {
   }
 }
 
-std::string HTTPRequest::GetHttpVersionAsString() {
+std::string HTTPRequest::getHttpVersionAsString() {
   switch (http_version_) {
     case kHttp_1_1:
       return "HTTP/1.1";

@@ -42,8 +42,8 @@ class HTTPRequest {
     void parseHeaderLine(std::string str);
     void parseBodyLine(std::string str);
 
-    std::string GetHttpMethodAsString();
-    std::string GetHttpVersionAsString();
+    std::string getHttpMethodAsString();
+    std::string getHttpVersionAsString();
 
     enum ParseLineState parse_line_state_;
 

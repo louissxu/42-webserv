@@ -38,6 +38,7 @@ private:
 	std::map<std::string, std::string> headers;
 	std::string body;
 
+	bool cgiStatus;
 public:
 	HTTPResponse();
 	HTTPResponse(std::string const &_version, Status const &_status, std::string const &_reason, std::map<std::string, std::string> const &_headers, std::string const &_body);
@@ -61,6 +62,9 @@ public:
 	std::string const &getReason() const;
 	std::map<std::string, std::string> const &getHeaders() const;
 	std::string const &getBody() const;
+
+	bool const &getCgiStatus() const;
+	void setCgiStatus(bool _status);
 
 	void buildDefaultResponse();
 	void setDefaultHeaders();

@@ -1,0 +1,11 @@
+<html><body>
+<h1> Login Program </h1>
+<h1> Welcome q, your password is q</h1>
+<form method='post' action='login.py'>
+<label>Username : </label> 
+<input type='text' placeholder='Enter Username' name='username' required>
+<label>Password : </label> 
+<input type='password' placeholder='Enter Password' name='password' required>
+<input type='submit' value='Submit'/>
+</form>
+</body></html>

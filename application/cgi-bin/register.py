@@ -2,6 +2,7 @@ import os
 import user
 import cgi
 
+print()
 print("<!DOCTYPE html>")
 print("<html>")
 print("<head>")
@@ -23,8 +24,9 @@ if "username" in form and "password" in form:
 	if (newUser.getUserByUsername(username) == False):
 		newUser.addUser()
 		print("<pre>thanks for registering: " + firstname + "</pre>")
+		print("<p><a href='login.py'>login</a></p>")
 	else:
-		print("<pre>welcome back you are already a member: " + firstname + "</pre>")
+		print("<pre>member already exists: " + firstname + " " + newUser.sessionID + "</pre>")
 		print("<p><a href='login.py'>login</a></p>")
 
 print("</body>")

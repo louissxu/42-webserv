@@ -372,12 +372,11 @@ int ServerManager::handleReadEvent(Client *cl, struct kevent event)
   if (cl == NULL)
     return false;
 
-  char ClientMessage[event.data * 2];
-
+  char ClientMessage[event.data + 1];
+  memset(ClientMessage, 0, event.data + 1);
   // int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
 
-  int readLen = read(cl->getSockFD(), ClientMessage, event.data * 2);
-
+  int readLen = read(cl->getSockFD(), ClientMessage, event.data);
   if (readLen == 0)
   {
     return (NOMOREDATA);

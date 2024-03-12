@@ -527,8 +527,15 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
       headers[key] = value;
     }
   }
-  std::getline(ss, line);
-  body = line;
+
+  // Parse body
+  body = "";
+  while(!ss.eof()) {
+    char buff[51];
+    memset(buff, '\0', 50);
+    ss.getline(buff, 50);
+    body = body + buff;
+  }
 
   Method meth;
   if (method == "GET")

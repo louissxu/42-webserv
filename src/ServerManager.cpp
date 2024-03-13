@@ -529,9 +529,12 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
   
   // Parse body
   body = "";
-  while(std::getline(ss, line)) {
-    body = body + line + "\n";
+  // REF: https://stackoverflow.com/questions/3203452/how-to-read-entire-stream-into-a-stdstring
+  char buffer[100];
+  while (ss.read(buffer, sizeof(buffer))) {
+    body.append(buffer, sizeof(buffer));
   }
+  body.append(buffer, ss.gcount());
 
   Method meth;
   if (method == "GET")

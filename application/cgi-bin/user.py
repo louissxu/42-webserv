@@ -1,11 +1,11 @@
 import sqlite3
-
+import sys
 class User:
 	def __init__(self, sessionID: str, userName: str, password: str, firstName: str):
 		self.sessionID = sessionID
 		self.userName = userName
 		self.password = password
-		self.firstName = firstName
+		self.firstname = firstName
 
 		self.connection = sqlite3.connect("database.db")
 		self.cursor = self.connection.cursor()
@@ -19,13 +19,13 @@ class User:
 		)
 		""")
 
-	def getUserByID(self, sessionID: str):
+	def getUserByID(self, id: str):
 		self.cursor.execute("""
 		SELECT * FROM users
 		WHERE sessionID = ?
-		""", (sessionID,))
-
+		""", (id,))
 		results = self.cursor.fetchone()
+		print(results[0], file=sys.stderr)
 		if results:
 			self.sessionID = results[0]
 			self.username = results[1]
@@ -50,7 +50,6 @@ class User:
 			self.firstname = results[3]
 			return True
 		else:
-			# print("User not found.")
 			return False
 
 	def getUser(self, userName="", password=""):
@@ -73,11 +72,11 @@ class User:
 		self.cursor.execute("""
 			INSERT INTO users VALUES
 			('{}', '{}', '{}', '{}')
-			""".format(self.sessionID, self.userName, self.password, self.firstName))
+			""".format(self.sessionID, self.userName, self.password, self.firstname))
 
 		self.connection.commit()
 
-	def updateSessionId(self, sessionID=""):
+	def updateSessionId(self, sessionID: str):
 		try:
 			sqliteConnection = sqlite3.connect('database.db')
 			cursor = sqliteConnection.cursor()
@@ -85,11 +84,14 @@ class User:
 			data = (sessionID, self.userName)
 			cursor.execute(sql_update_query, data)
 			sqliteConnection.commit()
-			# print("Record Updated successfully")
+			print("Record Updated successfully", file=sys.stderr)
 			cursor.close()
 
 		except sqlite3.Error as error:
 			print("Failed to update sqlite table", error)
+
+	def printuser(self):
+		print(f"Session ID: {self.sessionID}, Username: {self.userName}, Password: {self.password}, First Name: {self.firstname}", file=sys.stderr)
 
 	def printAllUsers(self):
 		try:
@@ -97,16 +99,21 @@ class User:
 			all_users = self.cursor.fetchall()
 			for user in all_users:
 				sessionID, userName, password, firstName = user
-				print(f"Session ID: {sessionID}, Username: {userName}, Password: {password}, First Name: {firstName}")
+				print(f"Session ID: {sessionID}, Username: {userName}, Password: {password}, First Name: {firstName}\n", file=sys.stderr)
 		except sqlite3.Error as error:
 			print("Failed to fetch users from the database:", error)
-		# finally:
-		# 	if sqliteConnection:
-		# 		sqliteConnection.close()
-		# 		print("The SQLite connection is closed")
-	# 	self.sessionID = sessionID
-	# 	return ;
-		# self.connection.close()
+
+
+
+
+# user_instance = User("4be7305f-8d7a-as-9886-72c23775ba32", "a", "a", "a")
+
+# # Call the getUserByID method with the sessionID you want to search for
+# id = "4be7305f-8d7a-48fe-9886-72c23775ba32"
+# user_instance.getUserByID(id)
+# user_instance.tester(id, "a")
+
+
 
 # p1 = User(123445, "mehdi1", "pss",  "medhi")
 # p1.addUser()

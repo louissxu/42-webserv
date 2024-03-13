@@ -526,7 +526,7 @@ HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
       headers[key] = value;
     }
   }
-  
+
   // Parse body
   body = "";
   // REF: https://stackoverflow.com/questions/3203452/how-to-read-entire-stream-into-a-stdstring

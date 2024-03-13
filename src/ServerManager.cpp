@@ -479,8 +479,8 @@ void ServerManager::checkCgi(HTTPRequest &_req)
 {
   std::string uri = _req.getUri();
   std::string cookie = _req.getHeader("Cookie");
-  bool isCgi = (uri.compare(1, 7, "cgi-bin") == 0);
-
+  bool isCgi = uri.size() >= 8 && uri.compare(1, 7, "cgi-bin");
+  
   // if (!cookie.empty())
   // {
   //   if (uri == "/login-form/index.html" || uri == "/register/index.html")

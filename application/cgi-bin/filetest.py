@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import cgi
 import os
-import io
+from io import BytesIO as IO
 
 # Set target directory for uploads
 target_dir = "uploads/"
@@ -14,7 +14,7 @@ print(f"<!-- {os.getenv('Content-Type')}-->")
 
 # Check if form was submitted
 form = cgi.FieldStorage(
-    io.BytesIO(os.getenv("QUERY_STRING").encode("utf-8")),
+    IO(os.getenv("QUERY_STRING").encode("utf-8")),
     headers={"content-type": os.getenv("Content-Type"), "content-length": os.getenv("Content-Length")},
     environ={"REQUEST_METHOD": os.getenv("Method")}
 )

@@ -1,10 +1,14 @@
 #include "Client.hpp"
 
-Client::Client() : sockFD(0), FDconnectedTo(-1), bufferRead(0) {}
+Client::Client() : sockFD(0), FDconnectedTo(-1), bufferRead(0)
+{
+	_last_msg_time = time(NULL);
+}
 
 Client::Client(int _sockFD, int _FDConnectedTo, sockaddr_in _client_addr) : sockFD(_sockFD), client_addr(_client_addr), FDconnectedTo(_FDConnectedTo)
 {
 	bufferRead = 0;
+	_last_msg_time = time(NULL);
 }
 
 Client::~Client()
@@ -77,4 +81,14 @@ void Client::setPipeTo(int *pipe)
 {
 	this->pipe_out[0] = pipe[0];
 	this->pipe_out[1] = pipe[1];
+}
+
+const time_t     &Client::getLastTime() const
+{
+    return (_last_msg_time);
+}
+
+void Client::updateTime()
+{
+    _last_msg_time = time(NULL);
 }

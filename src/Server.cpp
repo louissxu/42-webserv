@@ -38,8 +38,7 @@ Server::Server() {
   _client_max_body_size = MAX_CONTENT_LENGTH;
   _autoindex = false;
   this->initialiseErrorPages();
-  std::cout << YELLOW << "Server\t: " << RESET 
-  << "default constructor called. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  std::cout << YELLOW << "Server\t: " << RESET << "default constructor called. " << std::endl;
 }
 
 Server::Server(size_t serverId) {
@@ -131,7 +130,41 @@ void Server::setListen(std::string newListen)
 |             OTHER METHODS                  |
 \*------------------------------------------*/
 
+
+/*
+ * @Brief: Basic printing function to display the attributes of our server class.
+*/
+void Server::printState(void)
+{
+  std::cout << BLUE;
+  std::cout << "Server state: " << std::endl;
+  std::cout << "_listen = " << _listen << std::endl;
+  std::cout << "_host = " << _host << std::endl;
+  std::cout << "_server_name = " << _server_name << std::endl;
+  std::cout << "_root = " << _root << std::endl;
+  std::cout << "_index = " << _index << std::endl;
+  std::cout << "_sockfd = " << _sockfd << std::endl;
+  std::cout << "client_max_body_size = " << _client_max_body_size << std::endl;
+  if (_autoindex)
+    std::cout << "_autoindex = true" << std::endl;
+  else
+    std::cout << "_autoindex = false" << std::endl;
+
+  std::cout << "_locations: " << std::endl;
+  for (std::vector<Location>::iterator it = _locations.begin(); it != _locations.end(); ++it)
+  {
+    std::cout << it->getPath() << std::endl;
+  }
+  std::cout << RESET;
+}
+
 void Server::startServer(void) {
+
+  //If we haven't set a page to serve by default, serve up index.html.
+  if (_index.empty()) {
+    _index = "index.html";  // Set to default value
+  }
+
   struct addrinfo hints;
   memset(&hints, 0, sizeof hints);
 
@@ -202,24 +235,15 @@ void Server::startServer(void) {
   freeaddrinfo(servinfo);
 }
 
+
+
 int Server::getSockFd()
 {
   return _sockfd;
 }
 
-void Server::acceptNewConnection()
-{
-  Connection newConnection = Connection(_sockfd);
-  _connections.push_back(newConnection);
-  std::cout << "connection accepted" << std::endl;
-}
-
 void Server::acceptNewLocation(Location newLocation) {
   _locations.push_back(newLocation);
-}
-
-std::vector<Connection>& Server::getConnections() {
-  return _connections;
 }
 
 void Server::addDirective(const std::string& name, const std::string& value) {
@@ -238,6 +262,10 @@ void Server::addDirective(const std::string& name, const std::string& value) {
   else if (name == "root")
   {
     _root = value;
+  }
+  else if (name == "index")
+  {
+    _index = value;
   }
 }
 

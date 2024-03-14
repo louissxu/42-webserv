@@ -70,8 +70,6 @@ class Server {
 
     // init_servers()
     int getSockFd();
-    void acceptNewConnection();
-    std::vector<Connection>& getConnections();
     void setListen(std::string newListen);
     void startServer();
     void initialiseErrorPages();
@@ -79,11 +77,10 @@ class Server {
     //void addLocation(Location & src);
     //setter for multiple attributes prior to server start.
     void addDirective(const std::string& name, const std::string& value);
+    void printState(void);
 
     //Getters:
     std::string getListen(void) const;
-
-
 
   private:
     size_t                      _id;
@@ -96,7 +93,6 @@ class Server {
     size_t                      _client_max_body_size;
     bool                        _autoindex;
     std::map<int, std::string>  _err_pages;
-    std::vector<Connection>     _connections;
     std::vector<Location> 		_locations;
 };
 

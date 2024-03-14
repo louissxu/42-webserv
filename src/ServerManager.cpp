@@ -249,6 +249,21 @@ void ServerManager::acceptClient(int ListenSocket)
   updateEvent(clientFD, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
 }
 
+void ServerManager::checkTimeout() {
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ) {
+        if (time(NULL) - it->second->getLastTime() > CLIENT_TIMEOUT) {
+            WARN("Client: %d Timeout, closing connection..", it->first);
+            Client *client = it->second; 
+            ++it; 
+            closeConnection(client);
+        } else {
+            ++it;
+        }
+    }
+}
+
+
+
 void ServerManager::runKQ()
 {
   createQ();
@@ -269,11 +284,80 @@ void ServerManager::runKQ()
       }
       handleEvent(ev_list[i]);
     }
+    checkTimeout();
   }
 }
 
+Server* ServerManager::getServerByDescriptor(int sockfd) {
+    for (size_t i = 0; i < _servers.size(); ++i) {
+        if (_servers[i].getSockFd() == sockfd) {
+            return &_servers[i]; // Return the address of the Server instance
+        }
+    }
+    return nullptr; // Return nullptr if not found
+}
+
+Server* ServerManager::getServerByPort(std::string port) {
+    for (size_t i = 0; i < _servers.size(); ++i) {
+        if (_servers[i].getListen() == port) {
+            return &_servers[i]; // Assuming Server has a getPort() method
+        }
+    }
+    return nullptr; // Server not found
+}
+
+Server* ServerManager::getServerByRequestHost(HTTPRequest* _req) {
+    if (!_req) {
+        ERR("HTTP Request is nullptr.");
+        return nullptr; // Early exit if request is nullptr
+    }
+    
+    std::string hostHeader = _req->getHeader("Host");
+    std::string port = "80"; // Default HTTP port. Use 443 for HTTPS by default if you support it.
+
+    // Check if the host header includes a port
+    size_t colonPos = hostHeader.find(':');
+    if (colonPos != std::string::npos) {
+        // Extract the port number
+        port = hostHeader.substr(colonPos + 1);
+    }
+
+    // Now, find the server by port
+    return getServerByPort(port);
+}
+
+// void ServerManager::generateHTTPResponse(HTTPRequest const &_req)
+// {
+//   HTTPResponse newResponse();
+  
+//   /*
+// 	buildDefaultResponse();
+// 	switch (_req.getMethod())
+// 	{
+// 	case Method(GET):
+// 		GETHandler(_req.getUri());
+// 		return;
+// 	case Method(POST):
+// 		if (_req.getHeader("Set-Cookie") != std::string())
+// 			headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
+// 		return;
+// 	case Method(DELETE):
+// 		DELETEHandler();
+// 	default:
+// 		return;
+// 	}
+//   */
+// }
+
+
+
+
 void ServerManager::handleEvent(struct kevent const &ev)
 {
+  //Checking which server is handling the event.
+  //std::cout << RED << "HANDLE EVENT: " << RESET << std::endl;
+  //server->printState();
+
   bool isCgiRead = false;
   bool isCgiWrite = false;
   Client *cl = getClient(ev.ident);
@@ -317,7 +401,7 @@ void ServerManager::handleEvent(struct kevent const &ev)
       if (_req->getHeader("Content-Length").empty())
       {
         RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
-
+        //this->_resp = GenerateHTTPResponse(*_req);
         this->_resp = HTTPResponse(*_req);
         Message message(_resp);
         cl->setMessage(message);
@@ -331,6 +415,7 @@ void ServerManager::handleEvent(struct kevent const &ev)
       {
         if (std::stoi(_req->getHeader("Content-Length")) == static_cast<int>(_req->getBody().size()))
         {
+          //*-----Creating our response from a given request.-----*//
           this->_resp = HTTPResponse(*_req);
           if (_req->getCGIStatus() == true)
           {
@@ -527,7 +612,7 @@ HTTPResponse &ServerManager::getResponse()
 
 
 /*------------------------------------------*\
-|             CONFIG READING                 |
+|          CONFIG READING METHODS            |
 \*------------------------------------------*/
 
 
@@ -643,6 +728,7 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
       }
       //starting the server now that the required fields have been populated.
       newServ.startServer();
+      newServ.printState();
       this->addServer(newServ);
     }
 }
@@ -682,7 +768,6 @@ void ServerManager::setStateFromParser(ConfigParser &src)
     {
       ns_addDirectives(src);
     }
-
     //Context check:
     if (src.get_contexts().empty()) {
       #ifdef _PRINT_

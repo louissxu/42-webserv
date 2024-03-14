@@ -15,6 +15,7 @@ private:
 	int bufferRead;
 	std::string recvMessage;
 	Message message;
+	time_t	_last_msg_time;
 
 public:
 	int pipe_in[2];
@@ -29,6 +30,7 @@ public:
 	int getSockFDconnectedTo() const;
 	sockaddr_in getClinetAddr() const;
 	Message const &getMessage() const;
+	time_t const &getLastTime() const;
 
 	void setMessage(Message const &src);
 
@@ -39,6 +41,8 @@ public:
 	void appendRecvMessage(std::string const &message, int len);
 	void appendRecvMessage(char *message, int len);
 	std::string const &getRecvMessage() const;
+
+	void updateTime();
 
 	void setPipeFrom(int pipe[2]);
 	void setPipeTo(int pipe[2]);

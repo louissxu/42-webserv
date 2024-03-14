@@ -43,7 +43,7 @@ class Server;
 #define MAX_EVENTS 200 // random value
 #define BUFFER_SIZE 3000
 #define BUFFERSIZE 10000
-
+#define CLIENT_TIMEOUT 10 //time in seconds before a client times out.
 
 
 class ServerManager
@@ -56,8 +56,8 @@ class ServerManager
   		HTTPResponse _resp;
 
 		std::vector<Server> _servers;
-  		std::vector< std::pair <std::string, std::string> > _directives;
-		std::vector < ConfigParser >  _contexts;
+  		//std::vector< std::pair <std::string, std::string> > _directives;
+		//std::vector < ConfigParser >  _contexts;
 		std::vector <std::string> _portsActive;
 
   		int kq;
@@ -106,6 +106,12 @@ class ServerManager
 
   		HTTPResponse &getResponse();
 
+		//Experimental: for performing httpRequest->httpResponse within the ServerManager.
+		Server* getServerByDescriptor(int sockfd);
+		Server* getServerByPort(std::string port);
+		Server* getServerByRequestHost(HTTPRequest* _req);
+		void checkTimeout();
+
 		//Configuration handling related:
 		bool portIsAvailable(std::string portNo);
 		bool isValidDirectiveName(const std::string &src);
@@ -130,4 +136,5 @@ class ServerManager
 				virtual ~ErrorException() throw() {}
 		};
 };
+
 #endif

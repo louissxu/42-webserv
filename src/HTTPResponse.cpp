@@ -24,6 +24,10 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 	return *this;
 }
 
+/*
+ * @brief: HTTPResponse(HTTPRequest const &_req)
+ * Creates an appropriate HTTPResponse from a given HTTPRequest.
+*/
 HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 {
 	buildDefaultResponse();
@@ -135,7 +139,6 @@ std::string const &HTTPResponse::getBody() const
 {
 	return this->body;
 }
-
 
 bool isValidURI(const std::string &uri) {
     // List of forbidden characters or patterns. Adjust according to your needs.

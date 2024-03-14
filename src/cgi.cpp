@@ -25,6 +25,9 @@ void Cgi::setEnv(HTTPRequest &req)
 	_envVec.push_back("User-Agent=" + req.getHeader("User-Agent"));
 	_envVec.push_back("Method=" + req.getMethodString());
 	_envVec.push_back("QUERY_STRING=" + req.getBody());
+	_envVec.push_back("REQUEST_METHOD=" + req.getMethodString());
+	_envVec.push_back("PATH_INFO=" + req.getUri());
+	_envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
 
 	if (!req.getHeader("Cookie").empty())
 	{
@@ -48,6 +51,10 @@ void Cgi::setArgv(HTTPRequest const &req)
 	_argv = std::vector<char *>(3);
 	// std::string pythonPath = "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3";
 	std::string pythonPath = "/usr/local/bin/python3";
+	if (req.getUri() == "/cgi-bin/cgi_tester")
+	{
+		pythonPath = "application/cgi-bin/cgi_tester";
+	}
 	std::string cgiScript = "application" + req.getUri();
 
 	_argv[0] = new char[pythonPath.size() + 1];

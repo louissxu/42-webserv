@@ -1,3 +1,4 @@
+print()
 print(" <!DOCTYPE html>")
 print("<html>")
 print("<body>")

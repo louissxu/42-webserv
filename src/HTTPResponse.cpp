@@ -197,6 +197,11 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	std::string path = "application" + uri;
 	struct stat s;
 
+	if (uri == "/")
+	{
+		path = "application/src/index.html";
+	}
+	DEBUG("PATH == %s", path.c_str());
 	if (uri.empty() || (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos))
 	{
 		this->body = "";
@@ -262,7 +267,8 @@ void HTTPResponse::setDefaultHeaders()
 
 void HTTPResponse::setDefaultBody()
 {
-	body = "<html><head><title>Test Title</title></head><body>Hello World!<br /></body></html>";
+	
+	// body = "<html><head><title>Test Title</title></head><body>Hello World!<br /></body></html>";
 }
 // !helper functions
 

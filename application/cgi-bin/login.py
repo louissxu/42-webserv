@@ -3,7 +3,8 @@ import user
 import os
 import sys
 import cookie
-
+# import cgitb
+# cgitb.enable()
 string = ""
 
 def verifyLogin(form):
@@ -18,7 +19,7 @@ def verifyLogin(form):
 			newcookie = cookie.generateCookie()
 			cookie.printCookie(newcookie)
 			logger.updateSessionId(newcookie)
-		string += "<h1> Welcome " + username + ", your password is " + password + " and new session-id is " + logger.sessionID + "</h1>"
+		string += "<h1> Welcome " + username + " and new session-id is " + logger.sessionID + "</h1>"
 	elif logger.getUserByUsername(username):
 		string += "<h1>Incorrect password</h1>"
 	else:
@@ -28,6 +29,9 @@ def verifyLogin(form):
 
 form = cgi.FieldStorage()
 if "username" in form and "password" in form:
+	# print(repr(os.getenv("QUERY_STRING")), file=sys.stderr)
+	# print ("username = " + form["username"].value + "\n", file=sys.stderr)
+	# print ("username = " + form["password"].value + "\n", file=sys.stderr)
 	verifyLogin(form)
 else:
 	cookies = os.getenv("Cookie")
@@ -41,6 +45,7 @@ else:
 			print("<html><body>")
 			print("<h1> Login Program </h1>")
 			print("<h1>no need to sign in user: " + logger.username + "</h1>")
+			print("<p><a href='/'>Go back</a></p>")
 			print("</body></html>")
 			exit(0)
 

@@ -25,9 +25,9 @@ void Cgi::setEnv(HTTPRequest &req)
 	_envVec.push_back("User-Agent=" + req.getHeader("User-Agent"));
 	_envVec.push_back("Method=" + req.getMethodString());
 	_envVec.push_back("QUERY_STRING=" + req.getBody());
-	_envVec.push_back("REQUEST_METHOD=" + req.getMethodString());
-	_envVec.push_back("PATH_INFO=" + req.getUri());
-	_envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
+	// _envVec.push_back("REQUEST_METHOD=" + req.getMethodString());
+	// _envVec.push_back("PATH_INFO=" + req.getUri());
+	// _envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
 
 	if (!req.getHeader("Cookie").empty())
 	{

@@ -1,0 +1,85 @@
+<html>
+<body bgcolor="#f0f0f8"><font color="#f0f0f8" size="-5"> -->
+	<body bgcolor="#f0f0f8"><font color="#f0f0f8" size="-5"> --> -->
+	</font> </font> </font> </script> </object> </blockquote> </pre>
+	</table> </table> </table> </table> </table> </font> </font> </font><body bgcolor="#f0f0f8">
+	<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+	<tr bgcolor="#6622aa">
+	<td valign=bottom>&nbsp;<br>
+	<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>AttributeError</strong></big></big></font></td
+	><td align=right valign=bottom
+	><font color="#ffffff" face="helvetica, arial">Python 3.10.4: /usr/local/bin/python3<br>Thu Mar 14 15:11:48 2024</font></td></tr></table>
+		
+	<p>A problem occurred in a Python script.  Here is the sequence of
+	function calls leading up to the error, in the order they occurred.</p>
+	<table width="100%" cellspacing=0 cellpadding=0 border=0>
+	<tr><td bgcolor="#d8bbff"><big>&nbsp;</big><a href="file:///Users/mehdimirzaie/Desktop/newnew/application/cgi-bin/login.py">/Users/mehdimirzaie/Desktop/newnew/application/cgi-bin/login.py</a> in <strong>&lt;module&gt;</strong></td></tr>
+	<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;30</small>&nbsp;form&nbsp;=&nbsp;cgi.FieldStorage()<br>
+	</tt></font></td></tr>
+	<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;31</small>&nbsp;if&nbsp;"username"&nbsp;in&nbsp;form&nbsp;and&nbsp;"password"&nbsp;in&nbsp;form:<br>
+	</tt></font></td></tr>
+	<tr><td bgcolor="#ffccee"><tt>=&gt;<small>&nbsp;&nbsp;&nbsp;32</small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;verifyLogin(form)<br>
+	</tt></td></tr>
+	<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;33</small>&nbsp;else:<br>
+	</tt></font></td></tr>
+	<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;34</small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cookies&nbsp;=&nbsp;os.getenv("Cookie")<br>
+	</tt></font></td></tr>
+	<tr><td><small><font color="#909090"><strong>verifyLogin</strong>&nbsp;= &lt;function verifyLogin&gt;, <strong>form</strong>&nbsp;= FieldStorage(None, None, [MiniFieldStorage('user...rname', 'm'), MiniFieldStorage('password', 'm')])</font></small></td></tr></table>
+	<table width="100%" cellspacing=0 cellpadding=0 border=0>
+	<tr><td bgcolor="#d8bbff"><big>&nbsp;</big><a href="file:///Users/mehdimirzaie/Desktop/newnew/application/cgi-bin/login.py">/Users/mehdimirzaie/Desktop/newnew/application/cgi-bin/login.py</a> in <strong>verifyLogin</strong>(form=FieldStorage(None, None, [MiniFieldStorage('user...rname', 'm'), MiniFieldStorage('password', 'm')]))</td></tr>
+	<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;10</small>&nbsp;def&nbsp;verifyLogin(form):<br>
+	</tt></font></td></tr>
+	<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;11</small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;global&nbsp;string<br>
+	</tt></font></td></tr>
+	<tr><td bgcolor="#ffccee"><tt>=&gt;<small>&nbsp;&nbsp;&nbsp;12</small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;username&nbsp;=&nbsp;form["username"].value<br>
+	</tt></td></tr>
+	<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;13</small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password&nbsp;=&nbsp;form["password"].value<br>
+	</tt></font></td></tr>
+	<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;14</small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;logger&nbsp;=&nbsp;user.User("",&nbsp;username,&nbsp;password,&nbsp;"")<br>
+	</tt></font></td></tr>
+	<tr><td><small><font color="#909090">username <em>undefined</em>, <strong>form</strong>&nbsp;= FieldStorage(None, None, [MiniFieldStorage('user...rname', 'm'), MiniFieldStorage('password', 'm')]), ].<strong>value</strong>&nbsp;= [MiniFieldStorage('username', 'm'), MiniFieldStorage('password', 'm'), MiniFieldStorage('username', 'm'), MiniFieldStorage('password', 'm')]</font></small></td></tr></table><p><strong>AttributeError</strong>: 'list' object has no attribute 'value'
+	<br><tt><small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</small>&nbsp;</tt>args&nbsp;=
+	("'list' object has no attribute 'value'",)
+	<br><tt><small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</small>&nbsp;</tt>name&nbsp;=
+	'value'
+	<br><tt><small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</small>&nbsp;</tt>obj&nbsp;=
+	[MiniFieldStorage('username', 'm'), MiniFieldStorage('username', 'm')]
+	<br><tt><small>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</small>&nbsp;</tt>with_traceback&nbsp;=
+	&lt;built-in method with_traceback of AttributeError object&gt;
+	
+	
+	<!-- The above is a description of an error in a Python program, formatted
+		 for a web browser because the 'cgitb' module was enabled.  In case you
+		 are not reading this in a web browser, here is the original traceback:
+	
+	Traceback (most recent call last):
+	  File "/Users/mehdimirzaie/Desktop/newnew/application/cgi-bin/login.py", line 32, in &lt;module&gt;
+		verifyLogin(form)
+	  File "/Users/mehdimirzaie/Desktop/newnew/application/cgi-bin/login.py", line 12, in verifyLogin
+		username = form["username"].value
+	AttributeError: 'list' object has no attribute 'value'
+	
+	-->
+	
+	
+	[deb] cgi.cpp: Bytes Read: 5184
+	1
+	/error/E50x.html
+	[record]: got cookie: 
+	
+	[deb] HTTPResponse.cpp: went in GETHandler
+	[deb] HTTPResponse.cpp: PATH == application/error/E50x.html
+	[deb] ServerManager.cpp: sent to: 6: 
+	HTTP/1.1 200 OK
+	Connection: Keep-Alive
+	Content-Length: 1209
+	Content-Type: text/html
+	Server: mehdi's_webserv
+	
+</html>
+	<!-- <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head>
+		<title>500 &mdash; Internal Sever Error</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta name="description" content="Sorry, something went wrong. Internal Server Error"/>
+		<style type="text/css"> -->

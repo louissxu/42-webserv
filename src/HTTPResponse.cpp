@@ -1,36 +1,5 @@
 #include "HTTPResponse.hpp"
 
-// https://github.com/php/php-src/blob/master/ext/session/session.c#L279
-// const int PS_MAX_SID_LENGTH = 32; // Define your maximum session ID length here
-
-// static std::string genSessionID(int sid_length, int sid_bits_per_character)
-// {
-// 	// Seed the random number generator
-// 	srand(static_cast<unsigned int>(time(nullptr)));
-
-// 	// Allocate memory for the session ID
-// 	unsigned char rbuf[PS_MAX_SID_LENGTH];
-
-// 	// Generate random bytes for the session ID
-// 	for (int i = 0; i < sid_length; ++i)
-// 	{
-// 		rbuf[i] = rand() % 256; // Generate a random byte (0-255)
-// 	}
-
-// 	// Convert binary data to a readable string
-// 	std::string outid;
-// 	for (int i = 0; i < sid_length; ++i)
-// 	{
-// 		// Determine the character representing this byte
-// 		char character = '0' + (rbuf[i] % sid_bits_per_character);
-
-// 		// Append the character to the output string
-// 		outid.push_back(character);
-// 	}
-
-// 	return outid;
-// }
-
 HTTPResponse::HTTPResponse()
 {
 	buildDefaultResponse();
@@ -200,6 +169,10 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	if (uri == "/")
 	{
 		path = "application/src/index.html";
+	}
+	else if (uri == "/favicon.ico")
+	{
+		path = "application/assets/images/favicon.ico";
 	}
 	DEBUG("PATH == %s", path.c_str());
 	if (uri.empty() || (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos))

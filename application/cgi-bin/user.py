@@ -86,6 +86,7 @@ class User:
 			sqliteConnection.commit()
 			print("Record Updated successfully", file=sys.stderr)
 			cursor.close()
+			self.sessionID = sessionID
 
 		except sqlite3.Error as error:
 			print("Failed to update sqlite table", error)

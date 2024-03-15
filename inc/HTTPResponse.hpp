@@ -14,6 +14,7 @@
 #include "log.hpp"
 #include "Server.hpp"
 #include "MIME.hpp"
+#include "Utils.hpp"
 
 class Server;
 
@@ -41,7 +42,8 @@ private:
 	std::map<std::string, std::string> headers;
 	std::string body;
 	bool cgiStatus;
-	
+	Server _server;
+
 public:
 	HTTPResponse();
 	HTTPResponse(std::string const &_version, Status const &_status, std::string const &_reason, std::map<std::string, std::string> const &_headers, std::string const &_body);

@@ -54,24 +54,24 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 */
 HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 {
-	(void)_myServer;
+	_server = _myServer;
 	//std::cout << "HTTPResponse: Using server: " << std::endl;
 	//_myServer.printState();
 
 	buildDefaultResponse();
 	switch (_req.getMethod())
 	{
-	case Method(GET):
-		GETHandler(_req.getUri());
-		return;
-	case Method(POST):
-		if (_req.getHeader("Set-Cookie") != std::string())
-			headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
-		return;
-	case Method(DELETE):
-		DELETEHandler();
-	default:
-		return;
+		case Method(GET):
+			GETHandler(_req.getUri());
+			return;
+		case Method(POST):
+			if (_req.getHeader("Set-Cookie") != std::string())
+				headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
+			return;
+		case Method(DELETE):
+			DELETEHandler();
+		default:
+			return;
 	}
 }
 
@@ -207,18 +207,21 @@ bool isValidURI(const std::string &uri) {
 void HTTPResponse::GETHandler(std::string const &uri)
 {
 	DEBUG("went in GETHandler");
-	std::string path = "application" + uri;
+//	std::string path = "application" + uri;
+	std::string path = _server.getRoot() + uri;
 	struct stat s;
 
 	if (!isValidURI(uri))
 	{
-		//this->geterrorResource("E403.html");
+		this->geterrorResource("E403.html");
 		return;
 	}
 
+
 	if (uri == "/")
 	{
-		path = "application/src/index.html";
+		path = _server.getRoot() + _server.getIndex();
+		//path = "application/src/index.html";
 	}
 	else if (uri == "/favicon.ico")
 	{
@@ -251,10 +254,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 			}
 		}
 		else
-		{
-
-			//   something else
-		}
+		{}
 	}
 	else
 	{
@@ -290,7 +290,8 @@ void HTTPResponse::setDefaultHeaders()
 
 void HTTPResponse::setDefaultBody()
 {
-	
+
+	//body = getReasource("index.html");
 	// body = "<html><head><title>Test Title</title></head><body>Hello World!<br /></body></html>";
 }
 // !helper functions

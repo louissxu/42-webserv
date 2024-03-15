@@ -38,6 +38,7 @@ Server::Server() {
   _client_max_body_size = MAX_CONTENT_LENGTH;
   _autoindex = false;
   this->initialiseErrorPages();
+  this->initMethodPermissions();
   std::cout << YELLOW << "Server\t: " << RESET << "default constructor called. " << std::endl;
 }
 
@@ -51,6 +52,7 @@ Server::Server(size_t serverId) {
   _client_max_body_size = MAX_CONTENT_LENGTH;
   _autoindex = false;
   this->initialiseErrorPages();
+  this->initMethodPermissions();
   _id = serverId;
   std::cout << YELLOW << "Server\t: " << RESET 
   << "id constructor called, id: " << _id << std::endl;
@@ -75,7 +77,7 @@ Server::Server(const Server& other) :
     _autoindex(other._autoindex) {
     // Assume _locations is a std::vector<std::string>
     _locations = other._locations;
-    
+    _serverPermissions = other._serverPermissions;
       std::cout << YELLOW << "Server\t: " << RESET 
   <<"Copy constructor called. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
     // If there were pointers or complex types requiring deep copies, you'd handle them here, like so:
@@ -93,7 +95,7 @@ Server& Server::operator=(const Server& other) {
     _client_max_body_size = other._client_max_body_size;
     _autoindex = other._autoindex;
     _locations = other._locations;
-
+    _serverPermissions = other._serverPermissions;
   std::cout << YELLOW << "Server\t: " << RESET 
   <<"equals override constructor called. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
   return *this;
@@ -108,6 +110,13 @@ Server::~Server() {
   }
 }
 
+void Server::initMethodPermissions()
+{
+    _serverPermissions[r_GET] = false;
+    _serverPermissions[r_POST] = false;
+    _serverPermissions[r_DELETE] = false;
+}
+
 /*------------------------------------------*\
 |              BASIC GETTERS                 |
 \*------------------------------------------*/
@@ -117,7 +126,6 @@ Server::~Server() {
     // std::string getHost(void) const;
     // std::string getIndex(void) const;
     // std::string getSockFd(void) const;
-
 
   std::string Server::getListen(void) const
   {
@@ -132,6 +140,11 @@ Server::~Server() {
   std::string Server::getIndex(void) const
   {
     return _index;
+  }
+
+  std::string Server::getRoot(void) const
+  {
+    return _root;
   }
 
   int Server::getSockFd(void) const

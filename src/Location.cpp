@@ -8,13 +8,7 @@ void Location::initMethodPermissions()
 {
     _methodPermissions[r_GET] = false;
     _methodPermissions[r_POST] = false;
-    _methodPermissions[r_PATCH] = false;
-    _methodPermissions[r_PUT] = false;
     _methodPermissions[r_DELETE] = false;
-    _methodPermissions[r_HEAD] = false;
-    _methodPermissions[r_OPTIONS] = false;
-    _methodPermissions[r_CONNECT] = false;
-    _methodPermissions[r_TRACE] = false;
 }
 
 Location::Location()
@@ -145,13 +139,7 @@ void Location::setMethodPermissions(std::map<enum e_HRM, bool> newPermissions)
 {
     _methodPermissions[r_GET]     = newPermissions[r_GET];
     _methodPermissions[r_POST]    = newPermissions[r_POST];
-    _methodPermissions[r_PATCH]   = newPermissions[r_PATCH];
-    _methodPermissions[r_PUT]     = newPermissions[r_PUT];
     _methodPermissions[r_DELETE]  = newPermissions[r_DELETE];
-    _methodPermissions[r_HEAD]    = newPermissions[r_HEAD];
-    _methodPermissions[r_OPTIONS] = newPermissions[r_OPTIONS];
-    _methodPermissions[r_CONNECT] = newPermissions[r_CONNECT];
-    _methodPermissions[r_TRACE]   = newPermissions[r_TRACE];
 }
 
 void Location::setMethodPermission(enum e_HRM test, bool permissionState)
@@ -233,13 +221,7 @@ void Location::setDirective(const std::string& name, const std::string& value) {
             switch (it->first) {
                 case r_GET: method = "GET"; break;
                 case r_POST: method = "POST"; break;
-                case r_PATCH: method = "PATCH"; break;
-                case r_PUT: method = "PUT"; break;
                 case r_DELETE: method = "DELETE"; break;
-                case r_HEAD: method = "HEAD"; break;
-                case r_OPTIONS: method = "OPTIONS"; break;
-                case r_CONNECT: method = "CONNECT"; break;
-                case r_TRACE: method = "TRACE"; break;
                 default: method = "Unknown"; break;
             }
             std::cout << method << ": " << (it->second ? "true" : "false") << "\n";
@@ -254,13 +236,7 @@ void Location::setAllowMethods(const std::string& methods) {
     std::map<std::string, e_HRM> methodMap;
     methodMap["GET"] = r_GET;
     methodMap["POST"] = r_POST;
-    methodMap["PATCH"] = r_PATCH;
-    methodMap["PUT"] = r_PUT;
     methodMap["DELETE"] = r_DELETE;
-    methodMap["HEAD"] = r_HEAD;
-    methodMap["OPTIONS"] = r_OPTIONS;
-    methodMap["CONNECT"] = r_CONNECT;
-    methodMap["TRACE"] = r_TRACE;
 
     std::istringstream iss(methods);
     std::string method;

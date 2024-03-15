@@ -18,7 +18,6 @@
 
 class Connection;
 
-# define MAX_CONTENT_LENGTH 30000000
 
 /*
 In the configuration file, you should be able to:
@@ -67,21 +66,25 @@ class Server {
     Server& operator=(const Server& other);
     ~Server();
 
-    // init_servers()
     int getSockFd();
     void startServer();
     void acceptNewLocation(Location newLocation);
     void initialiseErrorPages();
-    //void addLocation(Location & src);
-    //setter for multiple attributes prior to server start.
     void addDirective(const std::string& name, const std::string& value);
     void printState(void);
+
+    //Method Permissions:
+    void setMethodPermissions(std::map<enum e_HRM, bool> newPermissions);
+    void setMethodPermission(enum e_HRM, bool permissionState);
+    void printMethodPermissions() const;
+    void initMethodPermissions();
 
     //Getters:
     std::string getListen(void) const;
     std::string getHost(void) const;
     std::string getIndex(void) const;
-    int getSockFd(void) const;
+    std::string getRoot(void) const;
+    int         getSockFd(void) const;
 
     //Setters:
     void setListen(std::string listen);
@@ -100,7 +103,8 @@ class Server {
     size_t                      _client_max_body_size;
     bool                        _autoindex;
     std::map<int, std::string>  _err_pages;
-    std::vector<Location> 		_locations;
+    std::vector<Location> 		  _locations;
+    std::map<enum e_HRM, bool>  _serverPermissions;
 };
 
 #endif

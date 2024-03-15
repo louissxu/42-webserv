@@ -12,19 +12,6 @@
 #include "ConfigParser.hpp"
 #include "Utils.hpp"
 
-//http request method ENUM.
-enum e_HRM {
-    r_GET,
-    r_POST,
-    r_PATCH,
-    r_PUT,
-    r_DELETE,
-    r_HEAD,
-    r_OPTIONS,
-    r_CONNECT,
-    r_TRACE
-};
-
 class Location
 {
     public:

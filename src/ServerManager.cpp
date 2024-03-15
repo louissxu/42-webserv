@@ -5,7 +5,7 @@ static void areFdsOpen(int pipein[2], int pipeout[2])
   if (pipein == NULL || pipeout == NULL)
     return;
   int fd = pipein[0];
-  for (int i = 0; i < 2; i++)
+  for (int i = 0; i < 2; i++) 
   {
     int flags = fcntl(fd, F_GETFD);
     if (flags != -1)
@@ -46,7 +46,6 @@ void ServerManager::addServer(const Server &server)
 {
   _servers.push_back(server);
   _portsActive.push_back(server.getListen());
-  return;
 }
 
 Client *ServerManager::getClient(int fd)
@@ -281,7 +280,7 @@ Server* ServerManager::getServerByDescriptor(int sockfd) {
             return &_servers[i]; // Return the address of the Server instance
         }
     }
-    return nullptr; // Return nullptr if not found
+    return NULL; // Return nullptr if not found
 }
 
 Server* ServerManager::getServerByPort(std::string port) {
@@ -290,13 +289,13 @@ Server* ServerManager::getServerByPort(std::string port) {
             return &_servers[i]; // Assuming Server has a getPort() method
         }
     }
-    return nullptr; // Server not found
+    return NULL; // Server not found
 }
 
 Server* ServerManager::getServerByRequestHost(HTTPRequest* _req) {
     if (!_req) {
         ERR("HTTP Request is nullptr.");
-        return nullptr; // Early exit if request is nullptr
+        return NULL; // Early exit if request is nullptr
     }
     
     std::string hostHeader = _req->getHeader("Host");
@@ -327,7 +326,7 @@ std::string ServerManager::stripWhiteSpace(std::string src) {
 
 
 
-Server* ServerManager::getRelevantServer(HTTPRequest &request, std::vector<Server>& servers) {
+Server &ServerManager::getRelevantServer(HTTPRequest &request, std::vector<Server>& servers) {
     if (servers.empty()) {
         throw ErrorException("No servers are configured.");
     }
@@ -352,21 +351,98 @@ Server* ServerManager::getRelevantServer(HTTPRequest &request, std::vector<Serve
       requestHost = LOCALHOST;
     }
 
-    for (std::vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it) {
+    for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); ++it) {
         std::string serverHost = it->getHost();
         std::string serverPort = it->getListen(); 
 
         // Find a server with matching host and port.
         if (serverHost == requestHost && serverPort == requestPort) {
-        std::cout << YELLOW << "MATCH FOUND: host: " << serverHost << ", port: " << serverPort << std::endl;
-            return &(*it);
+          //std::cout << "getRelServer: Returning server: " << std::endl;
+          //it->printState();
+          return (*it);
         }
     }
     throw ErrorException("No matching server found for the given host and port.");
 }
 
+void ServerManager::startServer(Server &mServer) {
 
+  //If we haven't set a page to serve by default, serve up index.html.
+  if (mServer.getIndex().empty()) {
+    mServer.setIndex("index.html");  // Set to default value
+  }
 
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof hints);
+
+  hints.ai_family = AF_INET;       // set to IPv4
+  hints.ai_socktype = SOCK_STREAM; // set to TCP
+  // hints.ai_flags = AI_PASSIVE; // fill in my ip for me
+
+  struct addrinfo *servinfo;
+  int error_return;
+ // error_return = getaddrinfo(NULL, _listen.c_str(), &hints, &servinfo);
+  error_return = getaddrinfo(mServer.getHost().c_str(), mServer.getListen().c_str(), &hints, &servinfo);
+
+  if (error_return != 0)
+  {
+    gai_strerror(error_return);
+    throw std::runtime_error("Server: getaddrinfo: failed");
+  }
+
+  // debug print the ip and port
+  struct sockaddr_in *sai;
+  sai = reinterpret_cast<struct sockaddr_in *>(servinfo->ai_addr);
+  char ipstr[INET6_ADDRSTRLEN];
+  inet_ntop(servinfo->ai_family, &sai->sin_addr, ipstr, sizeof ipstr);
+  //std::cout << "Server: Starting on " << ipstr << ":" << ntohs(sai->sin_port) << std::endl;
+
+  int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+  if (sockfd < 0)
+  {
+    perror("Server: socket");
+    throw std::runtime_error("Server\t: socket: failed");
+  }
+
+  // set to allow port reuse? or something
+  int yes = 1;
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
+
+  // make the socket non-blocking
+  int flags;
+  // Get the current flags
+  if ((flags = fcntl(sockfd, F_GETFD, 0)) == -1)
+    perror("fcntl F_GETFL");
+  // Set the O_NONBLOCK flag
+  if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
+    perror("fcntl F_SETFL O_NONBLOCK");
+
+  std::cout << "DBG: sockfd: " << sockfd << std::endl;
+  std::cout << "servinfo aiaddr: " << servinfo->ai_addr << std::endl;
+  std::cout << "servinfo ai_addrlen: " << servinfo->ai_addrlen << std::endl;
+
+  error_return = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
+  if (error_return != 0)
+  {
+    perror("Server: bind");
+    throw std::runtime_error("Server: bind: failed");
+  }
+
+  error_return = listen(sockfd, 20); // start listening and set maximum number of pending connections to 20 (make this tuneable?)
+  if (error_return != 0)
+  {
+    perror("Server: listen");
+    throw std::runtime_error("Server: listen: failed");
+  }
+  mServer.setSockFd(sockfd);
+  mServer.setHost(ipstr);
+ // _sockfd = sockfd;
+ // _host = ipstr;
+
+  std::cout << YELLOW << "ServerManager -> Server\t: " << RESET
+  <<"starting on " << mServer.getHost() << ":" << mServer.getListen() << " fd: " << mServer.getSockFd() << std::endl;
+  freeaddrinfo(servinfo);
+}
 
 
 void ServerManager::handleEvent(struct kevent const &ev)
@@ -431,7 +507,7 @@ void ServerManager::handleEvent(struct kevent const &ev)
       {
         if (std::stoi(_req->getHeader("Content-Length")) == static_cast<int>(_req->getBody().size()))
         {
-          //*-----Creating our response from a given request.-----*//
+          //*-----Creating our response from a given request.-----
           //this->_resp = HTTPResponse(*_req);
           this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
           if (_req->getCGIStatus() == true)
@@ -468,6 +544,7 @@ void ServerManager::handleEvent(struct kevent const &ev)
   }
 }
 
+
 // *unsure if recv will always read all the avialable data, need to learn.
 int ServerManager::handleReadEvent(Client *cl, struct kevent event)
 {
@@ -502,11 +579,11 @@ int ServerManager::handleReadEvent(Client *cl, struct kevent event)
   return true;
 }
 
-/*
-send may not send the full response, therefore we have to check
-if the actual amount send was equal to the length of the respoinse string.
-if not we have to send it in the second try.
-*/
+
+// send may not send the full response, therefore we have to check
+// if the actual amount send was equal to the length of the respoinse string.
+// if not we have to send it in the second try.
+
 
 // TODO: safari has a delay when it sends EOF, we need a mechinism for it.
 bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
@@ -744,11 +821,21 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
         i++;
       }
       //starting the server now that the required fields have been populated.
-      newServ.startServer();
+      //newServ.startServer();
+      startServer(newServ);
       newServ.printState();
-      this->addServer(newServ);
+      addServer(newServ);
     }
 }
+
+void    ServerManager::printAllServers()
+{
+  std::cout << "Calling print all servers: " << std::endl;
+    for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); ++it) {
+      it->printState();
+    }
+}
+
 
 void    ServerManager::ns_addContexts(ConfigParser &src)
 {

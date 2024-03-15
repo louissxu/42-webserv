@@ -111,8 +111,11 @@ class ServerManager
 		Server* getServerByDescriptor(int sockfd);
 		Server* getServerByPort(std::string port);
 		Server* getServerByRequestHost(HTTPRequest* _req);
-		Server* getRelevantServer(HTTPRequest &request, std::vector<Server>& servers);
+		Server &getRelevantServer(HTTPRequest &request, std::vector<Server>& servers);
 		std::string stripWhiteSpace(std::string src);
+		//void startServer(Server &mServer);
+		void printAllServers();
+		void startServer(Server &mServer);
 
 		//Configuration handling related:
 		bool portIsAvailable(std::string portNo);

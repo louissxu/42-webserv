@@ -49,7 +49,7 @@ public:
 	HTTPResponse &operator=(HTTPResponse const &src);
 
 	//HTTPResponse(HTTPRequest const &request);
-	HTTPResponse(HTTPRequest const &_req, Server *_myServer);
+	HTTPResponse(HTTPRequest const &_req, Server &_myServer);
 
 	// setters
 	void setVersion(std::string const &_version);

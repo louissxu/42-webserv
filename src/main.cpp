@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
     }
     parser.setStateFromContent(0, false);
     sm.setStateFromParser(parser);
+    //sm.printAllServers();
     std::cout << BLUE << "Main\t: "<< RESET 
     <<"Site ready..." << std::endl;
     sm.runKQ();

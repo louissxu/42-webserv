@@ -56,24 +56,46 @@ Server::Server(size_t serverId) {
   << "id constructor called, id: " << _id << std::endl;
 }
 
-Server::Server(const Server& other) {
-  _sockfd = safe_dup(other._sockfd);
-  _host = other._host;
-  _listen = other._listen;
-  std::cout << YELLOW << "Server\t: " << RESET 
+// Server::Server(const Server& other) {
+//   _sockfd = safe_dup(other._sockfd);
+//   _host = other._host;
+//   _listen = other._listen;
+//   std::cout << YELLOW << "Server\t: " << RESET 
+//   <<"Copy constructor called. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+// }
+
+Server::Server(const Server& other) : 
+    _listen(other._listen), 
+    _host(other._host), 
+    _server_name(other._server_name), 
+    _root(other._root), 
+    _index(other._index), 
+    _sockfd(other._sockfd), 
+    _client_max_body_size(other._client_max_body_size), 
+    _autoindex(other._autoindex) {
+    // Assume _locations is a std::vector<std::string>
+    _locations = other._locations;
+    
+      std::cout << YELLOW << "Server\t: " << RESET 
   <<"Copy constructor called. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+    // If there were pointers or complex types requiring deep copies, you'd handle them here, like so:
+    // _complexType = new ComplexType(*other._complexType);
 }
 
+
 Server& Server::operator=(const Server& other) {
-  int new_fd = safe_dup(other._sockfd);
-  if (_sockfd != -1) {
-    close(_sockfd);
-  }
-  _sockfd = new_fd;
-  _host = other._host;
-  _listen = other._listen;
+    _listen = other._listen);
+    _host = other._host;
+    _server_name = other._server_name;
+    _root = other._root;
+    _index = other._index;
+    _sockfd = other._sockfd; 
+    _client_max_body_size = other._client_max_body_size;
+    _autoindex = other._autoindex;
+    _locations = other._locations;
+
   std::cout << YELLOW << "Server\t: " << RESET 
-  <<"assignment constructor called. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
+  <<"equals override constructor called. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
   return *this;
 }
 
@@ -90,6 +112,12 @@ Server::~Server() {
 |              BASIC GETTERS                 |
 \*------------------------------------------*/
 
+    // //Getters:
+    // std::string getListen(void) const;
+    // std::string getHost(void) const;
+    // std::string getIndex(void) const;
+    // std::string getSockFd(void) const;
+
 
   std::string Server::getListen(void) const
   {
@@ -101,10 +129,39 @@ Server::~Server() {
     return _host;
   }
 
+  std::string Server::getIndex(void) const
+  {
+    return _index;
+  }
+
+  int Server::getSockFd(void) const
+  {
+    return _sockfd;
+  }
 
 /*------------------------------------------*\
 |                 SETTERS                    |
 \*------------------------------------------*/
+
+  void Server::setListen(std::string listen)
+  {
+    _listen = listen;
+  }
+
+  void Server::setHost(std::string host)
+  {
+    _host = host;
+  }
+
+  void Server::setIndex(std::string index)
+  {
+    _index = index;
+  }
+
+  void Server::setSockFd(int sockfd)
+  {
+    _sockfd = sockfd;
+  }
 
 void Server::initialiseErrorPages(void)
 {
@@ -124,12 +181,6 @@ void Server::initialiseErrorPages(void)
 	_err_pages[505] = "";
 	_err_pages[505] = "";
 }
-
-void Server::setListen(std::string newListen)
-{
-  _listen = newListen;
-}
-
 
 /*------------------------------------------*\
 |             OTHER METHODS                  |

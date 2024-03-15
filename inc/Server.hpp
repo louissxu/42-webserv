@@ -70,10 +70,9 @@ class Server {
 
     // init_servers()
     int getSockFd();
-    void setListen(std::string newListen);
     void startServer();
-    void initialiseErrorPages();
     void acceptNewLocation(Location newLocation);
+    void initialiseErrorPages();
     //void addLocation(Location & src);
     //setter for multiple attributes prior to server start.
     void addDirective(const std::string& name, const std::string& value);
@@ -82,6 +81,14 @@ class Server {
     //Getters:
     std::string getListen(void) const;
     std::string getHost(void) const;
+    std::string getIndex(void) const;
+    int getSockFd(void) const;
+
+    //Setters:
+    void setListen(std::string listen);
+    void setHost(std::string host);
+    void setIndex(std::string index);
+    void setSockFd(int sockfd);
 
   private:
     size_t                      _id;

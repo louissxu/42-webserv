@@ -28,10 +28,10 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
  * @brief: HTTPResponse(HTTPRequest const &_req)
  * Creates an appropriate HTTPResponse from a given HTTPRequest.
 */
-HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server *_myServer)
+HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 {
-	std::cout << "RESPONSE GEN: Using server" << std::endl;
-	_myServer->printState();
+	std::cout << "HTTPResponse: Using server: " << std::endl;
+	_myServer.printState();
 
 	buildDefaultResponse();
 	switch (_req.getMethod())

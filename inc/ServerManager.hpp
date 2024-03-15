@@ -44,6 +44,7 @@ class Server;
 #define BUFFER_SIZE 3000
 #define BUFFERSIZE 10000
 #define CLIENT_TIMEOUT 10 //time in seconds before a client times out.
+#define LOCALHOST "127.0.0.1"
 
 
 class ServerManager
@@ -110,7 +111,8 @@ class ServerManager
 		Server* getServerByDescriptor(int sockfd);
 		Server* getServerByPort(std::string port);
 		Server* getServerByRequestHost(HTTPRequest* _req);
-		void checkTimeout();
+		Server* getRelevantServer(HTTPRequest &request, std::vector<Server>& servers);
+		std::string stripWhiteSpace(std::string src);
 
 		//Configuration handling related:
 		bool portIsAvailable(std::string portNo);

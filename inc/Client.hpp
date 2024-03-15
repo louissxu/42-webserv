@@ -15,7 +15,6 @@ private:
 	int bufferRead;
 	std::string recvMessage;
 	Message message;
-	time_t	_last_msg_time;
 
 public:
 	int pipe_in[2];
@@ -42,7 +41,6 @@ public:
 	void appendRecvMessage(char *message, int len);
 	std::string const &getRecvMessage() const;
 
-	void updateTime();
 
 	void setPipeFrom(int pipe[2]);
 	void setPipeTo(int pipe[2]);

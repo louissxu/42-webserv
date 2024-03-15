@@ -12,6 +12,9 @@
 
 #include "HTTPRequest.hpp"
 #include "log.hpp"
+#include "Server.hpp"
+
+class Server;
 
 enum Status
 {
@@ -36,6 +39,8 @@ private:
 	std::string reason;
 	std::map<std::string, std::string> headers;
 	std::string body;
+	std::string _location;
+
 
 public:
 	HTTPResponse();
@@ -43,7 +48,8 @@ public:
 	HTTPResponse(HTTPResponse const &src);
 	HTTPResponse &operator=(HTTPResponse const &src);
 
-	HTTPResponse(HTTPRequest const &request);
+	//HTTPResponse(HTTPRequest const &request);
+	HTTPResponse(HTTPRequest const &_req, Server *_myServer);
 
 	// setters
 	void setVersion(std::string const &_version);

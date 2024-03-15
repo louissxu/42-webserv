@@ -81,6 +81,7 @@ class Server {
 
     //Getters:
     std::string getListen(void) const;
+    std::string getHost(void) const;
 
   private:
     size_t                      _id;

@@ -96,6 +96,11 @@ Server::~Server() {
     return _listen;
   }
 
+  std::string Server::getHost(void) const
+  {
+    return _host;
+  }
+
 
 /*------------------------------------------*\
 |                 SETTERS                    |

@@ -249,18 +249,6 @@ void ServerManager::acceptClient(int ListenSocket)
   updateEvent(clientFD, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
 }
 
-void ServerManager::checkTimeout() {
-    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ) {
-        if (time(NULL) - it->second->getLastTime() > CLIENT_TIMEOUT) {
-            WARN("Client: %d Timeout, closing connection..", it->first);
-            Client *client = it->second; 
-            ++it; 
-            closeConnection(client);
-        } else {
-            ++it;
-        }
-    }
-}
 
 
 
@@ -284,7 +272,6 @@ void ServerManager::runKQ()
       }
       handleEvent(ev_list[i]);
     }
-    checkTimeout();
   }
 }
 
@@ -326,28 +313,58 @@ Server* ServerManager::getServerByRequestHost(HTTPRequest* _req) {
     return getServerByPort(port);
 }
 
-// void ServerManager::generateHTTPResponse(HTTPRequest const &_req)
-// {
-//   HTTPResponse newResponse();
-  
-//   /*
-// 	buildDefaultResponse();
-// 	switch (_req.getMethod())
-// 	{
-// 	case Method(GET):
-// 		GETHandler(_req.getUri());
-// 		return;
-// 	case Method(POST):
-// 		if (_req.getHeader("Set-Cookie") != std::string())
-// 			headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
-// 		return;
-// 	case Method(DELETE):
-// 		DELETEHandler();
-// 	default:
-// 		return;
-// 	}
-//   */
-// }
+std::string ServerManager::stripWhiteSpace(std::string src) {
+    std::string result;
+    for (size_t i = 0; i < src.length(); ++i) {
+        char c = src[i];
+        //If the character is non whitespace, add it to our output.
+        if (c != '\n' && c != '\r' && c != '\t' && c != ' ') {
+            result += c; 
+        }
+    }
+    return result;
+}
+
+
+
+Server* ServerManager::getRelevantServer(HTTPRequest &request, std::vector<Server>& servers) {
+    if (servers.empty()) {
+        throw ErrorException("No servers are configured.");
+    }
+
+    std::string hostHeader = request.getHeader("Host");
+    if (hostHeader.empty()) {
+        throw ErrorException("No Host header found in the request.");
+    }
+
+    std::string requestHost;
+    std::string requestPort = "80"; // Default HTTP port.
+    size_t colonPos = hostHeader.find(':');
+    if (colonPos != std::string::npos) {
+        requestHost = stripWhiteSpace(hostHeader.substr(0, colonPos));
+        requestPort = stripWhiteSpace(hostHeader.substr(colonPos + 1));
+    } else {
+        requestHost = hostHeader;
+    }
+
+    if (requestHost == "localhost")
+    {
+      requestHost = LOCALHOST;
+    }
+
+    for (std::vector<Server>::iterator it = servers.begin(); it != servers.end(); ++it) {
+        std::string serverHost = it->getHost();
+        std::string serverPort = it->getListen(); 
+
+        // Find a server with matching host and port.
+        if (serverHost == requestHost && serverPort == requestPort) {
+        std::cout << YELLOW << "MATCH FOUND: host: " << serverHost << ", port: " << serverPort << std::endl;
+            return &(*it);
+        }
+    }
+    throw ErrorException("No matching server found for the given host and port.");
+}
+
 
 
 
@@ -401,8 +418,7 @@ void ServerManager::handleEvent(struct kevent const &ev)
       if (_req->getHeader("Content-Length").empty())
       {
         RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
-        //this->_resp = GenerateHTTPResponse(*_req);
-        this->_resp = HTTPResponse(*_req);
+        this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
         Message message(_resp);
         cl->setMessage(message);
         cl->setBufferRead(0);
@@ -416,7 +432,8 @@ void ServerManager::handleEvent(struct kevent const &ev)
         if (std::stoi(_req->getHeader("Content-Length")) == static_cast<int>(_req->getBody().size()))
         {
           //*-----Creating our response from a given request.-----*//
-          this->_resp = HTTPResponse(*_req);
+          //this->_resp = HTTPResponse(*_req);
+          this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
           if (_req->getCGIStatus() == true)
           {
             Cgi *cgi = new Cgi();

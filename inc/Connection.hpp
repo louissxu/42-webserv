@@ -1,27 +1,31 @@
 #pragma once
-#ifndef CONNECTION_HPP
-#define CONNECTION_HPP
 
 #include <netinet/in.h>
 #include <unistd.h> // for dup
 
+#include <exception>
+#include <string>
+#include <sys/errno.h>
+#include <iostream>
+
 #include "HTTPRequest.hpp"
 
-class Connection {
-  public:
-    Connection();
-    Connection(const Connection& other);
-    Connection& operator=(const Connection& other);
-    ~Connection();
+class HTTPRequest;
 
-    Connection(int sockfd);
+class Connection
+{
+public:
+  Connection();
+  Connection(const Connection &other);
+  Connection &operator=(const Connection &other);
+  ~Connection();
 
-    void receiveData();
-    void sendData();
+  Connection(int sockfd);
 
-  private:
-    int _connection_fd;
-    HTTPRequest _req;
+  void receiveData();
+  void sendData();
+
+private:
+  int _connection_fd;
+  // HTTPRequest *_req;
 };
-
-#endif

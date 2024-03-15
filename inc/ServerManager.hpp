@@ -1,55 +1,90 @@
 #pragma once
-#ifndef ServerManager_HPP
-#define ServerManager_HPP
 
 #include <poll.h>
-
-#include "Server.hpp"
-#include "Cout.hpp"
-#include <vector>
-
-#include <iostream>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
-#include <unistd.h>
+
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <sys/event.h>
 #include <sys/time.h>
+#include <sys/stat.h>
+
+#include <map>
+#include <vector>
+
+#include "Server.hpp"
+#include "Client.hpp"
 
 #include "HTTPResponse.hpp"
+#include "HTTPRequest.hpp"
+#include "cgi.hpp"
+#include "log.hpp"
 
-#define MAX_EVENTS 20 // random value
+class Server;
+
+#define NOMOREDATA 0
+#define MOREDATA 1
+#define ERRORDATA 2
+
+#define MAX_EVENTS 200 // random value
 #define BUFFER_SIZE 3000
-class ServerManager {
-  public:
-    ServerManager();
-    ~ServerManager();
+#define BUFFERSIZE 10000
+class ServerManager
+{
+private:
+  std::vector<Server> _servers;
+  std::map<int, Client *> _clients;
+  std::map<int, Client *> _cgiRead;
+  std::map<int, Client *> _cgiWrite;
+  HTTPResponse _resp;
 
-    void addServer(const Server& server);
-    // void addConnection(Connection& connection);
+  int kq;
+  bool accepting;
+  struct kevent *ev_set;
+  struct kevent ev_list[MAX_EVENTS];
+  int ev_set_count;
+  std::string defaultPath;
 
-    void runPoll();
+  ServerManager(ServerManager &other);
+  ServerManager &operator=(ServerManager &other);
 
-    void runKQ();
-    void createQ();
-    void acceptNewConnections( int nev );
-    void processConnectionIO(int nev );
-    bool isListeningSocket(int socket_fd);
+public:
+  ServerManager();
+  ~ServerManager();
 
+  void addServer(const Server &server);
+  // void addConnection(Connection& connection);
 
-  private:
-    std::vector<Server> _servers;
-    int kq;
-    bool accepting;
-    struct kevent *ev_set;
-    struct kevent ev_list[MAX_EVENTS];
-    // void extendPfdArray(int amount = 10);
+  void runKQ();
+  void createQ();
 
-    ServerManager(ServerManager& other);
-    ServerManager& operator=(ServerManager& other);
+  void acceptClient(int ListenSocket);
+  Client *getClient(int fd);
+  Client *getCgiClient(int fd, bool &isRead, bool &isWrite);
+  Client *getCgiRead(int fd);
+  int getCgiReadFd(Client *cl);
+  Client *getCgiWrite(int fd);
+
+  // io handlers
+  void handleEvent(struct kevent const &ev);
+  int handleReadEvent(Client *cl, struct kevent event);
+  bool handleWriteEvent(Client *cl, int dataLen);
+  void handleEOF(Client *cl, int fd, bool &isRead, bool &isWrite);
+
+  HTTPRequest *parseRequest(Client *cl, std::string const &message);
+
+  std::string getFileContents(std::string uri);
+  void updateEvent(int ident, short filter, u_short flags, u_int fflags, int data, void *udata);
+  void closeConnection(Client *cl);
+  bool isListeningSocket(int socket_fd);
+
+  HTTPResponse &getResponse();
+
+private:
+  // void launchCgi(HTTPRequest const &request, Client *cl);
+  void deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter);
+  void deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter);
+
+  void checkCgi(HTTPRequest &_req);
 };
-
-#endif

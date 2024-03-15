@@ -1,89 +1,127 @@
 #include "HTTPRequest.hpp"
 
-HTTPRequest::HTTPRequest(): HTTPResponse()
+HTTPRequest::HTTPRequest()
 {
+	method = GET;
+	version = HTTP_1_1;
+	uri = "/";
 }
 
-HTTPRequest::HTTPRequest(std::string request)
+HTTPRequest::HTTPRequest(std::map<std::string, std::string> const &_headers, std::string const &_body, Method const &_method, std::string const &_uri, Version const &_version, bool _isCGI)
+	: headers(_headers), body(_body), method(_method), uri(_uri), version(_version), isCGI(_isCGI)
 {
-  parseString(request);
+	// (void)isCGI;
 }
 
-HTTPRequest::HTTPRequest(HTTPRequest& other)
+HTTPRequest::~HTTPRequest() {}
+
+// Setters
+// !Might have to append value in some cases research further
+void HTTPRequest::setHeader(std::string const &key, std::string const &value)
 {
-  *this = other;
+	std::map<std::string, std::string>::iterator it = headers.find(key);
+	if (it == headers.end())
+		headers.insert(std::pair<std::string, std::string>(key, value));
+	else
+		it->second = value;
 }
 
-HTTPRequest& HTTPRequest::operator=(HTTPRequest& other) {
-  if (this == &other)
-		return *this;
-  this->setMethod(other.getMethod());
-  this->setUri(other.getUri());
-  this->setVersion(other.getVersion());
-  this->setConnection(other.getConnection());
-  this->setContentType(other.getContentType());
-  return *this;
+void HTTPRequest::setBody(std::string const &body)
+{
+	this->body = body;
 }
 
-HTTPRequest::~HTTPRequest() {
+void HTTPRequest::setMethod(Method const &method)
+{
+	this->method = method;
 }
 
-void HTTPRequest::print() {
-  // std::cout << "---- Parsed HTTP Request Contents (rest was discarded) ----" << std::endl;
-  std::cout << "\033[31m" << "HTTP Request" << "\033[0m" << std::endl;
-  std::cout << "  Method name:  " << _request_method_name << std::endl;
-  std::cout << "  URI:          " << _request_uri << std::endl;
-  std::cout << "  HTTP version: " << _HTTP_version << std::endl;
-  std::cout << "  Connection type: " << _Connection_type << std::endl;
-  std::cout << "  Content type: " << _content_type << std::endl;
-  std::cout << "\033[31m" << "---- end of request ----\n" << "\033[0m" << std::endl;
+void HTTPRequest::setUri(std::string const &_uri)
+{
+	this->uri = _uri;
 }
 
-void HTTPRequest::parseString(std::string str) {
+void HTTPRequest::setVersion(Version const &version)
+{
+	this->version = version;
+}
 
-  // std::cout << "\033[34m" << str << "\n" << "\033[0m" << std::endl;
+void HTTPRequest::setIsCgi(bool const &isCgi)
+{
+	this->isCGI = isCgi;
+}
 
-  std::stringstream ss(str);
-  std::string line;
+// Getters
+std::map<std::string, std::string> const &HTTPRequest::getHeaders() const
+{
+	return this->headers;
+}
 
-  std::getline(ss, line, '\n');
+std::string const &HTTPRequest::getHeader(std::string const &key) const
+{
+	static std::string emptystring;
+	std::map<std::string, std::string>::const_iterator it = headers.find(key);
+	if (it != headers.end())
+		return it->second;
+	return emptystring;
+}
 
-  std::stringstream line_stream(line);
-  std::string item;
+std::string const &HTTPRequest::getBody() const
+{
+	return this->body;
+}
+std::string const &HTTPRequest::getUri() const
+{
+	return this->uri;
+}
 
-  std::getline(line_stream, item, ' ');
-  _request_method_name = item;
+Method const &HTTPRequest::getMethod() const
+{
+	return this->method;
+}
 
-  if (_request_method_name.compare("POST") == 0)
-    cgi = true;
-  else
-    cgi = false;
+std::string HTTPRequest::getMethodString() const
+{
+	switch (this->method)
+	{
+	case POST:
+		return "POST";
+		break;
+	case GET:
+		return "GET";
+		break;
+	case HEAD:
+		return "HEAD";
+		break;
+	case PUT:
+		return "PUT";
+		break;
+	case DELETE:
+		return "DELETE";
+	case TRACE:
+		return "TRACE";
+		break;
+	case OPTIONS:
+		return "OPTIONS";
+		break;
+	case CONNECT:
+		return "CONNECT";
+		break;
+	case PATCH:
+		return "PATCH";
+		break;
+	default:
+		return std::string();
+		break;
+	}
+}
 
-  std::getline(line_stream, item, ' ');
-  _request_uri = item;
+Version const &HTTPRequest::getVersion() const
+{
+	return this->version;
+}
 
-  std::getline(line_stream, item, '\\');
-  _HTTP_version = item;
-
-  while (std::getline(ss, line, '\n'))
-  {
-    std::stringstream line_stream1(line);
-    std::string item;
-    std::getline(line_stream1, item, ' ');
-    if (item == "Accept:") {
-      std::getline(line_stream1, item, ',');
-      _content_type = item;
-    }
-    else if (item == "connection:") {
-      std::getline(line_stream1, item, '\n');
-      _Connection_type = item;
-    }
-  }
-  this->print();
-  // while (item.compare(0, 11, "Connection:"))
-  // {
-  //   std::getline(line_stream, item, '\n');
-  //   continue;
-  // }
-  // _Connection_type = "keep-alive";
+bool const &HTTPRequest::getCGIStatus() const
+{
+	return this->isCGI;
 }

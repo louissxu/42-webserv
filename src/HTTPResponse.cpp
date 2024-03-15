@@ -1,199 +1,298 @@
 #include "HTTPResponse.hpp"
 
-HTTPResponse::HTTPResponse():
-  _request_method_name("NONE"),
-  _request_uri("/"),
-  _HTTP_version("HTTP/1.1"),
-  _Connection_type("keep-alive")
+HTTPResponse::HTTPResponse()
 {
+	buildDefaultResponse();
 }
 
+HTTPResponse::HTTPResponse(std::string const &_version, Status const &_status, std::string const &_reason, std::map<std::string, std::string> const &_headers, std::string const &_body)
+	: version(_version), status(_status), reason(_reason), headers(_headers), body(_body)
+{
+}
 
 HTTPResponse::HTTPResponse(HTTPResponse const &src)
 {
-  *this = src;
+	*this = src;
 }
 
-HTTPResponse& HTTPResponse::operator=(HTTPResponse const &other) {
-  _request_method_name = other._request_method_name;
-  _request_uri = other._request_uri;
-  _HTTP_version = other._HTTP_version;
-  _Connection_type = other._Connection_type;
-  return *this;
+HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
+{
+	this->status = src.getStatusCode();
+	this->reason = src.getReason();
+	this->headers = src.getHeaders();
+	this->body = src.getBody();
+	return *this;
 }
 
-HTTPResponse::~HTTPResponse() {
-}
-
-
-void HTTPResponse::setMethod( std::string method ){
-	this->_request_method_name = method;
-}
-void HTTPResponse::setUri( std::string uri ){
-	this->_request_uri = uri;
-}
-void HTTPResponse::setVersion( std::string version ){
-	this->_HTTP_version = version;
-}
-void HTTPResponse::setConnection( std::string connection ){
-	this->_Connection_type = connection;
-}
-void HTTPResponse::setContentType( std::string content ){
-	this->_content_type = content;
-}
-void HTTPResponse::setVersionState( std::string version ){
-	this->_HTTP_version_state = version;
-}
-
-
-std::string HTTPResponse::getMethod( ) const{
-	return ( this->_request_method_name );
-}
-
-std::string HTTPResponse::getUri( ) const{
-	return ( this->_request_uri );
-}
-
-std::string HTTPResponse::getVersion( ) const{
-	return ( this->_HTTP_version );
-}
-
-std::string HTTPResponse::getVersionState( ) const{
-	return ( this->_HTTP_version_state );
-}
-
-std::string HTTPResponse::getConnection( ) const{
-	return ( this->_Connection_type );
-}
-
-std::string HTTPResponse::getContentType( ) const{
-	return ( this->_content_type );
-}
-
-
-std::string HTTPResponse::getFileContents( std::string filePath ) {
-	std::ifstream file;
-
-	if ( filePath == std::string() ) {
-		file.open("application/error404/errorPage.html", std::ios::in | std::ios::binary);
-		if (!file.is_open()) {
-			std::cout << "could not file error page\n" << std::endl;
-		}
-		this->setVersionState("404 Not Found");
-		this->setContentType("text/html");
-	}
-	else {
-		file.open(filePath, std::ios::in | std::ios::binary);
-		if (!file.is_open()) {
-			std::cout << "could not file error page\n" << std::endl;
-		}
-		this->setVersionState(" 200 OK");
-	}
-	std::ostringstream file_contents;
-    file_contents << file.rdbuf();
-	file.close();
-	return file_contents.str();
-}
-
-#include <unistd.h>
-		#include <fcntl.h>
-
-void HTTPResponse::generateResponse( int fd ) {
-	std::string fileContents;
-	// if (this->cgi == true)
-	if (this->getUri().compare("/cgiBin/login.sh") == 0)
+HTTPResponse::HTTPResponse(HTTPRequest const &_req)
+{
+	buildDefaultResponse();
+	std::cout << _req.getUri() << std::endl;
+	if (_req.getUri() == "/cgi-bin/login.py")
 	{
-		this->setVersionState(" 200 OK");
-		// std::cerr << "going inside cgi\n";
+		// this->setVersion("HTTP/1.1");
+		// this->setStatus(OK);
+		// this->setReason("OK");
+		// DEBUG("\nReturning\n")
+		return;
+	}
+	// buildDefaultResponse();
 
-		// Create pipes for communication
-		int pipe_to_cgi[2];
-		int pipe_from_cgi[2];
+	RECORD("got cookie: %s%s%s", BOLDRED, _req.getHeader("Cookie").c_str(), RESET);
+	switch (_req.getMethod())
+	{
+	case Method(GET):
+		GETHandler(_req.getUri());
+		break;
+	// case Method(POST):
+	// 	if (_req.getHeader("Cookie").empty())
+	// 	{
+	// 		std::string id = genSessionID(32, 5);
+	// 		addHeader("Set-Cookie", "session-id=" + id + "; Domain=localhost; Path=/");
+	// 		RECORD("Set new cookie: %s%s%s", BOLDRED, id.c_str(), RESET);
+	// 		// headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
+	// 	}
+	// 	else
+	// 	{
+	// 		RECORD("got cookie: %s%s%s", BOLDRED, _req.getHeader("Cookie").c_str(), RESET);
+	// 	}
+	// 	break;
+	case Method(DELETE):
+		DELETEHandler();
+	default:
+		break;
+	}
 
-		pipe(pipe_to_cgi);
-		pipe(pipe_from_cgi);
+	addHeader("Content-Length", std::to_string(body.size()));
+	this->reason = getStatus();
+}
 
-		// Fork to create a child process for the CGI script
-		pid_t pid = fork();
+std::string const &HTTPResponse::getVersion() const
+{
+	return this->version;
+}
 
-		if (pid == 0) {
-			// Child process (CGI script)
+Status const &HTTPResponse::getStatusCode() const
+{
+	return this->status;
+}
 
-			// Close unused pipe ends
-			close(pipe_to_cgi[1]);
-			close(pipe_from_cgi[0]);
+std::string HTTPResponse::getStatus() const
+{
+	switch (status)
+	{
+	case OK:
+		return "OK";
+	case CREATED:
+		return "CREATED";
+	case ACCEPTED:
+		return "ACCEPTED";
+	case NO_CONTENT:
+		return "NO_CONTENT";
+	case BAD_REQUEST:
+		return "BAD_REQUEST";
+	case FORBIDDEN:
+		return "FORBIDDEN";
+	case NOT_FOUND:
+		return "NOT_FOUND";
+	case REQUEST_TIMEOUT:
+		return "REQUEST_TIMEOUT";
+	case INTERNAL_SERVER_ERROR:
+		return "INTERNAL_SERVER_ERROR";
+	case BAD_GATEWAY:
+		return "BAD_GATEWAY";
+	case SERVICE_UNAVAILABLE:
+		return "SERVICE_UNAVAILABLE";
+		// TODO throw error when code is not valid
+		// default:
+		// 	throw;
+		// 	break;
+	}
+}
 
-			// Redirect standard input and output
-			dup2(pipe_to_cgi[0], STDIN_FILENO);
-			dup2(pipe_from_cgi[1], STDOUT_FILENO);
+void HTTPResponse::setVersion(std::string const &_version)
+{
+	this->version = _version;
+}
 
-			// Execute the CGI script
-			execl("cgiBin/login.sh", "cgiBin/login.sh", nullptr);
+void HTTPResponse::setStatus(Status const &_status)
+{
+	this->status = _status;
+}
 
-			// If execl fails
-			perror("execl");
-			exit(EXIT_FAILURE);
-		} else if (pid > 0) {
-			// Parent process (C++ server)
+void HTTPResponse::setReason(std::string const &_reason)
+{
+	this->reason = _reason;
+}
 
-			// Close unused pipe ends
-			close(pipe_to_cgi[0]);
-			close(pipe_from_cgi[1]);
+void HTTPResponse::addHeader(std::string const &_key, std::string const &_value)
+{
+	// TODO check if key is already in the map, or is the key "Cookie".
+	std::map<std::string, std::string>::iterator it = headers.find(_key);
+	if (it != headers.end())
+		it->second = _value;
+	else
+		headers.insert(std::pair<std::string, std::string>(_key, _value));
+}
 
-			// Write data to the CGI script
-			const char* dataToSend = "username=mehdi&password=mirzaie";
-			if (write(pipe_to_cgi[1], dataToSend, strlen(dataToSend)) < 0)
-				std::cerr << errno << std::endl;
+void HTTPResponse::setBody(std::string const &_body)
+{
+	this->body = _body;
+}
 
-			close(pipe_to_cgi[1]);
-			// Read data from the CGI script
-			// std::cerr << "data was sent\n";
-			char buffer[1024];
-			ssize_t bytesRead;
-			while ((bytesRead = read(pipe_from_cgi[0], buffer, sizeof(buffer))) > 0) {
-				// std::cerr << buffer << std::endl;
-				fileContents.append(buffer, bytesRead);
+// Status const &HTTPResponse::getStatus() const
+// {
+// 	return this->status;
+// }
+
+std::string const &HTTPResponse::getReason() const
+{
+	return this->reason;
+}
+
+std::map<std::string, std::string> const &HTTPResponse::getHeaders() const
+{
+	return this->headers;
+}
+
+std::string const &HTTPResponse::getBody() const
+{
+	return this->body;
+}
+
+void HTTPResponse::GETHandler(std::string const &uri)
+{
+	DEBUG("went in GETHandler");
+	std::string path = "application" + uri;
+	struct stat s;
+
+	if (uri == "/")
+	{
+		path = "application/src/index.html";
+	}
+	else if (uri == "/favicon.ico")
+	{
+		path = "application/assets/images/favicon.ico";
+	}
+	DEBUG("PATH == %s", path.c_str());
+	if (uri.empty() || (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos))
+	{
+		this->body = "";
+		return;
+	}
+	if (uri.compare(1, 7, "cgi-bin") == 0 && access(path.c_str(), F_OK) != -1)
+	{
+		if (uri.compare(8, uri.size(), "loogin.py") != 0)
+			this->geterrorResourse("E403.html");
+		return;
+	}
+	if (stat(path.c_str(), &s) == 0)
+	{
+		// if (s.st_mode & S_IFDIR)
+		// {
+		//   // it's a directory
+		// }
+		if (s.st_mode & S_IFREG)
+		{
+			int len = s.st_size;
+			if (!this->getResourse(path, len))
+			{
+				this->geterrorResourse("E404.html");
 			}
-			fileContents.append("\0", 1);
-			close(pipe_from_cgi[0]);
-			wait(nullptr);
-		} else {
-			// Fork failed
-			perror("fork");
-			exit(EXIT_FAILURE);
 		}
+		else
+		{
 
+			//   something else
+		}
 	}
 	else
-		fileContents = getFileContents(getFileName(getUri()));
-	_response =
-			"HTTP/1.1 " + getVersionState() + "\r\n"
-			"Content-Type: " + getContentType() + "\r\n"
-			"Connection: " + getConnection() + "\r\n"
-			// "Set-Cookie: session_id=abc123; Path=/; HttpOnly \r\n"
-			"\r\n" + fileContents;
-
-	// std::cout << "HTTP/1.1 " + getVersionState() + "\\r\\n"
-	// 		"Content-Type: " + getContentType() + "\\r\\n"
-	// 		"Connection: " + getConnection() + "\\r\\n" << std::endl;
-	send(fd, _response.c_str(), _response.length(), 0);
+	{
+		this->geterrorResourse("E404.html");
+		// this->GETHandler("error404/errorPage.html");
+	}
+	//   return "";
+	// this->body = "";
 }
 
+void HTTPResponse::DELETEHandler()
+{
+	body = "<html><head><title>Ha Ha</title></head><body>Sorry Bud, Delete is not allowed on this server :(\n Go hack some other Server!<br /></body></html>";
+	addHeader("Content-Length", std::to_string(body.size()));
+}
 
-std::string HTTPResponse::getFileName( std::string uri ) const {
-	std::string dir = "application";
-	std::string fullpath = dir + uri;
-	std::string _default = "/";
+void HTTPResponse::buildDefaultResponse()
+{
+	this->version = "HTTP/1.1";
+	this->status = OK;
+	this->reason = "OK";
+	setDefaultBody();
+	setDefaultHeaders();
+}
 
-	// if (this->cgi == true)
-	if (uri.compare("/cgiBin/login.sh") == 0)
-		return ("cgiBin/login.sh");
-	if (uri.compare(_default) == 0)
-		return dir + "/menu.html";
+void HTTPResponse::setDefaultHeaders()
+{
+	addHeader("Content-Length", std::to_string(body.size()));
+	addHeader("Content-Type", "text/html");
+	addHeader("Connection", "Keep-Alive");
+	addHeader("Server", "mehdi's_webserv");
+}
 
-	if (access(fullpath.c_str(), F_OK) == 0)
-		return fullpath;
-	// TODO if !R_OK return 403 Forbidden.
-	std::cout << uri << " not found.\n" << std::endl;
-	return std::string();
+void HTTPResponse::setDefaultBody()
+{
+	
+	// body = "<html><head><title>Test Title</title></head><body>Hello World!<br /></body></html>";
+}
+// !helper functions
+
+bool HTTPResponse::getResourse(std::string const &path, int const &len)
+{
+	(void)len;
+	// char contents[len + 1];
+	std::ifstream file(path, std::ios::in | std::ios::binary);
+	if (!file.is_open())
+	{
+		ERR("Open: %s", strerror(errno));
+		return false;
+	}
+
+	std::ostringstream oss;
+	oss << file.rdbuf();
+	this->body = oss.str();
+
+	this->addHeader("Content-Length", std::to_string(this->body.size()));
+
+	std::string filetype = path.substr(path.find("."), path.size());
+	this->addHeader("Content-Type", MimeTypes::getMimeType(filetype));
+	return true;
+}
+
+void HTTPResponse::geterrorResourse(std::string const &filename)
+{
+	struct stat s;
+
+	std::string path = "application/error/" + filename;
+	if (stat(path.c_str(), &s) == 0)
+	{
+		int len = s.st_size;
+		if (!this->getResourse(path, len))
+		{
+			ERR("unable to get error resourse: %s", path.c_str());
+			return;
+		}
+	}
+	if (filename.compare(0, 2, "403"))
+		this->status = FORBIDDEN;
+	else
+		this->status = NOT_FOUND;
+}
+
+bool const &HTTPResponse::getCgiStatus() const
+{
+	return cgiStatus;
+}
+
+void HTTPResponse::setCgiStatus(bool _status)
+{
+	cgiStatus = _status;
 }

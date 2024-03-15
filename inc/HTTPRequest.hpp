@@ -1,24 +1,63 @@
 #pragma once
-#ifndef HTTPREQUEST_HPP
-#define HTTPREQUEST_HPP
 
-#include <string>
-#include <iostream>
+#include <map>
 #include <sstream>
 
-#include "HTTPResponse.hpp"
-class HTTPRequest: public HTTPResponse {
-  public:
-    HTTPRequest();
-    HTTPRequest(std::string request);
-    HTTPRequest(HTTPRequest& other);
-    HTTPRequest& operator=(HTTPRequest& other);
-    virtual ~HTTPRequest();
-
-    void print();
-
-  private:
-    void parseString(std::string str);
+enum Method
+{
+	GET,
+	HEAD,
+	POST,
+	PUT,
+	DELETE,
+	TRACE,
+	OPTIONS,
+	CONNECT,
+	PATCH
 };
 
-#endif
+enum Version
+{
+	HTTP_1_0,
+	HTTP_1_1,
+	HTTP_2_0
+};
+
+class HTTPRequest
+{
+private:
+	std::map<std::string, std::string> headers;
+	std::string body;
+	Method method;
+	std::string uri;
+	Version version;
+	bool isCGI;
+
+public:
+	HTTPRequest(std::map<std::string, std::string> const &_headers,
+				std::string const &_body,
+				Method const &_method,
+				std::string const &_uri,
+				Version const &_version,
+				bool _isCGI);
+	HTTPRequest();
+	~HTTPRequest();
+
+	// setters
+	void setHeader(std::string const &key, std::string const &value);
+	void setBody(std::string const &body);
+	void setMethod(Method const &method);
+	void setUri(std::string const &_uri);
+	void setVersion(Version const &version);
+	void setIsCgi(bool const &isCgi);
+
+	// getters
+	std::map<std::string, std::string> const &getHeaders() const;
+	std::string const &getHeader(std::string const &key) const;
+	std::string const &getBody() const;
+	std::string const &getUri() const;
+	Method const &getMethod() const;
+	std::string getMethodString() const;
+	Version const &getVersion() const;
+	bool const &getCGIStatus() const;
+};

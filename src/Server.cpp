@@ -8,11 +8,12 @@
 // Ref: https://stackoverflow.com/questions/56369138/moving-an-object-with-a-file-descriptor
 // Ref: https://stackoverflow.com/questions/4172722/what-is-the-rule-of-three#:~:text=The%20rule%20of%203%2F5,functions%20when%20creating%20your%20class.
 
-Server::Server(std::string port) {
+Server::Server(std::string port)
+{
   struct addrinfo hints;
   memset(&hints, 0, sizeof hints);
 
-  hints.ai_family = AF_INET; // set to IPv4
+  hints.ai_family = AF_INET;       // set to IPv4
   hints.ai_socktype = SOCK_STREAM; // set to TCP
   // hints.ai_flags = AI_PASSIVE; // fill in my ip for me
 
@@ -20,8 +21,9 @@ Server::Server(std::string port) {
   int error_return;
   error_return = getaddrinfo(NULL, port.c_str(), &hints, &servinfo);
 
-  if (error_return != 0) {
-    // gai_strerror(error_return) ?? something with this error value // TODO: May be forbidden function
+  if (error_return != 0)
+  {
+    gai_strerror(error_return);
     throw std::runtime_error("Server: getaddrinfo: failed");
   }
 
@@ -33,7 +35,8 @@ Server::Server(std::string port) {
   std::cout << "Server: Starting on " << ipstr << ":" << ntohs(sai->sin_port) << std::endl;
 
   int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-  if (sockfd < 0) {
+  if (sockfd < 0)
+  {
     perror("Server: socket");
     throw std::runtime_error("Server: socket: failed");
   }
@@ -41,25 +44,26 @@ Server::Server(std::string port) {
   // set to allow port reuse? or something
   int yes = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
-  
+
   // make the socket non-blocking
   int flags;
   // Get the current flags
   if ((flags = fcntl(sockfd, F_GETFD, 0)) == -1)
-      perror("fcntl F_GETFL");
+    perror("fcntl F_GETFL");
   // Set the O_NONBLOCK flag
   if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
-      perror("fcntl F_SETFL O_NONBLOCK");
-
+    perror("fcntl F_SETFL O_NONBLOCK");
 
   error_return = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
-  if (error_return != 0) {
+  if (error_return != 0)
+  {
     perror("Server: bind");
     throw std::runtime_error("Server: bind: failed");
   }
 
   error_return = listen(sockfd, 20); // start listening and set maximum number of pending connections to 20 (make this tuneable?)
-  if (error_return != 0) {
+  if (error_return != 0)
+  {
     perror("Server: listen");
     throw std::runtime_error("Server: listen: failed");
   }
@@ -73,28 +77,34 @@ Server::Server(std::string port) {
   freeaddrinfo(servinfo);
 }
 
-static int safe_dup(int fd) {
-  if (fd == -1) {
+static int safe_dup(int fd)
+{
+  if (fd == -1)
+  {
     return -1;
   }
 
   int copy = dup(fd);
-  if (copy < 0) {
+  if (copy < 0)
+  {
     throw std::runtime_error(strerror(errno));
   }
   return copy;
 }
 
-Server::Server(const Server& other) {
+Server::Server(const Server &other)
+{
   _sockfd = safe_dup(other._sockfd);
   _ip = other._ip;
   _port = other._port;
   std::cout << "copy constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
 }
 
-Server& Server::operator=(const Server& other) {
+Server &Server::operator=(const Server &other)
+{
   int new_fd = safe_dup(other._sockfd);
-  if (_sockfd != -1) {
+  if (_sockfd != -1)
+  {
     close(_sockfd);
   }
   _sockfd = new_fd;
@@ -104,32 +114,38 @@ Server& Server::operator=(const Server& other) {
   return *this;
 }
 
-Server::~Server() {
+Server::~Server()
+{
   // TODO. Do teardown stuff
   std::cout << "destructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
-  if (_sockfd != -1) {
+  if (_sockfd != -1)
+  {
     shutdown(_sockfd, 2); // WHICH ONE?!
     // close(_sockfd);
   }
 }
 
-int Server::getSockFd() {
+int Server::getSockFd()
+{
   return _sockfd;
 }
 
-Server::Server() {
+Server::Server()
+{
   _sockfd = -1;
   _ip = "";
   _port = "";
   std::cout << "default constructor ran. " << _ip << ":" << _port << " fd: " << _sockfd << std::endl;
 }
 
-void Server::acceptNewConnection() {
+void Server::acceptNewConnection()
+{
   Connection newConnection = Connection(_sockfd);
-  _connections.push_back(newConnection);
+  _connections->push_back(newConnection);
   std::cout << "connection accepted" << std::endl;
 }
 
-std::vector<Connection>& Server::getConnections() {
-  return _connections;
+std::vector<Connection> &Server::getConnections()
+{
+  return *_connections;
 }

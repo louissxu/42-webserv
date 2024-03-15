@@ -1,59 +1,80 @@
 #pragma once
-#ifndef HTTPRESPONSE_HPP
-#define HTTPRESPONSE_HPP
 
-#include <iostream>
 #include <string>
+#include <exception>
+#include <iostream>
+#include <unistd.h>
 #include <fstream>
 #include <sstream>
-#include <unistd.h>
-#include <sys/socket.h>
+#include <exception>
+#include <map>
+#include <sys/stat.h>
 
-/*
-	TODO add later:
-	Server: AMAnix\r\n
-	Date: Fri, 19 Jan 2024 05:55:55 UTC\r\n\r\n
-*/
+#include "HTTPRequest.hpp"
+#include "MIME.hpp"
+#include "log.hpp"
 
-class HTTPResponse {
-	protected:
-		std::string _request_method_name;
-		std::string _request_uri;
-		std::string _HTTP_version;
-		std::string _HTTP_version_state;
-		std::string _Connection_type;
-		std::string _content_type;
-
-
-		// std::string Response();
-		// std::string getFileContents();
-		std::string _response;
-
-		bool		cgi;
-
-	public:
-		HTTPResponse();
-		virtual ~HTTPResponse();
-		HTTPResponse( HTTPResponse const &src );
-		HTTPResponse &operator=( HTTPResponse const &src );
-
-		void setMethod( std::string method );
-		void setUri( std::string method );
-		void setVersion( std::string method );
-		void setVersionState( std::string method );
-		void setConnection( std::string method );
-		void setContentType( std::string method );
-
-		std::string getMethod( ) const;
-		std::string getUri( ) const;
-		std::string getVersion( ) const;
-		std::string getVersionState( ) const;
-		std::string getConnection( ) const;
-		std::string getContentType( ) const;
-
-		void generateResponse(int fd);
-		std::string getFileContents( std::string filePath );
-		std::string getFileName( std::string uri ) const;
+enum Status
+{
+	OK = 200,
+	CREATED = 201,
+	ACCEPTED = 202,
+	NO_CONTENT = 203,
+	BAD_REQUEST = 400,
+	FORBIDDEN = 403,
+	NOT_FOUND = 404,
+	REQUEST_TIMEOUT = 408,
+	INTERNAL_SERVER_ERROR = 500,
+	BAD_GATEWAY = 502,
+	SERVICE_UNAVAILABLE = 503,
 };
 
-#endif
+class HTTPResponse
+{
+private:
+	std::string version;
+	Status status;
+	std::string reason;
+	std::map<std::string, std::string> headers;
+	std::string body;
+
+	bool cgiStatus;
+public:
+	HTTPResponse();
+	HTTPResponse(std::string const &_version, Status const &_status, std::string const &_reason, std::map<std::string, std::string> const &_headers, std::string const &_body);
+	HTTPResponse(HTTPResponse const &src);
+	HTTPResponse &operator=(HTTPResponse const &src);
+
+	HTTPResponse(HTTPRequest const &request);
+
+	// setters
+	void setVersion(std::string const &_version);
+	// void setReason(std::string const &_version);
+	void setStatus(Status const &_status);
+	void setReason(std::string const &_reason);
+	void addHeader(std::string const &_key, std::string const &_value);
+	void setBody(std::string const &_body);
+
+	// getters
+	std::string const &getVersion() const;
+	Status const &getStatusCode() const;
+	std::string getStatus() const;
+	std::string const &getReason() const;
+	std::map<std::string, std::string> const &getHeaders() const;
+	std::string const &getBody() const;
+
+	bool const &getCgiStatus() const;
+	void setCgiStatus(bool _status);
+
+	void buildDefaultResponse();
+	void setDefaultHeaders();
+	void setDefaultBody();
+
+private:
+	bool getResourse(std::string const &path, int const &len);
+	void geterrorResourse(std::string const &filename);
+
+	void GETHandler(std::string const &uri);
+	// int const &POSTHandler(HTTPRequest const &request);
+	void DELETEHandler();
+};

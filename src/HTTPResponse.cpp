@@ -27,7 +27,7 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 */
 HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 {
-	std::cout << "HTTPResponse: Using server: " << std::endl;
+	//std::cout << "HTTPResponse: Using server: " << std::endl;
 	//_myServer.printState();
 
 	buildDefaultResponse();
@@ -54,8 +54,9 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 */
 HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 {
-	std::cout << "HTTPResponse: Using server: " << std::endl;
-	_myServer.printState();
+	(void)_myServer;
+	//std::cout << "HTTPResponse: Using server: " << std::endl;
+	//_myServer.printState();
 
 	buildDefaultResponse();
 	switch (_req.getMethod())

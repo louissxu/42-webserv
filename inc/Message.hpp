@@ -29,6 +29,7 @@ public:
     // setter
     void setMessage(std::string const &_message);
     void setBufferSent(int buffer);
+    void addBufferSent(int buffer);
 
     // Serialization method
     void serialize(const HTTPResponse &_resp);

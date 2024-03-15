@@ -1,7 +1,6 @@
 #include "Client.hpp"
 
-Client::Client() : sockFD(0), FDconnectedTo(-1), bufferRead(0)
-{}
+Client::Client() : sockFD(0), FDconnectedTo(-1), bufferRead(0) {}
 
 Client::Client(int _sockFD, int _FDConnectedTo, sockaddr_in _client_addr) : sockFD(_sockFD), client_addr(_client_addr), FDconnectedTo(_FDConnectedTo)
 {

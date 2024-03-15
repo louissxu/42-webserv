@@ -45,6 +45,11 @@ public:
 
 	// setters
 	void setHeader(std::string const &key, std::string const &value);
+	void setBody(std::string const &body);
+	void setMethod(Method const &method);
+	void setUri(std::string const &_uri);
+	void setVersion(Version const &version);
+	void setIsCgi(bool const &isCgi);
 
 	// getters
 	std::map<std::string, std::string> const &getHeaders() const;

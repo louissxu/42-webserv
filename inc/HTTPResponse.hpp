@@ -13,6 +13,7 @@
 #include "HTTPRequest.hpp"
 #include "log.hpp"
 #include "Server.hpp"
+#include "MIME.hpp"
 
 class Server;
 
@@ -39,9 +40,8 @@ private:
 	std::string reason;
 	std::map<std::string, std::string> headers;
 	std::string body;
-	std::string _location;
-
-
+	bool cgiStatus;
+	
 public:
 	HTTPResponse();
 	HTTPResponse(std::string const &_version, Status const &_status, std::string const &_reason, std::map<std::string, std::string> const &_headers, std::string const &_body);
@@ -49,6 +49,7 @@ public:
 	HTTPResponse &operator=(HTTPResponse const &src);
 
 	//HTTPResponse(HTTPRequest const &request);
+	HTTPResponse(HTTPRequest const &_req);
 	HTTPResponse(HTTPRequest const &_req, Server &_myServer);
 
 	// setters
@@ -67,15 +68,18 @@ public:
 	std::map<std::string, std::string> const &getHeaders() const;
 	std::string const &getBody() const;
 
+	bool const &getCgiStatus() const;
+	void setCgiStatus(bool _status);
+
 	void buildDefaultResponse();
 	void setDefaultHeaders();
 	void setDefaultBody();
 
 private:
 	bool getResource(std::string const &path, int const &len);
-	void getDefaultResource();
+	void geterrorResource(std::string const &filename);
 
 	void GETHandler(std::string const &uri);
-	int const &POSTHandler(HTTPRequest const &request);
+	// int const &POSTHandler(HTTPRequest const &request);
 	void DELETEHandler();
 };

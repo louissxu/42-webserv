@@ -8,16 +8,16 @@
 // Ref: https://stackoverflow.com/questions/56369138/moving-an-object-with-a-file-descriptor
 // Ref: https://stackoverflow.com/questions/4172722/what-is-the-rule-of-three#:~:text=The%20rule%20of%203%2F5,functions%20when%20creating%20your%20class.
 
-static int safe_dup(int fd) {
-  if (fd == -1) {
-    return -1;
-  }
-  int copy = dup(fd);
-  if (copy < 0) {
-    throw std::runtime_error(strerror(errno));
-  }
-  return copy;
-}
+// static int safe_dup(int fd) {
+//   if (fd == -1) {
+//     return -1;
+//   }
+//   int copy = dup(fd);
+//   if (copy < 0) {
+//     throw std::runtime_error(strerror(errno));
+//   }
+//   return copy;
+// }
 
 /*------------------------------------------*\
 |              CONSTRUCTORS                  |
@@ -84,7 +84,7 @@ Server::Server(const Server& other) :
 
 
 Server& Server::operator=(const Server& other) {
-    _listen = other._listen);
+    _listen = other._listen;
     _host = other._host;
     _server_name = other._server_name;
     _root = other._root;
@@ -269,7 +269,6 @@ void Server::startServer(void) {
   std::cout << "DBG: sockfd: " << sockfd << std::endl;
   std::cout << "servinfo aiaddr: " << servinfo->ai_addr << std::endl;
   std::cout << "servinfo ai_addrlen: " << servinfo->ai_addrlen << std::endl;
-
   error_return = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
   if (error_return != 0)
   {
@@ -290,8 +289,6 @@ void Server::startServer(void) {
   <<"starting on " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
   freeaddrinfo(servinfo);
 }
-
-
 
 int Server::getSockFd()
 {

@@ -1,31 +1,5 @@
 #include "Webserver.hpp"
 
-/*
-int main(void)
-{
-  std::string port1 = "2345";
-  // std::string port2 = "3456";
-
-  Server a = Server();
-  // Server b = Server(port2);
-  a.setListen(port1);
-  a.startServer();
-
-  std::cout << "adding socket manager" << std::endl;
-  ServerManager sm;
-
-  sm.addServer(a);
-  // sm.addServer(b);
-
-  sm.runKQ();
-
-  // sm.runPoll();
-  std::cout << "all done!" << std::endl;
-
-  return (0);
-}
-*/
-
 int main(int argc, char **argv) {
   try
   {
@@ -41,7 +15,7 @@ int main(int argc, char **argv) {
     }
     else
     {
-            parser.setContent(argv[1]);
+      parser.setContent(argv[1]);
     }
     parser.setStateFromContent(0, false);
     sm.setStateFromParser(parser);

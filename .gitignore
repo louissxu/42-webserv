@@ -31,15 +31,17 @@
 *.out
 *.app
 
-<<<<<<< HEAD
+# debug
 .vscode
+
+#executable
+webserv
 
 #python
 __pycache__
+
+#database
 *.db
 
 #other
 .DS_Store
-webserv
-.vscode/*
-

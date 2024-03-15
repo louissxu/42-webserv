@@ -1,19 +1,16 @@
 #include "HTTPResponse.hpp"
 
+/*------------------------------------------*\
+|               CONSTRUCTORS                 |
+\*------------------------------------------*/
+
 HTTPResponse::HTTPResponse()
 {
 	buildDefaultResponse();
 }
 
 HTTPResponse::HTTPResponse(std::string const &_version, Status const &_status, std::string const &_reason, std::map<std::string, std::string> const &_headers, std::string const &_body)
-	: version(_version), status(_status), reason(_reason), headers(_headers), body(_body)
-{
-}
-
-HTTPResponse::HTTPResponse(HTTPResponse const &src)
-{
-	*this = src;
-}
+	: version(_version), status(_status), reason(_reason), headers(_headers), body(_body){}
 
 HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 {
@@ -23,6 +20,33 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 	this->body = src.getBody();
 	return *this;
 }
+
+/*
+ * @brief: HTTPResponse(HTTPRequest const &_req)
+ * Creates an appropriate HTTPResponse from a given HTTPRequest.
+*/
+HTTPResponse::HTTPResponse(HTTPRequest const &_req)
+{
+	std::cout << "HTTPResponse: Using server: " << std::endl;
+	//_myServer.printState();
+
+	buildDefaultResponse();
+	switch (_req.getMethod())
+	{
+	case Method(GET):
+		GETHandler(_req.getUri());
+		return;
+	case Method(POST):
+		if (_req.getHeader("Set-Cookie") != std::string())
+			headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
+		return;
+	case Method(DELETE):
+		DELETEHandler();
+	default:
+		return;
+	}
+}
+
 
 /*
  * @brief: HTTPResponse(HTTPRequest const &_req)
@@ -50,6 +74,17 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 	}
 }
 
+HTTPResponse::HTTPResponse(HTTPResponse const &src)
+{
+	*this = src;
+}
+
+//HTTPResponse::~HTTPResponse() {}
+
+/*------------------------------------------*\
+|                 GETTERS                    |
+\*------------------------------------------*/
+
 std::string const &HTTPResponse::getVersion() const
 {
 	return this->version;
@@ -58,6 +93,21 @@ std::string const &HTTPResponse::getVersion() const
 Status const &HTTPResponse::getStatusCode() const
 {
 	return this->status;
+}
+
+std::string const &HTTPResponse::getReason() const
+{
+	return this->reason;
+}
+
+std::map<std::string, std::string> const &HTTPResponse::getHeaders() const
+{
+	return this->headers;
+}
+
+std::string const &HTTPResponse::getBody() const
+{
+	return this->body;
 }
 
 std::string HTTPResponse::getStatus() const
@@ -93,6 +143,10 @@ std::string HTTPResponse::getStatus() const
 	}
 }
 
+/*------------------------------------------*\
+|                 SETTERS                    |
+\*------------------------------------------*/
+
 void HTTPResponse::setVersion(std::string const &_version)
 {
 	this->version = _version;
@@ -123,25 +177,9 @@ void HTTPResponse::setBody(std::string const &_body)
 	this->body = _body;
 }
 
-// Status const &HTTPResponse::getStatus() const
-// {
-// 	return this->status;
-// }
-
-std::string const &HTTPResponse::getReason() const
-{
-	return this->reason;
-}
-
-std::map<std::string, std::string> const &HTTPResponse::getHeaders() const
-{
-	return this->headers;
-}
-
-std::string const &HTTPResponse::getBody() const
-{
-	return this->body;
-}
+/*------------------------------------------*\
+|                BOOLEANS                    |
+\*------------------------------------------*/
 
 bool isValidURI(const std::string &uri) {
     // List of forbidden characters or patterns. Adjust according to your needs.
@@ -161,28 +199,42 @@ bool isValidURI(const std::string &uri) {
     return true; // URI passes basic validation
 }
 
-
-
+/*------------------------------------------*\
+|             METHOD HANDLERS                 |
+\*------------------------------------------*/
 
 void HTTPResponse::GETHandler(std::string const &uri)
 {
 	DEBUG("went in GETHandler");
-	if (uri.empty())
+	std::string path = "application" + uri;
+	struct stat s;
+
+	if (!isValidURI(uri))
+	{
+		//this->geterrorResource("E403.html");
+		return;
+	}
+
+	if (uri == "/")
+	{
+		path = "application/src/index.html";
+	}
+	else if (uri == "/favicon.ico")
+	{
+		path = "application/assets/images/favicon.ico";
+	}
+	DEBUG("PATH == %s", path.c_str());
+	if (uri.empty() || (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos))
 	{
 		this->body = "";
 		return;
 	}
-
-	if (!isValidURI(uri)) {
-	//if (true) {
-        this->status = BAD_REQUEST;
-		this->reason = "BAD_REQUEST";
-        getResource("application/errorPages/400.html", 0);
-        return;
-    }
-
-	std::string path = "application" + uri;
-	struct stat s;
+	if (uri.compare(1, 7, "cgi-bin") == 0 && access(path.c_str(), F_OK) != -1)
+	{
+		if (uri.compare(8, uri.size(), "loogin.py") != 0)
+			this->geterrorResource("E403.html");
+		return;
+	}
 	if (stat(path.c_str(), &s) == 0)
 	{
 		// if (s.st_mode & S_IFDIR)
@@ -194,8 +246,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 			int len = s.st_size;
 			if (!this->getResource(path, len))
 			{
-				//If we fail to load the resource at path, try to load the 404 resource.
-				this->getDefaultResource();
+				this->geterrorResource("E404.html");
 			}
 		}
 		else
@@ -206,7 +257,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	}
 	else
 	{
-		this->getDefaultResource();
+		this->geterrorResource("E404.html");
 		// this->GETHandler("error404/errorPage.html");
 	}
 	//   return "";
@@ -230,19 +281,18 @@ void HTTPResponse::buildDefaultResponse()
 
 void HTTPResponse::setDefaultHeaders()
 {
-	headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(body.size())));
-	headers.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
-	headers.insert(std::pair<std::string, std::string>("Connection", "Keep-Alive"));
-	headers.insert(std::pair<std::string, std::string>("Server", "mehdi's_webserv"));
+	addHeader("Content-Length", std::to_string(body.size()));
+	addHeader("Content-Type", "text/html");
+	addHeader("Connection", "Keep-Alive");
+	addHeader("Server", "mehdi's_webserv");
 }
 
 void HTTPResponse::setDefaultBody()
 {
-	body = "<html><head><title>Test Title</title></head><body>Hello World!<br /></body></html>";
+	
+	// body = "<html><head><title>Test Title</title></head><body>Hello World!<br /></body></html>";
 }
-#include "Cout.hpp"
 // !helper functions
-
 
 bool HTTPResponse::getResource(std::string const &path, int const &len)
 {
@@ -260,26 +310,38 @@ bool HTTPResponse::getResource(std::string const &path, int const &len)
 	this->body = oss.str();
 
 	this->addHeader("Content-Length", std::to_string(this->body.size()));
-	std::string filetype = path.substr(path.find(".") + 1, path.size());
-	if (filetype != "png")
-		this->addHeader("Content-Type", "text/" + filetype);
-	else
-		this->addHeader("Content-Type", "image/" + path.substr(path.find(".") + 1, path.size()));
+
+	std::string filetype = path.substr(path.find("."), path.size());
+	this->addHeader("Content-Type", MimeTypes::getMimeType(filetype));
 	return true;
 }
 
-void HTTPResponse::getDefaultResource()
+void HTTPResponse::geterrorResource(std::string const &filename)
 {
 	struct stat s;
-	std::string path = "application/errorPages/404.html";
+
+	std::string path = "application/error/" + filename;
 	if (stat(path.c_str(), &s) == 0)
 	{
 		int len = s.st_size;
 		if (!this->getResource(path, len))
 		{
-			std::cout << "unable to get resource: " << path << std::endl;
+			ERR("unable to get error Resource: %s", path.c_str());
+			return;
 		}
 	}
-	this->status = NOT_FOUND;
-	this->reason = "NOT_FOUND";
+	if (filename.compare(0, 2, "403"))
+		this->status = FORBIDDEN;
+	else
+		this->status = NOT_FOUND;
+}
+
+bool const &HTTPResponse::getCgiStatus() const
+{
+	return cgiStatus;
+}
+
+void HTTPResponse::setCgiStatus(bool _status)
+{
+	cgiStatus = _status;
 }

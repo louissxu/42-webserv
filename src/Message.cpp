@@ -46,6 +46,11 @@ void Message::setBufferSent(int buffer)
     this->bufferSent = buffer;
 }
 
+void Message::addBufferSent(int buffer)
+{
+    this->bufferSent += buffer;
+}
+
 void Message::serialize(const HTTPResponse &_resp)
 {
     // Serialize status line
@@ -60,7 +65,8 @@ void Message::serialize(const HTTPResponse &_resp)
     }
 
     // Add a blank line to indicate end of headers
-    this->message += "\r\n";
+    if (_resp.getCgiStatus() == false)
+        this->message += "\r\n";
 
     // Serialize body
     this->message += _resp.getBody();

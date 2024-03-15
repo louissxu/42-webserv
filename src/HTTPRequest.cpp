@@ -1,5 +1,9 @@
 #include "HTTPRequest.hpp"
 
+/*------------------------------------------*\
+|               CONSTRUCTORS                 |
+\*------------------------------------------*/
+
 HTTPRequest::HTTPRequest()
 {
 	method = GET;
@@ -13,19 +17,11 @@ HTTPRequest::HTTPRequest(std::map<std::string, std::string> const &_headers, std
 	// (void)isCGI;
 }
 
-HTTPRequest::~HTTPRequest()
-{
-}
+HTTPRequest::~HTTPRequest() {}
 
-// !Might have to append value in some cases research further
-void HTTPRequest::setHeader(std::string const &key, std::string const &value)
-{
-	std::map<std::string, std::string>::iterator it = headers.find(key);
-	if (it == headers.end())
-		headers.insert(std::pair<std::string, std::string>(key, value));
-	else
-		it->second = value;
-}
+/*------------------------------------------*\
+|                 GETTERS                    |
+\*------------------------------------------*/
 
 std::map<std::string, std::string> const &HTTPRequest::getHeaders() const
 {
@@ -100,3 +96,42 @@ bool const &HTTPRequest::getCGIStatus() const
 {
 	return this->isCGI;
 }
+
+/*------------------------------------------*\
+|                 SETTERS                    |
+\*------------------------------------------*/
+
+void HTTPRequest::setHeader(std::string const &key, std::string const &value)
+{
+	std::map<std::string, std::string>::iterator it = headers.find(key);
+	if (it == headers.end())
+		headers.insert(std::pair<std::string, std::string>(key, value));
+	else
+		it->second = value;
+}
+
+void HTTPRequest::setBody(std::string const &body)
+{
+	this->body = body;
+}
+
+void HTTPRequest::setMethod(Method const &method)
+{
+	this->method = method;
+}
+
+void HTTPRequest::setUri(std::string const &_uri)
+{
+	this->uri = _uri;
+}
+
+void HTTPRequest::setVersion(Version const &version)
+{
+	this->version = version;
+}
+
+void HTTPRequest::setIsCgi(bool const &isCgi)
+{
+	this->isCGI = isCgi;
+}
+

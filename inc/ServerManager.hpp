@@ -1,4 +1,3 @@
-#pragma once
 #ifndef SERVER_MANAGER_HPP
 # define SERVER_MANAGER_HPP
 
@@ -28,9 +27,6 @@
 #include "Location.hpp"
 #include "Utils.hpp"
 #include "Cout.hpp"
-
-
-
 
 class Utils;
 class ConfigParser;
@@ -72,8 +68,10 @@ class ServerManager
   		ServerManager &operator=(ServerManager &other);
 
   		// void launchCgi(HTTPRequest const &request, Client *cl);
-  		void deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter);
+		void deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter);
   		void deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter);
+  		void checkCgi(HTTPRequest &_req);
+
 
 	public:
   		ServerManager();
@@ -141,5 +139,4 @@ class ServerManager
 				virtual ~ErrorException() throw() {}
 		};
 };
-
 #endif

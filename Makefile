@@ -44,6 +44,7 @@ SRC_FILES = \
 	Cout.cpp \
 	Location.cpp \
 	Utils.cpp \
+	MIME.cpp \
 	main.cpp
 
 SRC_DIR = src

@@ -17,6 +17,7 @@ private:
 	Message message;
 
 public:
+	pid_t Cgipid;
 	int pipe_in[2];
 	int pipe_out[2];
 	Client();
@@ -29,7 +30,6 @@ public:
 	int getSockFDconnectedTo() const;
 	sockaddr_in getClinetAddr() const;
 	Message const &getMessage() const;
-	time_t const &getLastTime() const;
 
 	void setMessage(Message const &src);
 
@@ -40,7 +40,6 @@ public:
 	void appendRecvMessage(std::string const &message, int len);
 	void appendRecvMessage(char *message, int len);
 	std::string const &getRecvMessage() const;
-
 
 	void setPipeFrom(int pipe[2]);
 	void setPipeTo(int pipe[2]);

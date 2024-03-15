@@ -1,39 +1,40 @@
 #include "ServerManager.hpp"
+#include "Cout.hpp"
 
-static void areFdsOpen(int pipein[2], int pipeout[2])
-{
-  if (pipein == NULL || pipeout == NULL)
-    return;
-  int fd = pipein[0];
-  for (int i = 0; i < 2; i++) 
-  {
-    int flags = fcntl(fd, F_GETFD);
-    if (flags != -1)
-    {
-      DEBUG("%d: is open", fd);
-    }
-    else
-    {
-      DEBUG("%d: is not open", fd);
-    }
-    fd = pipein[1];
-  }
+// static void areFdsOpen(int pipein[2], int pipeout[2])
+// {
+//   if (pipein == NULL || pipeout == NULL)
+//     return;
+//   int fd = pipein[0];
+//   for (int i = 0; i < 2; i++)
+//   {
+//     int flags = fcntl(fd, F_GETFD);
+//     if (flags != -1)
+//     {
+//       DEBUG("%d: is open", fd);
+//     }
+//     else
+//     {
+//       DEBUG("%d: is not open", fd);
+//     }
+//     fd = pipein[1];
+//   }
 
-  fd = pipeout[0];
-  for (int i = 0; i < 2; i++)
-  {
-    int flags = fcntl(fd, F_GETFD);
-    if (flags != -1)
-    {
-      DEBUG("%d: is open", fd);
-    }
-    else
-    {
-      DEBUG("%d: is not open", fd);
-    }
-    fd = pipeout[1];
-  }
-}
+//   fd = pipeout[0];
+//   for (int i = 0; i < 2; i++)
+//   {
+//     int flags = fcntl(fd, F_GETFD);
+//     if (flags != -1)
+//     {
+//       DEBUG("%d: is open", fd);
+//     }
+//     else
+//     {
+//       DEBUG("%d: is not open", fd);
+//     }
+//     fd = pipeout[1];
+//   }
+// }
 
 ServerManager::ServerManager()
 {
@@ -98,9 +99,6 @@ void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short 
     if (fdmap.empty())
       return;
   }
-  DEBUG("\n\n");
-  areFdsOpen(cl->pipe_in, cl->pipe_out);
-  DEBUG("\n\n");
 }
 
 void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter)
@@ -110,9 +108,6 @@ void ServerManager::deleteCgi(std::map<int, Client *> &fdmap, int fd, short filt
   {
     updateEvent(it->first, filter, EV_DELETE, 0, 0, NULL);
     close(it->first);
-    DEBUG("\n\n");
-    areFdsOpen(it->second->pipe_in, it->second->pipe_out);
-    DEBUG("\n\n");
     fdmap.erase(it);
   }
 }
@@ -153,8 +148,6 @@ void ServerManager::updateEvent(int ident, short filter, u_short flags, u_int ff
 
 void ServerManager::closeConnection(Client *cl)
 {
-  // int i = 0;
-  // DEBUG("number of times gone in closeConnection: %d", ++i);
   if (cl == NULL)
     return;
   WARN("Client: %d disconnected!", cl->getSockFD());
@@ -248,9 +241,6 @@ void ServerManager::acceptClient(int ListenSocket)
   updateEvent(clientFD, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
 }
 
-
-
-
 void ServerManager::runKQ()
 {
   createQ();
@@ -274,44 +264,6 @@ void ServerManager::runKQ()
   }
 }
 
-Server* ServerManager::getServerByDescriptor(int sockfd) {
-    for (size_t i = 0; i < _servers.size(); ++i) {
-        if (_servers[i].getSockFd() == sockfd) {
-            return &_servers[i]; // Return the address of the Server instance
-        }
-    }
-    return NULL; // Return nullptr if not found
-}
-
-Server* ServerManager::getServerByPort(std::string port) {
-    for (size_t i = 0; i < _servers.size(); ++i) {
-        if (_servers[i].getListen() == port) {
-            return &_servers[i]; // Assuming Server has a getPort() method
-        }
-    }
-    return NULL; // Server not found
-}
-
-Server* ServerManager::getServerByRequestHost(HTTPRequest* _req) {
-    if (!_req) {
-        ERR("HTTP Request is nullptr.");
-        return NULL; // Early exit if request is nullptr
-    }
-    
-    std::string hostHeader = _req->getHeader("Host");
-    std::string port = "80"; // Default HTTP port. Use 443 for HTTPS by default if you support it.
-
-    // Check if the host header includes a port
-    size_t colonPos = hostHeader.find(':');
-    if (colonPos != std::string::npos) {
-        // Extract the port number
-        port = hostHeader.substr(colonPos + 1);
-    }
-
-    // Now, find the server by port
-    return getServerByPort(port);
-}
-
 std::string ServerManager::stripWhiteSpace(std::string src) {
     std::string result;
     for (size_t i = 0; i < src.length(); ++i) {
@@ -323,8 +275,6 @@ std::string ServerManager::stripWhiteSpace(std::string src) {
     }
     return result;
 }
-
-
 
 Server &ServerManager::getRelevantServer(HTTPRequest &request, std::vector<Server>& servers) {
     if (servers.empty()) {
@@ -444,266 +394,10 @@ void ServerManager::startServer(Server &mServer) {
   freeaddrinfo(servinfo);
 }
 
-
-void ServerManager::handleEvent(struct kevent const &ev)
-{
-  //Checking which server is handling the event.
-  //std::cout << RED << "HANDLE EVENT: " << RESET << std::endl;
-  //server->printState();
-
-  bool isCgiRead = false;
-  bool isCgiWrite = false;
-  Client *cl = getClient(ev.ident);
-
-  if (!(cl = getClient(ev.ident)) && !(cl = getCgiClient(ev.ident, isCgiRead, isCgiWrite)))
-  {
-    ERR("Client: %d does not exist!", static_cast<int>(ev.ident));
-    return;
-  }
-  if (ev.flags & EV_EOF)
-  {
-    handleEOF(cl, ev.ident, isCgiRead, isCgiWrite);
-    return;
-  }
-  if (isCgiWrite || isCgiRead)
-  {
-    Cgi cgi;
-    areFdsOpen(cl->pipe_in, cl->pipe_out);
-
-    if (isCgiWrite && !cgi.CgiWriteHandler(*this, cl, ev))
-    {
-      deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
-    }
-    else if (isCgiRead)
-    {
-      cgi.CgiReadHandler(*this, cl, ev);
-    }
-  }
-  else if (ev.filter == EVFILT_READ)
-  {
-    int r = handleReadEvent(cl, ev);
-    if (r == NOMOREDATA)
-    {
-      HTTPRequest *_req = parseRequest(cl, cl->getRecvMessage());
-      if (_req == NULL)
-      {
-        ERR("Failed to parse request from %d: ", cl->getSockFD());
-        closeConnection(cl);
-      }
-
-      if (_req->getHeader("Content-Length").empty())
-      {
-        RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
-        this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
-        Message message(_resp);
-        cl->setMessage(message);
-        cl->setBufferRead(0);
-        cl->resetRecvMessage();
-
-        updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-        updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-      }
-      else
-      {
-        if (std::stoi(_req->getHeader("Content-Length")) == static_cast<int>(_req->getBody().size()))
-        {
-          //*-----Creating our response from a given request.-----
-          //this->_resp = HTTPResponse(*_req);
-          this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
-          if (_req->getCGIStatus() == true)
-          {
-            Cgi *cgi = new Cgi();
-            cgi->launchCgi(*_req, cl);
-            _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
-            _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
-
-            updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-            updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
-
-            Message message(_req->getBody());
-            cl->setMessage(message);
-            cl->setBufferRead(0);
-            cl->resetRecvMessage();
-
-            updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-            updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-          }
-          RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
-        }
-      }
-      delete _req;
-    }
-  }
-  else if (ev.filter == EVFILT_WRITE)
-  {
-    if (!handleWriteEvent(cl, ev.data))
-    {
-      updateEvent(ev.ident, EVFILT_READ, EV_ENABLE, 0, 0, NULL);
-      updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-    }
-  }
-}
-
-
-// *unsure if recv will always read all the avialable data, need to learn.
-int ServerManager::handleReadEvent(Client *cl, struct kevent event)
-{
-  if (cl == NULL)
-    return false;
-
-  char ClientMessage[event.data * 2];
-
-  // int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
-
-  int readLen = read(cl->getSockFD(), ClientMessage, event.data * 2);
-
-  if (readLen == 0)
-  {
-    return (NOMOREDATA);
-  }
-  else if (readLen < 0)
-  {
-    ERR("unable to recv from %d", cl->getSockFD());
-    closeConnection(cl);
-    return ERRORDATA;
-  }
-  cl->appendRecvMessage(ClientMessage, readLen);
-  cl->setBufferRead(readLen);
-  ClientMessage[readLen] = '\0';
-  unsigned int left = (unsigned)event.data;
-  if (left <= (unsigned)readLen)
-  {
-    DEBUG("no more data");
-    return NOMOREDATA;
-  }
-  return true;
-}
-
-
-// send may not send the full response, therefore we have to check
-// if the actual amount send was equal to the length of the respoinse string.
-// if not we have to send it in the second try.
-
-
-// TODO: safari has a delay when it sends EOF, we need a mechinism for it.
-bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
-{
-  // DEBUG("writing response\n");
-  (void)dataLen;
-  Message message = cl->getMessage();
-
-  int attempSend = message.size();
-  if (message.getBufferSent() == attempSend)
-  {
-    std::string status = message.getMessage().substr(0, message.getMessage().find('\n'));
-    ;
-    RECORD("SENT TO: %d\t STATUS: %s", cl->getSockFD(), status.c_str());
-    // closeConnection(cl); might need to close connection here.
-    return false;
-  }
-  int actualSend = send(cl->getSockFD(), message.getMessage().c_str(), attempSend, 0);
-  DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
-  if (actualSend >= attempSend)
-    message.setBufferSent(actualSend);
-  cl->setMessage(message);
-  return true;
-}
-
-std::string ServerManager::getFileContents(std::string uri)
-{
-  std::string path = defaultPath + uri;
-  // std::string contents;
-  struct stat s;
-  if (stat(path.c_str(), &s) == 0)
-  {
-    if (s.st_mode & S_IFDIR)
-    {
-      // it's a directory
-    }
-    else if (s.st_mode & S_IFREG)
-    {
-      int len = s.st_size;
-      char contents[len];
-
-      std::ifstream file;
-      file.open(uri, std::ios::in | std::ios::binary);
-      if (!file.is_open())
-      {
-        ERR("Could not find: %s", uri.c_str());
-      }
-      file.read(contents, len);
-      return (contents);
-      // this->status = OK;
-    }
-    else
-    {
-      // something else
-    }
-  }
-  else
-  {
-    // error
-  }
-  return "";
-}
-
-HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
-{
-  (void)cl;
-  std::string key, value; // header, value
-  std::string method;
-  std::string version;
-  std::string uri;
-  std::map<std::string, std::string> headers;
-  std::string body;
-  bool isCGI = false;
-
-  std::stringstream ss(message);
-  std::string line;
-
-  std::getline(ss, line, '\n');
-  std::stringstream line_stream(line);
-  std::getline(line_stream, method, ' ');
-  std::getline(line_stream, uri, ' ');
-  std::getline(line_stream, version, '\r');
-
-  if (uri.compare(1, 7, "cgi-bin") == 0)
-    isCGI = true;
-
-  // Parse headers
-  while (std::getline(ss, line) && !line.empty() && line != "\r")
-  {
-    size_t colonPos = line.find(':');
-    if (colonPos != std::string::npos)
-    {
-      std::string key = line.substr(0, colonPos);
-      std::string value = line.substr(colonPos + 2); // Skip ': ' after colon
-      headers[key] = value;
-    }
-  }
-  std::getline(ss, line);
-  body = line;
-  // Get the rest as the body
-  // body = ss.str();
-  // // Remove headers from the body
-  // body.erase(0, ss.tellg());
-  // std::cout << "\n\n\nbody: " << body << "\n\n\n\n";
-
-  Method meth;
-  if (method == "GET")
-    meth = GET;
-  if (method == "POST")
-    meth = POST;
-  if (method == "DELETE")
-    meth = DELETE;
-  return (new HTTPRequest(headers, body, meth, uri, HTTP_1_1, isCGI));
-}
-
 HTTPResponse &ServerManager::getResponse()
 {
   return this->_resp;
 }
-
 
 /*------------------------------------------*\
 |          CONFIG READING METHODS            |
@@ -747,6 +441,138 @@ bool ServerManager::isValidDirectiveName(const std::string &src) {
         }
     }
     return false;
+}
+
+
+
+void ServerManager::handleEvent(struct kevent const &ev)
+{
+  bool isCgiRead = false;
+  bool isCgiWrite = false;
+  Client *cl = getClient(ev.ident);
+
+  if (!(cl = getClient(ev.ident)) && !(cl = getCgiClient(ev.ident, isCgiRead, isCgiWrite)))
+  {
+    ERR("Client: %d does not exist!", static_cast<int>(ev.ident));
+    return;
+  }
+  if (ev.flags & EV_EOF)
+  {
+    handleEOF(cl, ev.ident, isCgiRead, isCgiWrite);
+    return;
+  }
+  if (isCgiWrite || isCgiRead)
+  {
+    Cgi cgi;
+    // areFdsOpen(cl->pipe_in, cl->pipe_out);
+
+    if (isCgiWrite && !cgi.CgiWriteHandler(*this, cl, ev))
+    {
+      deleteCgi(_cgiWrite, cl, EVFILT_WRITE);
+    }
+    else if (isCgiRead)
+    {
+      cgi.CgiReadHandler(*this, cl, ev);
+    }
+  }
+  else if (ev.filter == EVFILT_READ)
+  {
+    int r = handleReadEvent(cl, ev);
+
+    if (r == NOMOREDATA)
+    {
+      HTTPRequest *_req = parseRequest(cl, cl->getRecvMessage());
+      if (_req == NULL)
+      {
+        ERR("Failed to parse request from %d: ", cl->getSockFD());
+        closeConnection(cl);
+      }
+      int len = (_req->getHeader("Content-Length").empty()) ? 0 : std::stoi(_req->getHeader("Content-Length"));
+      // if (std::stoi(_req->getHeader("Content-Length")) == static_cast<int>(_req->getBody().size()))
+      if (len == static_cast<int>(_req->getBody().size()))
+      {
+        //this->_resp = HTTPResponse(*_req);
+         this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
+        checkCgi(*_req);
+        if (_req->getCGIStatus() == true)
+        {
+          Cgi *cgi = new Cgi();
+          cgi->launchCgi(*_req, cl);
+          _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
+          _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
+
+          updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+          updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
+
+          Message message(_req->getBody());
+          cl->setMessage(message);
+          cl->setBufferRead(0);
+          cl->resetRecvMessage();
+
+          updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+          updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+        }
+        else if (_req->getHeader("Content-Length").empty())
+        {
+          RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
+           this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
+          //this->_resp = HTTPResponse(*_req);
+          Message message(_resp);
+          cl->setMessage(message);
+          cl->setBufferRead(0);
+          cl->resetRecvMessage();
+
+          updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+          updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+        }
+        RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
+      }
+      delete _req;
+    }
+  }
+  else if (ev.filter == EVFILT_WRITE)
+  {
+    if (!handleWriteEvent(cl, ev.data))
+    {
+      updateEvent(ev.ident, EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+      updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+    }
+  }
+}
+
+// *unsure if recv will always read all the avialable data, need to learn.
+int ServerManager::handleReadEvent(Client *cl, struct kevent event)
+{
+  if (cl == NULL)
+    return false;
+
+  char ClientMessage[event.data + 1];
+  memset(ClientMessage, 0, event.data + 1);
+  // int readLen = recv(cl->getSockFD(), ClientMessage, dataLen, MSG_DONTWAIT); // MSG_DONTWAIT is similar to O_NONBLOCK
+
+  int readLen = read(cl->getSockFD(), ClientMessage, event.data);
+  if (readLen == 0)
+  {
+    return (NOMOREDATA);
+  }
+  else if (readLen < 0)
+  {
+    ERR("unable to recv from %d", cl->getSockFD());
+    closeConnection(cl);
+    return ERRORDATA;
+  }
+  cl->appendRecvMessage(ClientMessage, readLen);
+  cl->setBufferRead(readLen);
+  ClientMessage[readLen] = '\0';
+  DEBUG("Recived from: %d\n%s%s%s", cl->getSockFD(), BLUE, ClientMessage, RESET);
+
+  unsigned int left = (unsigned)event.data;
+  if (left <= (unsigned)readLen)
+  {
+    DEBUG("no more data");
+    return NOMOREDATA;
+  }
+  return true;
 }
 
 
@@ -885,4 +711,151 @@ void ServerManager::setStateFromParser(ConfigParser &src)
       #endif
       ns_addContexts(src);
     }
+}
+/*
+send may not send the full response, therefore we have to check
+if the actual amount send was equal to the length of the respoinse string.
+if not we have to send it in the second try.
+*/
+
+// TODO: safari has a delay when it sends EOF, we need a mechinism for it.
+bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
+{
+  // DEBUG("writing response\n");
+  (void)dataLen;
+  Message message = cl->getMessage();
+
+  int attempSend = message.size();
+  if (message.getBufferSent() == attempSend)
+  {
+    std::string status = message.getMessage().substr(0, message.getMessage().find('\n'));
+    ;
+    RECORD("SENT TO: %d\t STATUS: %s", cl->getSockFD(), status.c_str());
+    // closeConnection(cl); might need to close connection here.
+    return false;
+  }
+  int actualSend = send(cl->getSockFD(), (message.getMessage()).c_str(), attempSend, 0);
+  if (actualSend < 0)
+  {
+    ERR("Send: unable to send");
+    return false;
+  }
+  // int actualSend = send(cl->getSockFD(), (message.getMessage()).c_str() + message.getBufferSent(), attempSend, 0);
+  DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
+  if (actualSend >= attempSend)
+    message.addBufferSent(actualSend);
+  cl->setMessage(message);
+  return true;
+}
+
+std::string ServerManager::getFileContents(std::string uri)
+{
+  std::string path = defaultPath + uri;
+  // std::string contents;
+  struct stat s;
+  if (stat(path.c_str(), &s) == 0)
+  {
+    if (s.st_mode & S_IFDIR)
+    {
+      // it's a directory
+    }
+    else if (s.st_mode & S_IFREG)
+    {
+      int len = s.st_size;
+      char contents[len];
+
+      std::ifstream file;
+      file.open(uri, std::ios::in | std::ios::binary);
+      if (!file.is_open())
+      {
+        ERR("Could not find: %s", uri.c_str());
+      }
+      file.read(contents, len);
+      return (contents);
+      // this->status = OK;
+    }
+    else
+    {
+      // something else
+    }
+  }
+  else
+  {
+    // error
+  }
+  return "";
+}
+
+void ServerManager::checkCgi(HTTPRequest &_req)
+{
+  std::string uri = _req.getUri();
+  std::string cookie = _req.getHeader("Cookie");
+  bool isCgi = 0;
+  if (uri.size() >= 8) {
+   isCgi = (uri.compare(1, 7, "cgi-bin") == 0);
+  }
+
+  // if (!cookie.empty())
+  // {
+  //   if (uri == "/login-form/index.html" || uri == "/register/index.html")
+  //   {
+  //     // std::string cgiScript = (uri == "/login-form/index.html") ? "cgi-bin/login.py" : "cgi-bin/register.py";
+  //     _req.setUri("/cgi-bin/logedin.py");
+  //     _req.setBody(cookie);
+  //     isCgi = true;
+  //   }
+  // }
+  _req.setIsCgi(isCgi);
+}
+
+
+HTTPRequest *ServerManager::parseRequest(Client *cl, std::string const &message)
+{
+  (void)cl;
+  std::string key, value; // header, value
+  std::string method;
+  std::string version;
+  std::string uri;
+  std::map<std::string, std::string> headers;
+  std::string body;
+  // bool isCGI = false;
+
+  std::stringstream ss(message);
+  std::string line;
+
+  std::getline(ss, line, '\n');
+  std::stringstream line_stream(line);
+  std::getline(line_stream, method, ' ');
+  std::getline(line_stream, uri, ' ');
+  std::getline(line_stream, version, '\r');
+
+  // Parse headers
+  while (std::getline(ss, line) && !line.empty() && line != "\r")
+  {
+    size_t colonPos = line.find(':');
+    if (colonPos != std::string::npos)
+    {
+      std::string key = line.substr(0, colonPos);
+      std::string value = line.substr(colonPos + 2); // Skip ': ' after colon
+      headers[key] = value;
+    }
+  }
+
+  // Parse body
+  body = "";
+  // REF: https://stackoverflow.com/questions/3203452/how-to-read-entire-stream-into-a-stdstring
+  char buffer[100];
+  while (ss.read(buffer, sizeof(buffer))) {
+    body.append(buffer, sizeof(buffer));
+  }
+  body.append(buffer, ss.gcount());
+
+  Method meth;
+  if (method == "GET")
+    meth = GET;
+  if (method == "POST")
+    meth = POST;
+  if (method == "DELETE")
+    meth = DELETE;
+  return (new HTTPRequest(headers, body, meth, uri, HTTP_1_1, false));
 }

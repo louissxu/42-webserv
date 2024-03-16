@@ -20,6 +20,7 @@ def verifyLogin(form):
 			cookie.printCookie(newcookie)
 			logger.updateSessionId(newcookie)
 		string += "<h1> Welcome " + username + " and new session-id is " + logger.sessionID + "</h1>"
+		string += "<p><a href='/'>Go back</a></p>"
 	elif logger.getUserByUsername(username):
 		string += "<h1>Incorrect password</h1>"
 	else:

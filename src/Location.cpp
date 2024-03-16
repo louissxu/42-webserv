@@ -72,9 +72,9 @@ Location::~Location(){}
 |                 GETTERS                    |
 \*------------------------------------------*/
 
-std::string Location::getPath()
+std::string const &Location::getPath() const
 {
-    return _path;
+	return _path;
 }
 
 std::string Location::getRoot()

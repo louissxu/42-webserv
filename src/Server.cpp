@@ -161,6 +161,11 @@ void Server::initMethodPermissions()
       }
   }
 
+std::vector<Location> Server::getLocations(void) const
+{
+  return _locations;  
+}
+
 /*------------------------------------------*\
 |                 SETTERS                    |
 \*------------------------------------------*/

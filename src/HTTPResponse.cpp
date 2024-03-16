@@ -58,18 +58,32 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 	//std::cout << "HTTPResponse: Using server: " << std::endl;
 	//_myServer.printState();
 
+	//Check if we can call the current request in the requested location.
+	if (!methodPermittedAtRoute(_req))
+	{
+		//Throw forbidden.
+
+	}
+
+
 	buildDefaultResponse();
 	switch (_req.getMethod())
 	{
 		case Method(GET):
+		{
 			GETHandler(_req.getUri());
 			return;
+		}
 		case Method(POST):
+		{
 			if (_req.getHeader("Set-Cookie") != std::string())
 				headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
 			return;
+		}
 		case Method(DELETE):
+		{
 			DELETEHandler();
+		}
 		default:
 			return;
 	}
@@ -347,4 +361,65 @@ bool const &HTTPResponse::getCgiStatus() const
 void HTTPResponse::setCgiStatus(bool _status)
 {
 	cgiStatus = _status;
+}
+
+/*------------------------------------------*\
+|        METHOD-ROUTE VERIFICATION           |
+\*------------------------------------------*/
+
+bool HTTPResponse::locationIsConfigured(const std::string& reqUri) {
+
+	DEBUG("Entered locationIsConfigured...")
+	std::vector<Location>::const_iterator it = _server.getLocations().begin(); 
+	std::vector<Location>::const_iterator end = _server.getLocations().end();
+
+	DEBUG("Entered loop...")
+    while (it != end) {
+		std::cout << "Checking location: " << it->getPath() << "..." << std::endl;
+        if (it->getPath() == reqUri) {
+            return true; // There is an entry in the config file with the same path.
+        }
+		++it;
+    }
+    return false; 
+}
+
+
+
+bool HTTPResponse::methodPermittedAtRoute(HTTPRequest const &_req)
+{
+
+	std::cout << YELLOW << "This HTTPRequest is trying to make a ";
+	switch (_req.getMethod())
+	{
+		case Method(GET):
+		{
+			std::cout << "GET request.." << std::endl;
+			break;
+		}
+		case Method(POST):
+		{
+			std::cout << "POST request.." << std::endl;
+			break;
+		}
+		case Method(DELETE):
+		{
+			std::cout << "DELETE request.." << std::endl;
+			break;
+		}
+		default:
+			return false;
+	}
+	std::cout << "At location: " << _req.getUri()<< RESET << std::endl;
+
+	if (locationIsConfigured(_req.getUri()))
+	{
+		std::cout << "We have configured settings for this location..." << std::endl;
+	}
+	else
+	{
+		std::cout << "We have not configured settings for this location..." << std::endl;
+	}
+	//if (_req.getLocation().methodIsAllowed())
+	return (true);
 }

@@ -80,12 +80,13 @@ class Server {
     void initMethodPermissions();
 
     //Getters:
-    std::string getListen(void) const;
-    std::string getHost(void) const;
-    std::string getIndex(void) const;
-    std::string getRoot(void) const;
-    int         getSockFd(void) const;
-    std::string getErrorPage(const int errorCode) const;
+    std::string           getListen(void) const;
+    std::string           getHost(void) const;
+    std::string           getIndex(void) const;
+    std::string           getRoot(void) const;
+    int                   getSockFd(void) const;
+    std::string           getErrorPage(const int errorCode) const;
+    std::vector<Location> getLocations(void) const;
 
     //Setters:
     void setListen(std::string listen);

@@ -61,25 +61,8 @@ std::string HTTPRequest::getMethodString() const
 	case GET:
 		return "GET";
 		break;
-	case HEAD:
-		return "HEAD";
-		break;
-	case PUT:
-		return "PUT";
-		break;
 	case DELETE:
 		return "DELETE";
-	case TRACE:
-		return "TRACE";
-		break;
-	case OPTIONS:
-		return "OPTIONS";
-		break;
-	case CONNECT:
-		return "CONNECT";
-		break;
-	case PATCH:
-		return "PATCH";
 		break;
 	default:
 		return std::string();

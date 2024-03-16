@@ -16,6 +16,7 @@
 #include "MIME.hpp"
 #include "Utils.hpp"
 
+class Location;
 class Server;
 
 enum Status
@@ -70,12 +71,17 @@ public:
 	std::map<std::string, std::string> const &getHeaders() const;
 	std::string const &getBody() const;
 
+	//CGI
 	bool const &getCgiStatus() const;
 	void setCgiStatus(bool _status);
 
 	void buildDefaultResponse();
 	void setDefaultHeaders();
 	void setDefaultBody();
+
+	//Method-Route Verification.
+	bool methodPermittedAtRoute(HTTPRequest const &_req);
+	bool locationIsConfigured(const std::string& reqUri);
 
 private:
 	bool getResource(std::string const &path, int const &len);

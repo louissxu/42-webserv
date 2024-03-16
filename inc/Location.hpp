@@ -24,7 +24,8 @@ class Location
         ~Location();
 
     // Getters
-        std::string                 getPath();
+        std::string const           &getPath() const;
+        // std::string                 getPath();
         std::string                 getRoot();
         std::string                 getIndex();
         std::string                 getFilePathPost();

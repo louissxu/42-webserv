@@ -152,6 +152,15 @@ void Server::initMethodPermissions()
     return _sockfd;
   }
 
+  std::string Server::getErrorPage(const int errorCode) const {
+    std::map<int, std::string>::const_iterator it = _err_pages.find(errorCode);
+      if (it != _err_pages.end() && it->second != "") {
+        return it->second; // Return the associated error message page path.
+      } else {
+        return "E404.html"; 
+      }
+  }
+
 /*------------------------------------------*\
 |                 SETTERS                    |
 \*------------------------------------------*/
@@ -312,6 +321,26 @@ void Server::acceptNewLocation(Location newLocation) {
   _locations.push_back(newLocation);
 }
 
+void Server::setErrorPage(const std::string& value) {
+    std::istringstream iss(value);
+    int errorCode;
+    std::string errorPage;
+
+    iss >> errorCode; // Extract the error code as an integer
+    iss >> errorPage; // Extract the error page path
+
+    std::cout << YELLOW << "Server: setting error page " << errorCode << " to: "<< errorPage << std::endl;
+    // Ensure that the error page path does not have a trailing semicolon
+    if (!errorPage.empty() && errorPage[errorPage.length() - 1] == ';') {
+        errorPage.erase(errorPage.length() - 1);
+    }
+
+    // Store the extracted values into the map
+    _err_pages[errorCode] = errorPage;
+}
+
+
+
 void Server::addDirective(const std::string& name, const std::string& value) {
   if (name == "listen") 
   {
@@ -332,6 +361,10 @@ void Server::addDirective(const std::string& name, const std::string& value) {
   else if (name == "index")
   {
     _index = value;
+  }
+  else if (name == "error_page")
+  {
+    setErrorPage(value);
   }
 }
 

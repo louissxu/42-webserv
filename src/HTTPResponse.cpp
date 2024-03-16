@@ -213,10 +213,9 @@ void HTTPResponse::GETHandler(std::string const &uri)
 
 	if (!isValidURI(uri))
 	{
-		this->geterrorResource("E403.html");
+		this->geterrorResource(403);
 		return;
 	}
-
 
 	if (uri == "/")
 	{
@@ -236,7 +235,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	if (uri.compare(1, 7, "cgi-bin") == 0 && access(path.c_str(), F_OK) != -1)
 	{
 		if (uri.compare(8, uri.size(), "loogin.py") != 0)
-			this->geterrorResource("E403.html");
+			this->geterrorResource(403);
 		return;
 	}
 	if (stat(path.c_str(), &s) == 0)
@@ -250,7 +249,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 			int len = s.st_size;
 			if (!this->getResource(path, len))
 			{
-				this->geterrorResource("E404.html");
+				this->geterrorResource(404);
 			}
 		}
 		else
@@ -258,7 +257,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	}
 	else
 	{
-		this->geterrorResource("E404.html");
+		this->geterrorResource(404);
 		// this->GETHandler("error404/errorPage.html");
 	}
 	//   return "";
@@ -285,7 +284,7 @@ void HTTPResponse::setDefaultHeaders()
 	addHeader("Content-Length", std::to_string(body.size()));
 	addHeader("Content-Type", "text/html");
 	addHeader("Connection", "Keep-Alive");
-	addHeader("Server", "mehdi's_webserv");
+	addHeader("Server", "Webserv");
 }
 
 void HTTPResponse::setDefaultBody()
@@ -318,10 +317,12 @@ bool HTTPResponse::getResource(std::string const &path, int const &len)
 	return true;
 }
 
-void HTTPResponse::geterrorResource(std::string const &filename)
+void HTTPResponse::geterrorResource(int errCode)
 {
+	DEBUG("went in getErrorResource attempting code: %d", errCode);
 	struct stat s;
-
+	std::string const filename = _server.getErrorPage(errCode);
+	DEBUG("HTTPResponse: getting errorResource: %s", filename.c_str());
 	std::string path = "application/error/" + filename;
 	if (stat(path.c_str(), &s) == 0)
 	{

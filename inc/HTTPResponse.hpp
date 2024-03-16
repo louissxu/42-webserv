@@ -79,8 +79,7 @@ public:
 
 private:
 	bool getResource(std::string const &path, int const &len);
-	void geterrorResource(std::string const &filename);
-
+	void geterrorResource(int errCode); //retrieves our servers error file first.
 	void GETHandler(std::string const &uri);
 	// int const &POSTHandler(HTTPRequest const &request);
 	void DELETEHandler();

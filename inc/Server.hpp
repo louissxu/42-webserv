@@ -16,7 +16,7 @@
 # include "Definitions.hpp"
 # include "Location.hpp"
 
-class Connection;
+//class Connection;
 
 
 /*
@@ -85,12 +85,14 @@ class Server {
     std::string getIndex(void) const;
     std::string getRoot(void) const;
     int         getSockFd(void) const;
+    std::string getErrorPage(const int errorCode) const;
 
     //Setters:
     void setListen(std::string listen);
     void setHost(std::string host);
     void setIndex(std::string index);
     void setSockFd(int sockfd);
+    void setErrorPage(const std::string& value);
 
   private:
     size_t                      _id;

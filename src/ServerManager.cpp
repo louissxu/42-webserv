@@ -226,7 +226,7 @@ void ServerManager::acceptClient(int ListenSocket)
     ERR("Accpet: %s", strerror(errno));
     return;
   }
-  RECORD("LISTENER: %d\t ACCEPTED: %d", ListenSocket, clientFD);
+  RECORD("LISTENER: %d\t\t ACCEPTED: %d", ListenSocket, clientFD);
   if (fcntl(clientFD, F_SETFL, O_NONBLOCK) < 0)
   {
     ERR("fcntl error: closing: %d\n errno: %s", clientFD, strerror(errno));
@@ -307,8 +307,6 @@ Server &ServerManager::getRelevantServer(HTTPRequest &request, std::vector<Serve
 
         // Find a server with matching host and port.
         if (serverHost == requestHost && serverPort == requestPort) {
-          //std::cout << "getRelServer: Returning server: " << std::endl;
-          //it->printState();
           return (*it);
         }
     }
@@ -351,7 +349,7 @@ void ServerManager::startServer(Server &mServer) {
   if (sockfd < 0)
   {
     perror("Server: socket");
-    throw std::runtime_error("Server\t: socket: failed");
+    throw std::runtime_error("Server\t\t: socket: failed");
   }
 
   // set to allow port reuse? or something
@@ -367,9 +365,9 @@ void ServerManager::startServer(Server &mServer) {
   if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
     perror("fcntl F_SETFL O_NONBLOCK");
 
-  std::cout << "DBG: sockfd: " << sockfd << std::endl;
-  std::cout << "servinfo aiaddr: " << servinfo->ai_addr << std::endl;
-  std::cout << "servinfo ai_addrlen: " << servinfo->ai_addrlen << std::endl;
+  //std::cout << "DBG: sockfd: " << sockfd << std::endl;
+  //std::cout << "servinfo aiaddr: " << servinfo->ai_addr << std::endl;
+  //std::cout << "servinfo ai_addrlen: " << servinfo->ai_addrlen << std::endl;
 
   error_return = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
   if (error_return != 0)
@@ -389,8 +387,9 @@ void ServerManager::startServer(Server &mServer) {
  // _sockfd = sockfd;
  // _host = ipstr;
 
-  std::cout << YELLOW << "ServerManager -> Server\t: " << RESET
-  <<"starting on " << mServer.getHost() << ":" << mServer.getListen() << " fd: " << mServer.getSockFd() << std::endl;
+  DEBUG("\tServer starting on %s:%s, fd: %d", mServer.getHost().c_str(), mServer.getListen().c_str(), mServer.getSockFd());
+  //std::cout << YELLOW << "ServerManager -> Server\t\t: " << RESET
+  //<<"starting on " << mServer.getHost() << ":" << mServer.getListen() << " fd: " << mServer.getSockFd() << std::endl;
   freeaddrinfo(servinfo);
 }
 
@@ -591,8 +590,10 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
     {
         Server newServ = Server(server_id);
         //adding Directives to the current server block.
-        std::cout << GREEN << "SManage\t: " << RESET
-        "Server " << server_id++ <<" Initialising: " << std::endl;
+        //std::cout << GREEN << "SManage\t\t: " << RESET
+        DEBUG("\tServer %zu initialising: ", server_id);
+        server_id++;
+        //"Server " << server_id++ <<" Initialising: " << std::endl;
         std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
         if (temp.empty())
         {
@@ -602,7 +603,7 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
         for(std::vector< std::pair < std::string, std::string> >::iterator it = temp.begin(); it != temp.end(); ++it)
         {
             #ifdef _PRINT_
-            std::cout <<"\t " << src.getName() << ": ";
+            std::cout <<"\t\t " << src.getName() << ": ";
             std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
             #endif
             if (isValidDirectiveName(it->first))
@@ -730,7 +731,7 @@ bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
   {
     std::string status = message.getMessage().substr(0, message.getMessage().find('\n'));
     ;
-    RECORD("SENT TO: %d\t STATUS: %s", cl->getSockFD(), status.c_str());
+    RECORD("SENT TO: %d\t\t STATUS: %s", cl->getSockFD(), status.c_str());
     // closeConnection(cl); might need to close connection here.
     return false;
   }

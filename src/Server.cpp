@@ -29,6 +29,7 @@
  * Do they need to be?
 */
 Server::Server() {
+  DEBUG("\t\tDefault constructor called.");
   _listen = ""; // Port
   _host = ""; // IP.
   _server_name = "";  //default localhost on most systems.
@@ -39,10 +40,10 @@ Server::Server() {
   _autoindex = false;
   this->initialiseErrorPages();
   this->initMethodPermissions();
-  std::cout << YELLOW << "Server\t: " << RESET << "default constructor called. " << std::endl;
 }
 
 Server::Server(size_t serverId) {
+  DEBUG("\t\tID Param constructor called.");
   _listen = ""; // Port
   _host = ""; // IP.
   _server_name = "";  //default localhost on most systems.
@@ -54,17 +55,8 @@ Server::Server(size_t serverId) {
   this->initialiseErrorPages();
   this->initMethodPermissions();
   _id = serverId;
-  std::cout << YELLOW << "Server\t: " << RESET 
-  << "id constructor called, id: " << _id << std::endl;
 }
 
-// Server::Server(const Server& other) {
-//   _sockfd = safe_dup(other._sockfd);
-//   _host = other._host;
-//   _listen = other._listen;
-//   std::cout << YELLOW << "Server\t: " << RESET 
-//   <<"Copy constructor called. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
-// }
 
 Server::Server(const Server& other) : 
     _listen(other._listen), 
@@ -74,18 +66,16 @@ Server::Server(const Server& other) :
     _index(other._index), 
     _sockfd(other._sockfd), 
     _client_max_body_size(other._client_max_body_size), 
-    _autoindex(other._autoindex) {
-    // Assume _locations is a std::vector<std::string>
+    _autoindex(other._autoindex)
+{
+    DEBUG("\t\tCopy constructor called.");
     _locations = other._locations;
-    _serverPermissions = other._serverPermissions;
-      std::cout << YELLOW << "Server\t: " << RESET 
-  <<"Copy constructor called. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
-    // If there were pointers or complex types requiring deep copies, you'd handle them here, like so:
-    // _complexType = new ComplexType(*other._complexType);
+    _defaultPermissions = other._defaultPermissions;
 }
 
 
 Server& Server::operator=(const Server& other) {
+  DEBUG("\t\tCopy equals override constructor called.");
     _listen = other._listen;
     _host = other._host;
     _server_name = other._server_name;
@@ -95,16 +85,12 @@ Server& Server::operator=(const Server& other) {
     _client_max_body_size = other._client_max_body_size;
     _autoindex = other._autoindex;
     _locations = other._locations;
-    _serverPermissions = other._serverPermissions;
-  std::cout << YELLOW << "Server\t: " << RESET 
-  <<"equals override constructor called. " << _host << ":" << _listen<< " fd: " << _sockfd << std::endl;
+    _defaultPermissions = other._defaultPermissions;
   return *this;
 }
 
 Server::~Server() {
-  // TODO. Do teardown stuff
-  std::cout << YELLOW << "Server\t: " << RESET
-  <<"destructor called. " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  DEBUG("\t\tDestructor called.");
   if (_sockfd != -1) {
     shutdown(_sockfd, 2); 
   }
@@ -112,9 +98,9 @@ Server::~Server() {
 
 void Server::initMethodPermissions()
 {
-    _serverPermissions[r_GET] = false;
-    _serverPermissions[r_POST] = false;
-    _serverPermissions[r_DELETE] = false;
+    _defaultPermissions[r_GET] = false;
+    _defaultPermissions[r_POST] = false;
+    _defaultPermissions[r_DELETE] = false;
 }
 
 /*------------------------------------------*\
@@ -160,11 +146,6 @@ void Server::initMethodPermissions()
         return "E404.html"; 
       }
   }
-
-std::vector<Location> Server::getLocations(void) const
-{
-  return _locations;  
-}
 
 /*------------------------------------------*\
 |                 SETTERS                    |
@@ -277,7 +258,7 @@ void Server::startServer(void) {
   if (sockfd < 0)
   {
     perror("Server: socket");
-    throw std::runtime_error("Server\t: socket: failed");
+    throw std::runtime_error("Server\t\t: socket: failed");
   }
 
   // set to allow port reuse? or something
@@ -293,9 +274,9 @@ void Server::startServer(void) {
   if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) == -1)
     perror("fcntl F_SETFL O_NONBLOCK");
 
-  std::cout << "DBG: sockfd: " << sockfd << std::endl;
-  std::cout << "servinfo aiaddr: " << servinfo->ai_addr << std::endl;
-  std::cout << "servinfo ai_addrlen: " << servinfo->ai_addrlen << std::endl;
+  //std::cout << "DBG: sockfd: " << sockfd << std::endl;
+  //std::cout << "servinfo aiaddr: " << servinfo->ai_addr << std::endl;
+  //std::cout << "servinfo ai_addrlen: " << servinfo->ai_addrlen << std::endl;
   error_return = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
   if (error_return != 0)
   {
@@ -312,8 +293,9 @@ void Server::startServer(void) {
   _sockfd = sockfd;
   _host = ipstr;
 
-  std::cout << YELLOW << "Server\t: " << RESET
-  <<"starting on " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
+  DEBUG("Starting Server on %s:%s, fd: %d", _host.c_str(), _listen.c_str(), _sockfd);
+  //std::cout << YELLOW << "Server\t\t: " << RESET
+  //<<"starting on " << _host << ":" << _listen << " fd: " << _sockfd << std::endl;
   freeaddrinfo(servinfo);
 }
 
@@ -334,7 +316,8 @@ void Server::setErrorPage(const std::string& value) {
     iss >> errorCode; // Extract the error code as an integer
     iss >> errorPage; // Extract the error page path
 
-    std::cout << YELLOW << "Server: setting error page " << errorCode << " to: "<< errorPage << std::endl;
+    DEBUG("\t\tSetting error page %d to: %s", errorCode, errorPage.c_str());
+    //std::cout << YELLOW << "Server: setting error page " << errorCode << " to: "<< errorPage << std::endl;
     // Ensure that the error page path does not have a trailing semicolon
     if (!errorPage.empty() && errorPage[errorPage.length() - 1] == ';') {
         errorPage.erase(errorPage.length() - 1);
@@ -372,6 +355,16 @@ void Server::addDirective(const std::string& name, const std::string& value) {
     setErrorPage(value);
   }
 }
+
+bool Server::hasLocation(const std::string &reqPath) {
+  for (size_t i = 0; i < _locations.size(); ++i) {
+    if (_locations[i].getPath() == reqPath) {
+      return true; // Found a matching path, so return true.
+    }
+  }
+  return false; // No match found after checking all locations.
+}
+
 
 /*
 HTTPResponse & Server::makeResponse(HTTPRequest &request)

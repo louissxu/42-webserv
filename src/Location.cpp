@@ -13,8 +13,10 @@ void Location::initMethodPermissions()
 
 Location::Location()
 {
-    std::cout << RED << "Location\t: " << RESET
-    <<"Default constructor called." << std::endl;
+    DEBUG("\t\tDefault constructor called.");
+    
+    //std::cout << RED << "Location\t\t: " << RESET
+    //<<"Default constructor called." << std::endl;
 	this->_path = "";
 	this->_root = "";
 	this->_index = "";
@@ -27,8 +29,9 @@ Location::Location()
 //PARAMETERISED CONSTRUCTOR: USING THE PATH.
 Location::Location(const std::string & path)
 {
-    std::cout << RED << "Location: " << RESET
-    <<"path constructor called: "<< path << std::endl;
+    DEBUG("\t\tPath param constructor called.");
+    // std::cout << RED << "Location: " << RESET
+    // <<"path constructor called: "<< path << std::endl;
 
 	this->_path = path;
 	this->_root = "";
@@ -41,6 +44,7 @@ Location::Location(const std::string & path)
 
 Location::Location(const Location& other)
 {
+    DEBUG("\t\tCopy constructor called.");
 	this->_path = other._path;
 	this->_root = other._root;
 	this->_index = other._index;
@@ -53,6 +57,7 @@ Location::Location(const Location& other)
 
 Location &Location::operator=(const Location &rhs)
 {
+    DEBUG("\t\tEquals override constructor called.");
 	if (this != &rhs)
 	{
 	    this->_path = rhs._path;
@@ -66,7 +71,9 @@ Location &Location::operator=(const Location &rhs)
 	return (*this);
 }
 
-Location::~Location(){}
+Location::~Location(){
+    DEBUG("\t\tDestructor called.");
+}
 
 /*------------------------------------------*\
 |                 GETTERS                    |

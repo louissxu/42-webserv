@@ -13,7 +13,7 @@ def verifyLogin(form):
 	password = form["password"].value
 	logger = user.User("", username, password, "")
 	if logger.getUser(username, password):
-		print(f"\t\tlogger before = {logger.printuser()}", file=sys.stderr)
+		print(f"\t\t\t\tlogger before = {logger.printuser()}", file=sys.stderr)
 		envcookie = os.getenv("cookie")
 		if not envcookie:
 			newcookie = cookie.generateCookie()

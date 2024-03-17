@@ -15,6 +15,7 @@
 # include "Connection.hpp"
 # include "Definitions.hpp"
 # include "Location.hpp"
+# include "log.hpp"
 
 //class Connection;
 
@@ -66,7 +67,7 @@ class Server {
     Server& operator=(const Server& other);
     ~Server();
 
-    int getSockFd();
+    int  getSockFd();
     void startServer();
     void acceptNewLocation(Location newLocation);
     void initialiseErrorPages();
@@ -79,6 +80,9 @@ class Server {
     void printMethodPermissions() const;
     void initMethodPermissions();
 
+    //Booleans:
+    bool hasLocation(const std::string &reqPath);
+
     //Getters:
     std::string           getListen(void) const;
     std::string           getHost(void) const;
@@ -86,7 +90,6 @@ class Server {
     std::string           getRoot(void) const;
     int                   getSockFd(void) const;
     std::string           getErrorPage(const int errorCode) const;
-    std::vector<Location> getLocations(void) const;
 
     //Setters:
     void setListen(std::string listen);
@@ -107,7 +110,7 @@ class Server {
     bool                        _autoindex;
     std::map<int, std::string>  _err_pages;
     std::vector<Location> 		  _locations;
-    std::map<enum e_HRM, bool>  _serverPermissions;
+    std::map<enum e_HRM, bool>  _defaultPermissions;
 };
 
 #endif

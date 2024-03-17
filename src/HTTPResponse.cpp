@@ -367,58 +367,54 @@ void HTTPResponse::setCgiStatus(bool _status)
 |        METHOD-ROUTE VERIFICATION           |
 \*------------------------------------------*/
 
-bool HTTPResponse::locationIsConfigured(const std::string& reqUri) {
-
-	DEBUG("Entered locationIsConfigured...")
-	std::vector<Location>::const_iterator it = _server.getLocations().begin(); 
-	std::vector<Location>::const_iterator end = _server.getLocations().end();
-
-	DEBUG("Entered loop...")
-    while (it != end) {
-		std::cout << "Checking location: " << it->getPath() << "..." << std::endl;
-        if (it->getPath() == reqUri) {
-            return true; // There is an entry in the config file with the same path.
-        }
-		++it;
+std::string HTTPResponse::stripFileName(std::string const &reqUri)
+{
+    std::size_t found = reqUri.find_last_of("/");
+    if (found == 0 || found == std::string::npos)
+    {
+        return "/";
     }
-    return false; 
+    else // if we find / further in the string.
+    {
+        return reqUri.substr(0, found); // Return the substring from the start of the string to the last "/"
+    }
 }
 
-
-
-bool HTTPResponse::methodPermittedAtRoute(HTTPRequest const &_req)
+bool HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 {
-
-	std::cout << YELLOW << "This HTTPRequest is trying to make a ";
-	switch (_req.getMethod())
+	switch (req.getMethod())
 	{
 		case Method(GET):
 		{
-			std::cout << "GET request.." << std::endl;
+			DEBUG("This HTTPRequest is trying to make a GET request..");
 			break;
 		}
 		case Method(POST):
 		{
-			std::cout << "POST request.." << std::endl;
+			DEBUG("This HTTPRequest is trying to make a POST request..");
 			break;
 		}
 		case Method(DELETE):
 		{
-			std::cout << "DELETE request.." << std::endl;
+			DEBUG("This HTTPRequest is trying to make a DELETE request..");
 			break;
 		}
 		default:
 			return false;
 	}
-	std::cout << "At location: " << _req.getUri()<< RESET << std::endl;
+	//std::cout << "Prestrip: " << req.getUri() << std::endl;
+	//std::cout << "At location: " << stripFileName(req.getUri()) << std::endl;
+	DEBUG("At Location: %s", stripFileName(req.getUri()).c_str());
 
-	if (locationIsConfigured(_req.getUri()))
+	if (_server.hasLocation(req.getUri()))
 	{
-		std::cout << "We have configured settings for this location..." << std::endl;
+		DEBUG("We have configured settings for this location...");
+		//std::cout << "We have configured settings for this location..." << std::endl;
 	}
 	else
 	{
-		std::cout << "We have not configured settings for this location..." << std::endl;
+		WARN("We have NOT configured settings for this location. Deferring to server rules.");
+		//std::cout << "We have NOT configured settings for this location...deferring to Server rules." << std::endl;
 	}
 	//if (_req.getLocation().methodIsAllowed())
 	return (true);

@@ -514,7 +514,7 @@ bool ConfigParser::isDirectiveInit(std::string line)
 bool ConfigParser::isContextInit(std::string line)
 {
   //  std::cout << "isContextInit : checking : <" << line << ">. " << std::endl;
-    const char* WhiteSpace = " \t\v\r\n";
+    const char* WhiteSpace = " \t\t\v\r\n";
     std::size_t end = line.find_last_not_of(WhiteSpace);
 	char lastCharacter = line[end];
     if (lastCharacter == '{')
@@ -600,7 +600,7 @@ void ConfigParser::printDirectives()
         j = 0;
         while (j < this->_contextLvl)
         {
-            std::cout <<"\t";
+            std::cout <<"\t\t";
             j++;
         }
         std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
@@ -619,7 +619,7 @@ void    ConfigParser::printContexts( void )
         j = 0;
         while (j < this->_contextLvl)
         {
-            std::cout <<"\t";
+            std::cout <<"\t\t";
             j++;
         }
         std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
@@ -684,10 +684,10 @@ int ConfigParser::printServerInformation()
 \------------------------------------------*/
 
 void ConfigParser::removeWhiteSpace(std::string& content) {
-    size_t start = content.find_first_not_of(" \t\n\v\f\r");
+    size_t start = content.find_first_not_of(" \t\t\n\v\f\r");
     if (start == std::string::npos) start = 0;
 
-    size_t end = content.find_last_not_of(" \t\n\v\f\r");
+    size_t end = content.find_last_not_of(" \t\t\n\v\f\r");
     if (end != std::string::npos) end += 1;
 
     content = content.substr(start, end - start);

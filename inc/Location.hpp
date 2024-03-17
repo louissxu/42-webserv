@@ -11,6 +11,7 @@
 #include "Definitions.hpp"
 #include "ConfigParser.hpp"
 #include "Utils.hpp"
+#include "log.hpp"
 
 class Location
 {

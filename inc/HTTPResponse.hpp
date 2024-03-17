@@ -80,8 +80,9 @@ public:
 	void setDefaultBody();
 
 	//Method-Route Verification.
-	bool methodPermittedAtRoute(HTTPRequest const &_req);
-	bool locationIsConfigured(const std::string& reqUri);
+	bool methodPermittedAtRoute(HTTPRequest const &req);
+	std::string stripFileName(std::string const &reqUri);
+
 
 private:
 	bool getResource(std::string const &path, int const &len);

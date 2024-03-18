@@ -24,7 +24,14 @@ void Cgi::setEnv(HTTPRequest &req)
 	_envVec.push_back("Content-Type=" + req.getHeader("Content-Type"));
 	_envVec.push_back("User-Agent=" + req.getHeader("User-Agent"));
 	_envVec.push_back("Method=" + req.getMethodString());
-	_envVec.push_back("QUERY_STRING=" + req.getBody());
+	
+	std::string content_type = req.getHeader("Content-Type");
+	if (content_type.size() >= 9 && content_type.substr(0, 9) == "multipart") {
+		std::string encoded_string = base64_encode(req.getBody());
+		_envVec.push_back("QUERY_STRING=" + encoded_string);
+	} else {
+		_envVec.push_back("QUERY_STRING=" + req.getBody());
+	}
 	// _envVec.push_back("REQUEST_METHOD=" + req.getMethodString());
 	// _envVec.push_back("PATH_INFO=" + req.getUri());
 	// _envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");

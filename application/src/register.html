@@ -1,22 +1,22 @@
-<!DOCTYPE html> 
-<html> 
+<!DOCTYPE html>
+<html>
 <head>
     <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet">
-    <title> Login Page </title>
-</head>  
+    <title> Register Page </title>
+</head>
 <body>
     <form action = "../../cgi-bin/register.py" method = "POST">
-            <label>Username : </label> 
+            <label>Username : </label>
             <input type="text" placeholder="Enter Username" name="username" required>
-            <label>Password : </label> 
+            <label>Password : </label>
             <input type="password" placeholder="Enter Password" name="password" required>
-            <label>FirstName : </label> 
+            <label>FirstName : </label>
             <input type="text" placeholder="Enter FirstName" name="firstname" required>
             <button type="submit">Register</button>
             <div class="login__register">
-                Already a member? <a href="../login-form/index.html">Login</a>
+                Already a member? <a href="../cgi-bin/login.py">Login</a>
              </div>
-    </form>   
-</body>   
+    </form>
+</body>
 </html>

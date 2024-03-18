@@ -68,39 +68,15 @@ void Cgi::setArgv(HTTPRequest const &req)
 void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 {
 	char buffer[ev_list.data + 1];
-	memset(buffer, 0, ev_list.data + 1);
 	int bytesRead = 0;
-	static std::string message = "";
+	std::string message = "";
+	HTTPResponse cgiResponse;
+	int status;
+
+	memset(buffer, 0, ev_list.data + 1);
 	bytesRead = read(ev_list.ident, buffer, ev_list.data);
 	DEBUG("cgiReadHandler: Read: %s", buffer);
-	if (bytesRead == 0)
-	{
-		DEBUG("cgiReadHandler: Bytes Read = 0");
-		sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		close(cl->pipe_in[0]);
-		close(cl->pipe_out[0]);
-
-		HTTPResponse cgiResponse;
-		int status;
-		waitpid(cl->Cgipid, &status, WCONTINUED);
-		if (!WIFEXITED(status))
-		{
-			cgiResponse.setCgiStatus(false);
-			std::map<std::string, std::string> _;
-			HTTPRequest errorReq(_, "", GET, "/error/E50x.html", HTTP_1_1, false);
-			cgiResponse = HTTPResponse(errorReq);
-			return ;
-		}
-		cgiResponse.setCgiStatus(true);
-		cgiResponse.setBody(message);
-		cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
-		Message cgiMessage = Message(cgiResponse);
-		cl->setMessage(cgiMessage);
-		message.clear();
-		sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-		sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-	}
-	else if (bytesRead < 0)
+	if (bytesRead < 0)
 	{
 		ERR("cgiReadHandler: %s", strerror(errno));
 		sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
@@ -108,34 +84,22 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 		close(cl->pipe_out[0]);
 		DEBUG("PIPES ends closing: %d %d", cl->pipe_in[0], cl->pipe_out[0]);
 	}
-	else
+	else if (bytesRead == 0)
 	{
-		DEBUG("Bytes Read: %d", bytesRead);
-		message.append(buffer);
+		DEBUG("cgiReadHandler: Bytes Read = 0");
+		sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		close(cl->pipe_in[0]);
+		close(cl->pipe_out[0]);
 
-		HTTPResponse cgiResponse = sm.getResponse();
-		cgiResponse.setVersion("HTTP/1.1");
-		cgiResponse.setBody(message);
-		// if (cgiResponse.getUri() == "/cgi-bin/loogin.py")
-		int contentlen = calcContentLength(message);
-		cgiResponse.addHeader("Content-Length", std::to_string(contentlen));
-		// cgiResponse.addHeader("Content-Length", std::to_string(message.size() - 1));
-		// cgiResponse.addHeader("session-id", )
-		cgiResponse.setCgiStatus(true);
-		Message cgiMessage = Message(cgiResponse);
-		cl->setMessage(cgiMessage);
-		message.clear();
-
-		int status;
 		waitpid(cl->Cgipid, &status, WCONTINUED);
 		if (WIFEXITED(status))
 		{
-			std::cout << WEXITSTATUS(status) << std::endl;
+			DEBUG("cgi exit status = %d", WEXITSTATUS(status));
 			if (WEXITSTATUS(status) == 1)
 			{
 				cgiResponse.setCgiStatus(false);
 				std::map<std::string, std::string> _;
-				HTTPRequest errorReq(_, "", GET, "/error/E50x.html", HTTP_1_1, false);
+				HTTPRequest errorReq(_, "", GET, "src/error/E500.html", HTTP_1_1, false);
 				cgiResponse = HTTPResponse(errorReq);
 				Message cgiMessage = Message(cgiResponse);
 				cl->setMessage(cgiMessage);
@@ -144,11 +108,186 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 		}
 		if (!WIFCONTINUED(status))
 		{
+			cgiResponse = sm.getResponse();
+			cgiResponse.setBody(cl->getRecvMessage());
+			cgiResponse.setVersion("HTTP/1.1");
+			int contentlen = calcContentLength(cl->getRecvMessage());
+			cgiResponse.addHeader("Content-Length", std::to_string(contentlen));
+			cgiResponse.addHeader("Content-Type", "text/HTML");
+			cgiResponse.setCgiStatus(true);
+			cl->setMessage(Message(cgiResponse));
+
+			sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+			sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+		}
+
+
+
+		// waitpid(cl->Cgipid, &status, WCONTINUED);
+		// if (!WIFEXITED(status))
+		// {
+		// 	cgiResponse.setCgiStatus(false);
+		// 	std::map<std::string, std::string> _;
+		// 	HTTPRequest errorReq(_, "", GET, "src/error/E50x.html", HTTP_1_1, false);
+		// 	cgiResponse = HTTPResponse(errorReq);
+		// 	return ;
+		// }
+		// cgiResponse.setCgiStatus(true);
+		// cgiResponse.setBody(message);
+		// cgiResponse.addHeader("Content-Type", "text/HTML");
+		// cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
+		// Message cgiMessage = Message(cgiResponse);
+		// cl->setMessage(cgiMessage);
+		// message.clear();
+		// sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+		// sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+	}
+	else
+	{
+		DEBUG("Bytes Read: %d", bytesRead);
+		cl->appendRecvMessage(buffer, bytesRead);
+
+		if (cl->getRecvMessage().size() >= MAX_CONTENT_LENGTH)
+		{
+			// DEBUG("killing %d", (int)cl->Cgipid());
+			kill(cl->Cgipid, SIGQUIT);
+			cgiResponse.setCgiStatus(false);
+			std::map<std::string, std::string> _;
+			HTTPRequest errorReq(_, "", GET, "/src/error/E500.html", HTTP_1_1, false);
+			Server defaultServer = Server();
+			cgiResponse = HTTPResponse(errorReq, defaultServer);
+			Message cgiMessage = Message(cgiResponse);
+			cl->setMessage(cgiMessage);
+			message.clear();
+		}
+		// message.clear();
+
+		waitpid(cl->Cgipid, &status, WNOHANG | WCONTINUED);
+		if (WIFEXITED(status))
+		{
+			DEBUG("cgi exit status = %d", WEXITSTATUS(status));
+			if (WEXITSTATUS(status) == 1)
+			{
+				cgiResponse.setCgiStatus(false);
+				std::map<std::string, std::string> _;
+				HTTPRequest errorReq(_, "", GET, "src/error/E500.html", HTTP_1_1, false);
+				cgiResponse = HTTPResponse(errorReq);
+				Message cgiMessage = Message(cgiResponse);
+				cl->setMessage(cgiMessage);
+				message.clear();
+			}
+		}
+		else
+			return ;
+		if (!WIFCONTINUED(status))
+		{
+			cgiResponse = sm.getResponse();
+			cgiResponse.setBody(cl->getRecvMessage());
+			cgiResponse.setVersion("HTTP/1.1");
+			int contentlen = calcContentLength(cl->getRecvMessage());
+			cgiResponse.addHeader("Content-Length", std::to_string(contentlen));
+			cgiResponse.addHeader("Content-Type", "text/HTML");
+			cgiResponse.setCgiStatus(true);
+			cl->setMessage(Message(cgiResponse));
+
 			sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
 			sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
 		}
 	}
 }
+
+
+// void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
+// {
+// 	char buffer[ev_list.data + 1];
+// 	memset(buffer, 0, ev_list.data + 1);
+// 	int bytesRead = 0;
+// 	static std::string message = "";
+// 	bytesRead = read(ev_list.ident, buffer, ev_list.data);
+// 	DEBUG("cgiReadHandler: Read: %s", buffer);
+// 	if (bytesRead == 0)
+// 	{
+// 		DEBUG("cgiReadHandler: Bytes Read = 0");
+// 		sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+// 		close(cl->pipe_in[0]);
+// 		close(cl->pipe_out[0]);
+
+// 		HTTPResponse cgiResponse;
+// 		int status;
+// 		waitpid(cl->Cgipid, &status, WCONTINUED);
+// 		if (!WIFEXITED(status))
+// 		{
+// 			cgiResponse.setCgiStatus(false);
+// 			std::map<std::string, std::string> _;
+// 			HTTPRequest errorReq(_, "", GET, "src/error/E50x.html", HTTP_1_1, false);
+// 			cgiResponse = HTTPResponse(errorReq);
+// 			return ;
+// 		}
+// 		cgiResponse.setCgiStatus(true);
+// 		cgiResponse.setBody(message);
+// 		cgiResponse.addHeader("Content-Type", "text/HTML");
+// 		cgiResponse.addHeader("Content-Length", std::to_string(message.size()));
+// 		Message cgiMessage = Message(cgiResponse);
+// 		cl->setMessage(cgiMessage);
+// 		message.clear();
+// 		sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+// 		sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+// 	}
+// 	else if (bytesRead < 0)
+// 	{
+// 		ERR("cgiReadHandler: %s", strerror(errno));
+// 		sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+// 		close(cl->pipe_in[0]);
+// 		close(cl->pipe_out[0]);
+// 		DEBUG("PIPES ends closing: %d %d", cl->pipe_in[0], cl->pipe_out[0]);
+// 	}
+// 	else
+// 	{
+// 		DEBUG("Bytes Read: %d", bytesRead);
+// 		message.append(buffer);
+
+// 		HTTPResponse cgiResponse = sm.getResponse();
+// 		cgiResponse.setVersion("HTTP/1.1");
+// 		cgiResponse.setBody(message);
+// 		// if (cgiResponse.getUri() == "/cgi-bin/loogin.py")
+// 		int contentlen = calcContentLength(message);
+// 		cgiResponse.addHeader("Content-Length", std::to_string(contentlen));
+// 		cgiResponse.addHeader("Content-Type", "text/HTML");
+// 		// cgiResponse.addHeader("Content-Length", std::to_string(message.size() - 1));
+// 		// cgiResponse.addHeader("session-id", )
+// 		cgiResponse.setCgiStatus(true);
+// 		Message cgiMessage = Message(cgiResponse);
+// 		cl->setMessage(cgiMessage);
+// 		message.clear();
+
+// 		int status;
+// 		waitpid(cl->Cgipid, &status, WCONTINUED);
+// 		if (WIFEXITED(status))
+// 		{
+// 			DEBUG("cgi exit status = %d", WEXITSTATUS(status));
+// 			if (WEXITSTATUS(status) == 1)
+// 			{
+// 				cgiResponse.setCgiStatus(false);
+// 				std::map<std::string, std::string> _;
+// 				HTTPRequest errorReq(_, "", GET, "src/error/E50x.html", HTTP_1_1, false);
+// 				cgiResponse = HTTPResponse(errorReq);
+// 				Message cgiMessage = Message(cgiResponse);
+// 				cl->setMessage(cgiMessage);
+// 				message.clear();
+// 			}
+// 		}
+// 		if (!WIFCONTINUED(status))
+// 		{
+// 			sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+// 			sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+// 		}
+// 		else
+// 		{
+// 			if (bytesRead >= MAX_CONTENT_LENGTH)
+// 				kill(cl->Cgipid, SIGQUIT);
+// 		}
+// 	}
+// }
 
 bool Cgi::CgiWriteHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 {

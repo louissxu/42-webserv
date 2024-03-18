@@ -730,11 +730,16 @@ bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
   if (message.getBufferSent() == attempSend)
   {
     std::string status = message.getMessage().substr(0, message.getMessage().find('\n'));
-    ;
+    // if (status == "")
+    // {
+    //   DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
+    // }
     RECORD("SENT TO: %d\t\t STATUS: %s", cl->getSockFD(), status.c_str());
     // closeConnection(cl); might need to close connection here.
     return false;
   }
+  std::string status = message.getMessage().substr(0, message.getMessage().find('\n'));
+    DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
   int actualSend = send(cl->getSockFD(), (message.getMessage()).c_str(), attempSend, 0);
   if (actualSend < 0)
   {
@@ -742,7 +747,7 @@ bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
     return false;
   }
   // int actualSend = send(cl->getSockFD(), (message.getMessage()).c_str() + message.getBufferSent(), attempSend, 0);
-  DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
+  // DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
   if (actualSend >= attempSend)
     message.addBufferSent(actualSend);
   cl->setMessage(message);

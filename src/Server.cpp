@@ -33,7 +33,7 @@ Server::Server() {
   _listen = ""; // Port
   _host = ""; // IP.
   _server_name = "";  //default localhost on most systems.
-  _root = "";  //root directory of server.
+  _root = "application";  //root directory of server.
   _index = "";
   _sockfd = -1; //server FD.
   _client_max_body_size = MAX_CONTENT_LENGTH;

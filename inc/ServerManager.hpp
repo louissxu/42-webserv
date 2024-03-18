@@ -98,7 +98,6 @@ class ServerManager
 
   		HTTPRequest *parseRequest(Client *cl, std::string const &message);
 
-  		std::string getFileContents(std::string uri);
   		void updateEvent(int ident, short filter, u_short flags, u_int fflags, int data, void *udata);
   		void closeConnection(Client *cl);
   		bool isListeningSocket(int socket_fd);

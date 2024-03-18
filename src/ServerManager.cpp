@@ -749,44 +749,6 @@ bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
   return true;
 }
 
-std::string ServerManager::getFileContents(std::string uri)
-{
-  std::string path = defaultPath + uri;
-  // std::string contents;
-  struct stat s;
-  if (stat(path.c_str(), &s) == 0)
-  {
-    if (s.st_mode & S_IFDIR)
-    {
-      // it's a directory
-    }
-    else if (s.st_mode & S_IFREG)
-    {
-      int len = s.st_size;
-      char contents[len];
-
-      std::ifstream file;
-      file.open(uri, std::ios::in | std::ios::binary);
-      if (!file.is_open())
-      {
-        ERR("Could not find: %s", uri.c_str());
-      }
-      file.read(contents, len);
-      return (contents);
-      // this->status = OK;
-    }
-    else
-    {
-      // something else
-    }
-  }
-  else
-  {
-    // error
-  }
-  return "";
-}
-
 void ServerManager::checkCgi(HTTPRequest &_req)
 {
   std::string uri = _req.getUri();

@@ -67,7 +67,7 @@ class Server {
     Server& operator=(const Server& other);
     ~Server();
 
-    int  getSockFd();
+    //int  getSockFd();
     void startServer();
     void acceptNewLocation(Location newLocation);
     void initialiseErrorPages();
@@ -76,12 +76,12 @@ class Server {
 
     //Method Permissions:
     void setMethodPermissions(std::map<enum e_HRM, bool> newPermissions);
-    void setMethodPermission(enum e_HRM, bool permissionState);
     void printMethodPermissions() const;
     void initMethodPermissions();
 
     //Booleans:
     bool hasLocation(const std::string &reqPath);
+    bool getMethodPermission(enum e_HRM method) const;
 
     //Getters:
     std::string           getListen(void) const;
@@ -90,6 +90,8 @@ class Server {
     std::string           getRoot(void) const;
     int                   getSockFd(void) const;
     std::string           getErrorPage(const int errorCode) const;
+    Location&             getLocationByPath(const std::string& reqPath);
+    std::map<enum e_HRM, bool> getMethodPermissions(void) const;
 
     //Setters:
     void setListen(std::string listen);
@@ -97,6 +99,8 @@ class Server {
     void setIndex(std::string index);
     void setSockFd(int sockfd);
     void setErrorPage(const std::string& value);
+    void setMethodPermission(enum e_HRM test, bool permissionState);
+    void setAllowedMethods(const std::string& methods);
 
   private:
     size_t                      _id;

@@ -1,14 +1,26 @@
 #include "Location.hpp"
-
+Location Location::NullLocation;
 /*------------------------------------------*\
 |              CONSTRUCTORS                  |
 \*------------------------------------------*/
+
 
 void Location::initMethodPermissions()
 {
     _methodPermissions[r_GET] = false;
     _methodPermissions[r_POST] = false;
     _methodPermissions[r_DELETE] = false;
+}
+
+void Location::initMethodPermissions(std::map<enum e_HRM, bool> srcPermissions)
+{
+    _methodPermissions[r_GET] = false;
+    _methodPermissions[r_POST] = false;
+    _methodPermissions[r_DELETE] = false;
+
+    for (std::map<enum e_HRM, bool>::const_iterator it = srcPermissions.begin(); it != srcPermissions.end(); ++it) {
+        _methodPermissions[it->first] = it->second;
+    }
 }
 
 Location::Location()
@@ -26,10 +38,10 @@ Location::Location()
     initMethodPermissions();
 }
 
-//PARAMETERISED CONSTRUCTOR: USING THE PATH.
-Location::Location(const std::string & path)
+//PARAMETERISED CONSTRUCTOR: USING THE PATH AND SERVER PERMISSIONS.
+Location::Location(const std::string & path, std::map<enum e_HRM, bool> srcPermissions)
 {
-    DEBUG("\t\tPath param constructor called.");
+    DEBUG("\t\tParam constructor called.");
     // std::cout << RED << "Location: " << RESET
     // <<"path constructor called: "<< path << std::endl;
 
@@ -39,7 +51,7 @@ Location::Location(const std::string & path)
 	this->_filePathPost = "";
     this->_autoIndex = false;
 	this->_clientMaxBodySize = MAX_CONTENT_LENGTH;
-    initMethodPermissions();
+    initMethodPermissions(srcPermissions);
 }
 
 Location::Location(const Location& other)
@@ -52,7 +64,6 @@ Location::Location(const Location& other)
     this->_autoIndex = other._autoIndex;
 	this->_clientMaxBodySize = other._clientMaxBodySize;
     this->_methodPermissions = other._methodPermissions;
-    initMethodPermissions();
 }
 
 Location &Location::operator=(const Location &rhs)
@@ -113,6 +124,15 @@ size_t Location::getClientMaxBodySize()
 {
     return _clientMaxBodySize;
 }
+
+bool Location::getMethodPermission(enum e_HRM method) const {
+    std::map<enum e_HRM, bool>::const_iterator it = _methodPermissions.find(method);
+    if (it != _methodPermissions.end()) {
+        return it->second;
+    }
+    return false; // Default if not set
+}
+
 
 /*------------------------------------------*\
 |                 SETTERS                    |
@@ -276,6 +296,11 @@ void Location::setAutoIndex(std::string stateString)
 /*------------------------------------------*\
 |                 OTHER                      |
 \*------------------------------------------*/
+
+bool Location::isNull()
+{ 
+    return this == &NullLocation;
+}
 
 bool Location::isValidLocationDirective(const std::string &src) {
     static const std::string validDirectiveNames[] = {

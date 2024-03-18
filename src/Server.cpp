@@ -147,6 +147,20 @@ void Server::initMethodPermissions()
       }
   }
 
+bool Server::getMethodPermission(enum e_HRM method) const {
+    std::map<enum e_HRM, bool>::const_iterator it = _defaultPermissions.find(method);
+    if (it != _defaultPermissions.end()) {
+        return it->second;
+    }
+    return false; // Default if not set
+}
+
+std::map<enum e_HRM, bool> Server::getMethodPermissions(void) const
+{
+  return _defaultPermissions;
+}
+
+
 /*------------------------------------------*\
 |                 SETTERS                    |
 \*------------------------------------------*/
@@ -189,6 +203,31 @@ void Server::initialiseErrorPages(void)
 	_err_pages[505] = "";
 	_err_pages[505] = "";
 }
+
+void Server::setMethodPermission(enum e_HRM test, bool permissionState)
+{
+    _defaultPermissions[test] = permissionState;
+}
+
+void Server::setAllowedMethods(const std::string& methods) {
+    std::istringstream methodStream(methods);
+    std::string method;
+
+    //each usage of methodStream >> method reads the next word
+    while(methodStream >> method) {
+        if(method == "GET") {
+          DEBUG("\t\tSetting server default permission [GET] to true.");
+          setMethodPermission(r_GET, true);
+        } else if(method == "POST") {
+          DEBUG("\t\tSetting server default permission [POST] to true.");
+          setMethodPermission(r_POST, true);
+        } else if(method == "DELETE") {
+          DEBUG("\t\tSetting server default permission [DELETE] to true.");
+          setMethodPermission(r_DELETE, true);
+        }
+    }
+}
+
 
 /*------------------------------------------*\
 |             OTHER METHODS                  |
@@ -299,11 +338,6 @@ void Server::startServer(void) {
   freeaddrinfo(servinfo);
 }
 
-int Server::getSockFd()
-{
-  return _sockfd;
-}
-
 void Server::acceptNewLocation(Location newLocation) {
   _locations.push_back(newLocation);
 }
@@ -326,8 +360,6 @@ void Server::setErrorPage(const std::string& value) {
     // Store the extracted values into the map
     _err_pages[errorCode] = errorPage;
 }
-
-
 
 void Server::addDirective(const std::string& name, const std::string& value) {
   if (name == "listen") 
@@ -354,21 +386,43 @@ void Server::addDirective(const std::string& name, const std::string& value) {
   {
     setErrorPage(value);
   }
+  else if (name == "allow_methods")
+  {
+    //DEBUG("\t\tServer default method set: %s", value.c_str());
+    setAllowedMethods(value);
+  }
 }
 
 bool Server::hasLocation(const std::string &reqPath) {
+  std::cout << GREEN;
+  DEBUG("Comparing: %s with", reqPath.c_str());
   for (size_t i = 0; i < _locations.size(); ++i) {
+    DEBUG(": %s, ", _locations[i].getPath().c_str());
     if (_locations[i].getPath() == reqPath) {
+      std::cout << RESET;
       return true; // Found a matching path, so return true.
     }
   }
+  std::cout << RESET;
   return false; // No match found after checking all locations.
 }
 
+// Location* Server::getLocationByPath(const std::string& reqPath) {
+//     for (size_t i = 0; i < _locations.size(); ++i) {
+//         if (_locations[i].getPath() == reqPath) {
+//             return &_locations[i]; // Return a pointer to the matching Location instance.
+//         }
+//     }
+//     return NULL; // Return NULL if no match is found.
+// }
 
-/*
-HTTPResponse & Server::makeResponse(HTTPRequest &request)
-{
-std::cout << "[]"
+Location& Server::getLocationByPath(const std::string& reqPath) {
+    for (size_t i = 0; i < _locations.size(); ++i) {
+        if (_locations[i].getPath() == reqPath) {
+            return _locations[i]; // Return a reference to the matching Location instance.
+        }
+    }
+    DEBUG("Could not find reqPath: %s in our Servers Vector of Locations..", reqPath.c_str());
+    return Location::NullLocation;
+}
 
-}*/

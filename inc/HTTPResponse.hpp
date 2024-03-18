@@ -15,6 +15,7 @@
 #include "Server.hpp"
 #include "MIME.hpp"
 #include "Utils.hpp"
+#include "Definitions.hpp"
 
 class Location;
 class Server;
@@ -70,6 +71,8 @@ public:
 	std::string const &getReason() const;
 	std::map<std::string, std::string> const &getHeaders() const;
 	std::string const &getBody() const;
+	std::string getMethodString(enum e_HRM method) const;
+	bool getMethodPermission(enum e_HRM method, Location &Location) const;
 
 	//CGI
 	bool const &getCgiStatus() const;
@@ -82,11 +85,12 @@ public:
 	//Method-Route Verification.
 	bool methodPermittedAtRoute(HTTPRequest const &req);
 	std::string stripFileName(std::string const &reqUri);
-
+	bool getMethodPermission(enum e_HRM method, Location *myLocation);
+	bool getMethodPermission(enum e_HRM method, Location &myLocation);
 
 private:
 	bool getResource(std::string const &path, int const &len);
-	void geterrorResource(int errCode); //retrieves our servers error file first.
+	void getErrorResource(int errCode); //retrieves our servers error file first.
 	void GETHandler(std::string const &uri);
 	// int const &POSTHandler(HTTPRequest const &request);
 	void DELETEHandler();

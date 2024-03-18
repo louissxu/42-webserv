@@ -16,10 +16,13 @@
 class Location
 {
     public:
+        static Location NullLocation;
+        bool isNull();
 
     // Constructors
-        Location();
-        Location(const std::string &path);
+
+        //Location(const std::string &path);
+        Location(const std::string & path, std::map<enum e_HRM, bool> srcPermissions);
         Location(const Location& other);
         Location& operator=(const Location& other);
         ~Location();
@@ -33,6 +36,7 @@ class Location
         std::map<enum e_HRM, bool>  getMethodPermissions();
         bool                        getAutoIndex();
         size_t                      getClientMaxBodySize();
+        bool                        getMethodPermission(enum e_HRM method) const;
 
     // Setters
         void setPath(std::string newPath);
@@ -55,6 +59,9 @@ class Location
 
     // Other
         bool isValidLocationDirective(const std::string &src);
+        //void initMethodPermissions();
+
+        void initMethodPermissions(std::map<enum e_HRM, bool> srcPermissions);
         void initMethodPermissions();
         void initLocationDirectives(ConfigParser &src);
 
@@ -76,6 +83,8 @@ class Location
 		};
 
     private:
+        Location();
+
         std::string                 _path;
         std::string                 _root;
         std::string                 _index;

@@ -270,7 +270,7 @@ std::string ServerManager::stripWhiteSpace(std::string src) {
         char c = src[i];
         //If the character is non whitespace, add it to our output.
         if (c != '\n' && c != '\r' && c != '\t' && c != ' ') {
-            result += c; 
+            result += c;
         }
     }
     return result;
@@ -303,7 +303,7 @@ Server &ServerManager::getRelevantServer(HTTPRequest &request, std::vector<Serve
 
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); ++it) {
         std::string serverHost = it->getHost();
-        std::string serverPort = it->getListen(); 
+        std::string serverPort = it->getListen();
 
         // Find a server with matching host and port.
         if (serverHost == requestHost && serverPort == requestPort) {
@@ -677,8 +677,8 @@ void    ServerManager::ns_addContexts(ConfigParser &src)
     for(std::vector< ConfigParser >::iterator it = temp.begin(); it != temp.end(); ++it)
     {
       #ifdef _PRINT_
-        std::cout << RED << src.getName() 
-        << ": context["<<i<<"]: name : <" << (*it).getName() 
+        std::cout << RED << src.getName()
+        << ": context["<<i<<"]: name : <" << (*it).getName()
         << ">" << RESET << std::endl;
       #endif
         ns_addContexts(*it);
@@ -790,22 +790,15 @@ std::string ServerManager::getFileContents(std::string uri)
 void ServerManager::checkCgi(HTTPRequest &_req)
 {
   std::string uri = _req.getUri();
-  std::string cookie = _req.getHeader("Cookie");
+  std::string path = defaultPath + uri;
   bool isCgi = 0;
-  if (uri.size() >= 8) {
+
+  if (access(path.c_str(), F_OK | X_OK) < 0)
+    return ;
+
+  if (uri.size() >= 9) {
    isCgi = (uri.compare(1, 7, "cgi-bin") == 0);
   }
-
-  // if (!cookie.empty())
-  // {
-  //   if (uri == "/login-form/index.html" || uri == "/register/index.html")
-  //   {
-  //     // std::string cgiScript = (uri == "/login-form/index.html") ? "cgi-bin/login.py" : "cgi-bin/register.py";
-  //     _req.setUri("/cgi-bin/logedin.py");
-  //     _req.setBody(cookie);
-  //     isCgi = true;
-  //   }
-  // }
   _req.setIsCgi(isCgi);
 }
 

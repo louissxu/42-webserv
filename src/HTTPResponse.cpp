@@ -199,7 +199,7 @@ void HTTPResponse::setBody(std::string const &_body)
 bool isValidURI(const std::string &uri) {
     // List of forbidden characters or patterns. Adjust according to your needs.
     const char* forbiddenChars = "<>{}|\\^~`";
-    
+
     //Check for directory traversal attempts
     if (uri.find("../") != std::string::npos || uri.find("/..") != std::string::npos) {
         return false;

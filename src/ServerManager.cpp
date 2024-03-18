@@ -38,7 +38,7 @@
 
 ServerManager::ServerManager()
 {
-  defaultPath = "./application";
+  defaultPath = "application";
 }
 
 ServerManager::~ServerManager() {}
@@ -755,9 +755,17 @@ void ServerManager::checkCgi(HTTPRequest &_req)
   std::string path = defaultPath + uri;
   bool isCgi = 0;
 
-  if (access(path.c_str(), F_OK | X_OK) < 0)
+  DEBUG("path was: %s", path.c_str());
+  if (access(path.c_str(), F_OK) < 0)
+  {
+    DEBUG("file does satisfy F_OK");
     return ;
-
+  }
+  // if (access(path.c_str(), X_OK) < 0)
+  // {
+  //   DEBUG("file does satisfy X_OK");
+  //   return ;
+  // }
   if (uri.size() >= 9) {
    isCgi = (uri.compare(1, 7, "cgi-bin") == 0);
   }

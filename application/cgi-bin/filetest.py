@@ -2,74 +2,67 @@
 import cgi
 import os
 from io import BytesIO as IO
+import base64
+
+def html_print(key, val):
+    print(f"<!-- key: {key}    val: {val}-->")
 
 # Set target directory for uploads
-target_dir = "uploads/"
+application_directory = "application"
+save_folder_name = "uploaded-files"
 
 # Create HTML header
 print("Content-type: text/html\n")
 print("<html><body>")
-print("<h1> Login Program </h1>")
+print("<h1> File Upload </h1>")
+
 print(f"<!-- {os.getenv('Content-Type')}-->")
+
+html_print("start of query string is: ", os.getenv("QUERY_STRING")[:10])
+if (os.getenv("Content-Type")[0:9] == "multipart"):
+    body = base64.b64decode(os.getenv("QUERY_STRING").encode())
+else:
+    body = os.getenv("QUERY_STRING").encode()
+
+html_print("start of body is: ", body[:10])
 
 # Check if form was submitted
 form = cgi.FieldStorage(
-    IO(os.getenv("QUERY_STRING").encode("utf-8")),
+    IO(body),
     headers={"content-type": os.getenv("Content-Type"), "content-length": os.getenv("Content-Length")},
     environ={"REQUEST_METHOD": os.getenv("Method")}
 )
 
-print(f"<!-- form is {form}-->")
-
 item = form.value[0]
-print(f"<!-- form is {item}-->")
-print(f"<!-- name is: {item.name}, filename is: {item.filename}, value is: {item.value} -->")
+print(f"<!-- name is: {item.name}, filename is: {item.filename}, value is: {item.value[:10]} -->")
 
+field_name = item.name
+file_name = item.filename
+binary_data = item.value
 
+html_print("type of binary_data", type(binary_data))
 
-if "submit" in form:
-    # Get file details
-    file_item = form["fileToUpload"]
-    target_file = os.path.join(target_dir, os.path.basename(file_item.filename))
-    upload_ok = 1
-    image_file_type = os.path.splitext(target_file)[1].lower()
+current_pwd = os.getcwd()
+print(f"<!- current pwd is {current_pwd}-->")
+upload_directory = os.path.join(os.getcwd(), application_directory, save_folder_name)
+if not os.path.exists(upload_directory):
+    os.makedirs(upload_directory)
 
-    # Check if image file is an actual image
-    if file_item.file:
-        check = file_item.file.read()
-        if check.startswith(b'\xFF\xD8') and check.endswith(b'\xFF\xD9'):
-            print("<p>File is an image.</p>")
-        else:
-            print("<p>File is not an image.</p>")
-            upload_ok = 0
+file_path = os.path.join(upload_directory, os.path.basename(file_name)) 
+print(f"<!-- file path is {file_path}-->")
 
-    # Check if file already exists
-    if os.path.exists(target_file):
-        print("<p>Sorry, file already exists.</p>")
-        upload_ok = 0
-
-    # Check file size
-    if file_item.file and len(check) > 500000:
-        print("<p>Sorry, your file is too large.</p>")
-        upload_ok = 0
-
-    # Allow certain file formats
-    allowed_formats = [".jpg", ".png", ".jpeg", ".gif"]
-    if image_file_type not in allowed_formats:
-        print("<p>Sorry, only JPG, JPEG, PNG & GIF files are allowed.</p>")
-        upload_ok = 0
-
-    # Check if upload_ok is set to 0 by an error
-    if upload_ok == 0:
-        print("<p>Sorry, your file was not uploaded.</p>")
-    else:
+if os.path.exists(file_path):
+    print("<p>Sorry, file already exists.</p>")
+else:
         # Try to upload file
-        try:
-            with open(target_file, "wb") as f:
-                f.write(file_item.file.read())
-            print("The file {} has been uploaded.".format(cgi.escape(file_item.filename)))
-        except IOError:
-            print("<p>Sorry, there was an error uploading your file.</p>")
+    try:
+        with open(file_path, "wb") as f:
+            f.write(binary_data)
+        print(f"<p>The file {file_name} has been uploaded.</p>")
+    except IOError as e:
+        print(f"<!-- {e.errno} -->")
+        print(f"<!-- {e} -->")
+        print(f"<p>Sorry there was an error uploading your file</p>")
 
 # Close HTML body and footer
 print("</body></html>")

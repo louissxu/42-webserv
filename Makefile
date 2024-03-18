@@ -35,13 +35,11 @@ SRC_FILES = \
 	Server.cpp \
 	Connection.cpp \
 	Client.cpp \
-	Cout.cpp \
 	Message.cpp \
 	HTTPRequest.cpp \
 	HTTPResponse.cpp \
 	cgi.cpp \
 	ConfigParser.cpp \
-	Cout.cpp \
 	Location.cpp \
 	Utils.cpp \
 	MIME.cpp \

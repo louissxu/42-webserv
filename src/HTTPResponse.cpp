@@ -77,8 +77,8 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 		}
 		case Method(POST):
 		{
-			if (_req.getHeader("Set-Cookie") != std::string())
-				headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
+			// if (_req.getHeader("Set-Cookie") != std::string())
+			// 	headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
 			return;
 		}
 		case Method(DELETE):
@@ -350,10 +350,11 @@ void HTTPResponse::geterrorResource(int errCode)
 			return;
 		}
 	}
-	if (filename.compare(0, 2, "403"))
-		this->status = FORBIDDEN;
-	else
-		this->status = NOT_FOUND;
+	// if (filename.compare(0, 2, "403"))
+	this->status = Status(errCode);
+	this->reason = getStatus();
+	// else
+	// 	this->status = NOT_FOUND;
 }
 
 bool const &HTTPResponse::getCgiStatus() const

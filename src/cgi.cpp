@@ -75,6 +75,7 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 	std::string message = "";
 	HTTPResponse cgiResponse;
 	int status;
+	Server defaultServer = Server();
 
 	memset(buffer, 0, ev_list.data + 1);
 	bytesRead = read(ev_list.ident, buffer, ev_list.data);
@@ -103,7 +104,7 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 				cgiResponse.setCgiStatus(false);
 				std::map<std::string, std::string> _;
 				HTTPRequest errorReq(_, "", GET, "src/error/E500.html", HTTP_1_1, false);
-				cgiResponse = HTTPResponse(errorReq);
+				cgiResponse = HTTPResponse(errorReq, defaultServer);
 				Message cgiMessage = Message(cgiResponse);
 				cl->setMessage(cgiMessage);
 				message.clear();
@@ -132,13 +133,13 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 		{
 			if (cl->getRecvMessage().size() >= MAX_CONTENT_LENGTH)
 			{
-				// std::cout << BOLDRED << "killing child" << "\n";
 				kill(cl->Cgipid, SIGQUIT);
 				cgiResponse.setCgiStatus(false);
-				std::map<std::string, std::string> _;
-				HTTPRequest errorReq(_, "", GET, "/src/error/E500.html", HTTP_1_1, false);
-				Server defaultServer = Server();
-				cgiResponse = HTTPResponse(errorReq, defaultServer);
+				// std::map<std::string, std::string> _;
+				// HTTPRequest errorReq(_, "", GET, "/src/error/E500.html", HTTP_1_1, false);
+				// cgiResponse = HTTPResponse(errorReq, defaultServer);
+				cgiResponse.geterrorResource(500);
+				
 				Message cgiMessage = Message(cgiResponse);
 				cl->setMessage(cgiMessage);
 				message.clear();
@@ -157,7 +158,7 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 					cgiResponse.setCgiStatus(false);
 					std::map<std::string, std::string> _;
 					HTTPRequest errorReq(_, "", GET, "src/error/E500.html", HTTP_1_1, false);
-					cgiResponse = HTTPResponse(errorReq);
+					cgiResponse = HTTPResponse(errorReq, defaultServer);
 					Message cgiMessage = Message(cgiResponse);
 					cl->setMessage(cgiMessage);
 					message.clear();

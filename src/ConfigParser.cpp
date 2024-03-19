@@ -363,7 +363,7 @@ void ConfigParser::setStateFromContent(size_t myContextLvl, bool print)
     std::string line;
     if (_contents.empty() || _contents.length() == 0)
     {
-        std::cout << "error: contents not set!" << std::endl;
+        //std::cout << "error: contents not set!" << std::endl;
         return ;
     }
     std::istringstream config_file(_contents);
@@ -371,14 +371,14 @@ void ConfigParser::setStateFromContent(size_t myContextLvl, bool print)
     while (std::getline(config_file, line))
     {
         e_lineType j = getLineType (line);
-        if (print)
-            std::cout << "line [" << lineNumber << "]: ";
+        // if (print)
+        //     std::cout << "line [" << lineNumber << "]: ";
         switch(j)
         {
            case DIRECTIVE_INIT:
            {
-                if (print)
-                    std::cout << "Directive Initialization." << std::endl;
+                // if (print)
+                //     std::cout << "Directive Initialization." << std::endl;
                 if (_contextLvl == myContextLvl)
                 {
                     setDirectiveInit(line);
@@ -387,8 +387,8 @@ void ConfigParser::setStateFromContent(size_t myContextLvl, bool print)
            }
            case CONTEXT_INIT:
            {
-                if(print)
-                    std::cout << "Context Initialization." << std::endl;
+                // if(print)
+                //     std::cout << "Context Initialization." << std::endl;
                 if (_contextLvl == myContextLvl)
                 {
                     ConfigParser *newConfigParser = new ConfigParser();
@@ -403,15 +403,15 @@ void ConfigParser::setStateFromContent(size_t myContextLvl, bool print)
            }
            case CONTEXT_END:
            {
-                if (print)
-                    std::cout << "Context End." << std::endl;
+                // if (print)
+                //     std::cout << "Context End." << std::endl;
                 _contextLvl--;
                 break;
            }
            case OTHER : 
            {
-                if (print)
-                    std::cout << "Other!" << std::endl;
+                // if (print)
+                //     std::cout << "Other!" << std::endl;
                 break;
            }
         }
@@ -603,7 +603,7 @@ void ConfigParser::printDirectives()
             std::cout <<"\t\t";
             j++;
         }
-        std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
+        //std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
         i++;
     }
 }
@@ -622,7 +622,7 @@ void    ConfigParser::printContexts( void )
             std::cout <<"\t\t";
             j++;
         }
-        std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
+        //std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
         //(*it).printDirectives();
         (*it).printContexts();
         i++;

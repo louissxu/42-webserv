@@ -452,6 +452,7 @@ int HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 			return 403;
 	}
 	std::string strippedUri = stripFileName(req.getUri().c_str());
+	DEBUG("\tAt location: %s", strippedUri.c_str());
 
 	Location	&myLocation = _server.getLocationByPath(strippedUri);
 	if (myLocation.isNull()) {

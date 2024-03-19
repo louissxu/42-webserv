@@ -94,7 +94,7 @@ class ServerManager
   		void handleEvent(struct kevent const &ev);
   		int handleReadEvent(Client *cl, struct kevent event);
   		bool handleWriteEvent(Client *cl, int dataLen);
-  		void handleEOF(Client *cl, int fd, bool &isRead, bool &isWrite);
+  		void handleEOF(Client *cl, struct kevent const &ev, bool &isRead, bool &isWrite);
 
   		HTTPRequest *parseRequest(Client *cl, std::string const &message);
 

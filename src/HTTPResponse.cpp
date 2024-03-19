@@ -21,6 +21,7 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 	return *this;
 }
 
+// ! error pages other than 404 are not loading.
 /*
  * @brief: HTTPResponse(HTTPRequest const &_req)
  * Creates an appropriate HTTPResponse from a given HTTPRequest.
@@ -246,18 +247,20 @@ void HTTPResponse::GETHandler(std::string const &uri)
 		this->body = "";
 		return;
 	}
-	if (uri.compare(1, 7, "cgi-bin") == 0 && access(path.c_str(), F_OK) != -1)
-	{
-		if (uri.compare(8, uri.size(), "loogin.py") != 0)
-			this->geterrorResource(403);
-		return;
-	}
+	// if (uri.compare(1, 7, "cgi-bin") == 0 && access(path.c_str(), F_OK) != -1)
+	// {
+	// 	// if (uri.compare(8, uri.size(), "loogin.py") != 0)
+	// 	// 	this->geterrorResource(403);
+	// 	return;
+	// }
 	if (stat(path.c_str(), &s) == 0)
 	{
-		// if (s.st_mode & S_IFDIR)
-		// {
-		//   // it's a directory
-		// }
+		if (s.st_mode & S_IFDIR)
+		{
+		  // it's a directory
+		  this->geterrorResource(403);
+		  return ;
+		}
 		if (s.st_mode & S_IFREG)
 		{
 			int len = s.st_size;
@@ -337,7 +340,7 @@ void HTTPResponse::geterrorResource(int errCode)
 	struct stat s;
 	std::string const filename = _server.getErrorPage(errCode);
 	DEBUG("HTTPResponse: getting errorResource: %s", filename.c_str());
-	std::string path = "application/error/" + filename;
+	std::string path = "application/src/error/" + filename;
 	if (stat(path.c_str(), &s) == 0)
 	{
 		int len = s.st_size;
@@ -413,7 +416,8 @@ bool HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 	}
 	else
 	{
-		WARN("We have NOT configured settings for this location. Deferring to server rules.");
+		// WARN("We have NOT configured settings for this location. Deferring to server rules.");
+		return false;
 		//std::cout << "We have NOT configured settings for this location...deferring to Server rules." << std::endl;
 	}
 	//if (_req.getLocation().methodIsAllowed())

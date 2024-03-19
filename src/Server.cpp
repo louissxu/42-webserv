@@ -33,8 +33,8 @@ Server::Server() {
   _listen = ""; // Port
   _host = ""; // IP.
   _server_name = "";  //default localhost on most systems.
-  _root = "";  //root directory of server.
-  _index = "";  
+  _root = "application";  //root directory of server.
+  _index = "";
   _sockfd = -1; //server FD.
   _client_max_body_size = MAX_CONTENT_LENGTH;
   _autoindex = false;
@@ -48,7 +48,7 @@ Server::Server(size_t serverId) {
   _host = ""; // IP.
   _server_name = "";  //default localhost on most systems.
   _root = "";  //root directory of server.
-  _index = "";  
+  _index = "";
   _sockfd = -1; //server FD.
   _client_max_body_size = MAX_CONTENT_LENGTH;
   _autoindex = false;
@@ -58,14 +58,14 @@ Server::Server(size_t serverId) {
 }
 
 
-Server::Server(const Server& other) : 
-    _listen(other._listen), 
-    _host(other._host), 
-    _server_name(other._server_name), 
-    _root(other._root), 
-    _index(other._index), 
-    _sockfd(other._sockfd), 
-    _client_max_body_size(other._client_max_body_size), 
+Server::Server(const Server& other) :
+    _listen(other._listen),
+    _host(other._host),
+    _server_name(other._server_name),
+    _root(other._root),
+    _index(other._index),
+    _sockfd(other._sockfd),
+    _client_max_body_size(other._client_max_body_size),
     _autoindex(other._autoindex)
 {
     DEBUG("\t\tCopy constructor called.");
@@ -81,7 +81,7 @@ Server& Server::operator=(const Server& other) {
     _server_name = other._server_name;
     _root = other._root;
     _index = other._index;
-    _sockfd = other._sockfd; 
+    _sockfd = other._sockfd;
     _client_max_body_size = other._client_max_body_size;
     _autoindex = other._autoindex;
     _locations = other._locations;
@@ -92,7 +92,7 @@ Server& Server::operator=(const Server& other) {
 Server::~Server() {
   DEBUG("\t\tDestructor called.");
   if (_sockfd != -1) {
-    shutdown(_sockfd, 2); 
+    shutdown(_sockfd, 2);
   }
 }
 
@@ -143,7 +143,7 @@ void Server::initMethodPermissions()
       if (it != _err_pages.end() && it->second != "") {
         return it->second; // Return the associated error message page path.
       } else {
-        return "E404.html"; 
+        return "E404.html";
       }
   }
 
@@ -173,16 +173,17 @@ void Server::initMethodPermissions()
 
 void Server::initialiseErrorPages(void)
 {
+  _err_pages[204] = "E204.html";
 	_err_pages[301] = "";
 	_err_pages[302] = "";
-	_err_pages[400] = "";
+	_err_pages[400] = "E400.html";
 	_err_pages[401] = "";
 	_err_pages[402] = "";
-	_err_pages[403] = "";
-	_err_pages[404] = "";
+	_err_pages[403] = "E403.html";
+	_err_pages[404] = "E404.html";
 	_err_pages[405] = "";
 	_err_pages[406] = "";
-	_err_pages[500] = "";
+	_err_pages[500] = "E500.html";
 	_err_pages[501] = "";
 	_err_pages[502] = "";
 	_err_pages[503] = "";
@@ -330,18 +331,18 @@ void Server::setErrorPage(const std::string& value) {
 
 
 void Server::addDirective(const std::string& name, const std::string& value) {
-  if (name == "listen") 
+  if (name == "listen")
   {
     _listen = value;
-  } 
+  }
   else if (name == "server_name")
   {
     _server_name = value;
-  } 
+  }
   else if (name == "host")
   {
     _host = value;
-  } 
+  }
   else if (name == "root")
   {
     _root = value;

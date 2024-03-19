@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "Cout.hpp"
 
-#define LOG_LEVEL 4 // for printing logs.
+#define LOG_LEVEL 3 // for printing logs.
 
 #define __PFILE__ (strrchr(__FILE__, '/')           \
 					   ? strrchr(__FILE__, '/') + 1 \

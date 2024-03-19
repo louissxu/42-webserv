@@ -36,4 +36,9 @@ public:
 	bool CgiWriteHandler(ServerManager &sm, Client *cl, struct kevent ev_list);
 
 	void launchCgi(HTTPRequest &req, Client *cl);
+
+	void handleTerminatedWithError(ServerManager &sm, Client *cl);
+	void handleSuccessfulTermination(ServerManager &sm, Client *cl);
+	// void handleReadError(ServerManager &sm, Client *cl);
+
 };

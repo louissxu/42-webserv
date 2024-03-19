@@ -298,7 +298,7 @@ bool Location::isValidLocationDirective(const std::string &src) {
 
 void Location::initLocationDirectives(ConfigParser &src)
 {
-    size_t i = 0;
+    // size_t i = 0;
     std::vector< std::pair < std::string, std::string> > temp = src.get_directives();
     if (temp.empty())
     {
@@ -317,6 +317,6 @@ void Location::initLocationDirectives(ConfigParser &src)
             << RESET << std::endl;
             #endif
         }
-        i++;
+        // i++;
     }
 }

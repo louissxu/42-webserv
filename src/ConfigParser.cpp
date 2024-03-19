@@ -158,7 +158,7 @@ int ConfigParser::setContent(std::string fileName)
     {    
         return (1);
     }
-    size_t i = 0;
+    // size_t i = 0;
     std::string statement = "";
     while (std::getline(config_file, line))
     {
@@ -185,7 +185,7 @@ int ConfigParser::setContent(std::string fileName)
             _contents += statement + "\n";
             statement.clear();  // clear the statement for the next one
         }
-        i++;
+        // i++;
     }
     return (0);
 }

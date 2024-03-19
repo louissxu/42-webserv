@@ -15,7 +15,7 @@ RED 			:= 	\033[38;5;160m
 
 NAME = webserv
 CC = c++
-CFLAGS = -std=c++98 -fsanitize=address -g #-D _PRINT_
+CFLAGS = -std=c++98 -Wall -Wextra -Werror -fsanitize=address -g #-D _PRINT_
 LDFLAGS = -fsanitize=address 
 
 #CFLAGS = -Wall -Wextra -Werror -g -std=c++98 #-D _PRINT_

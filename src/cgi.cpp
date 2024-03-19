@@ -68,18 +68,16 @@ void Cgi::setArgv(HTTPRequest const &req)
 	_argv[2] = nullptr;
 }
 
+
 void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 {
 	char buffer[ev_list.data + 1];
 	int bytesRead = 0;
-	std::string message = "";
-	HTTPResponse cgiResponse;
 	int status;
-	Server defaultServer = Server();
 
 	memset(buffer, 0, ev_list.data + 1);
 	bytesRead = read(ev_list.ident, buffer, ev_list.data);
-	DEBUG("cgiReadHandler: Read:\n %s", buffer);
+	// RECORD("cgiReadHandler: Read:\n %s", buffer);
 	if (bytesRead < 0)
 	{
 		ERR("cgiReadHandler: %s", strerror(errno));
@@ -101,29 +99,13 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 			DEBUG("cgi exit status = %d", WEXITSTATUS(status));
 			if (WEXITSTATUS(status) == 1)
 			{
-				cgiResponse.setCgiStatus(false);
-				std::map<std::string, std::string> _;
-				HTTPRequest errorReq(_, "", GET, "src/error/E500.html", HTTP_1_1, false);
-				cgiResponse = HTTPResponse(errorReq, defaultServer);
-				Message cgiMessage = Message(cgiResponse);
-				cl->setMessage(cgiMessage);
-				message.clear();
+				// error case
+				handleTerminatedWithError(sm, cl);
+				return ;
 			}
 		}
 		if (!WIFCONTINUED(status))
-		{
-			cgiResponse = sm.getResponse();
-			cgiResponse.setBody(cl->getRecvMessage());
-			cgiResponse.setVersion("HTTP/1.1");
-			int contentlen = calcContentLength(cl->getRecvMessage());
-			cgiResponse.addHeader("Content-Length", std::to_string(contentlen));
-			cgiResponse.addHeader("Content-Type", "text/HTML");
-			cgiResponse.setCgiStatus(true);
-			cl->setMessage(Message(cgiResponse));
-
-			sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-			sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-		}
+			handleSuccessfulTermination(sm, cl);
 	}
 	else
 	{
@@ -134,62 +116,57 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 			if (cl->getRecvMessage().size() >= MAX_CONTENT_LENGTH)
 			{
 				kill(cl->Cgipid, SIGQUIT);
-				cgiResponse.setCgiStatus(false);
-				// std::map<std::string, std::string> _;
-				// HTTPRequest errorReq(_, "", GET, "/src/error/E500.html", HTTP_1_1, false);
-				// cgiResponse = HTTPResponse(errorReq, defaultServer);
-				cgiResponse.geterrorResource(500);
-				
-				Message cgiMessage = Message(cgiResponse);
-				cl->setMessage(cgiMessage);
-				message.clear();
-				// return ;
+				handleTerminatedWithError(sm, cl);
 			}
 		}
 		else
 		{
 			waitpid(cl->Cgipid, &status, WCONTINUED);
+			RECORD("cgi exit status = %d", WEXITSTATUS(status));
 			if (WIFEXITED(status))
 			{
-				RECORD("cgi exit status = %d", WEXITSTATUS(status));
-				// std::cout << BOLDRED << WEXITSTATUS(status) << "\n";
 				if (WEXITSTATUS(status) == 1)
-				{
-					cgiResponse.setCgiStatus(false);
-					std::map<std::string, std::string> _;
-					HTTPRequest errorReq(_, "", GET, "src/error/E500.html", HTTP_1_1, false);
-					cgiResponse = HTTPResponse(errorReq, defaultServer);
-					Message cgiMessage = Message(cgiResponse);
-					cl->setMessage(cgiMessage);
-					message.clear();
-				}
+					handleTerminatedWithError(sm, cl);
 			}
 			else
-			{
-				// std::cout << BOLDRED << "did not exit" << "\n";
 				return ;
-			}
 			if (!WIFCONTINUED(status))
-			{
-				// std::cout << BOLDRED << "exited\n";
-				cgiResponse = sm.getResponse();
-				cgiResponse.setBody(cl->getRecvMessage());
-				cgiResponse.setVersion("HTTP/1.1");
-				cgiResponse.addHeader("Content-Type", "text/HTML");
-				int contentlen = calcContentLength(cl->getRecvMessage());
-				cgiResponse.addHeader("Content-Length", std::to_string(contentlen));
-				cgiResponse.setCgiStatus(true);
-				cl->setMessage(Message(cgiResponse));
-
-				sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-				sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-			}
+				handleSuccessfulTermination(sm, cl);
 		}
 	}
 }
 
+void Cgi::handleSuccessfulTermination(ServerManager &sm, Client *cl)
+{
+	HTTPResponse cgiResponse;
+
+	cgiResponse = sm.getResponse();
+	cgiResponse.setBody(cl->getRecvMessage());
+	cgiResponse.setVersion("HTTP/1.1");
+	cgiResponse.addHeader("Content-Type", "text/HTML");
+	int contentlen = calcContentLength(cl->getRecvMessage());
+	cgiResponse.addHeader("Content-Length", std::to_string(contentlen));
+	cgiResponse.setCgiStatus(true);
+	cl->setMessage(Message(cgiResponse));
+
+	sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+	sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+}
+
+void Cgi::handleTerminatedWithError(ServerManager &sm, Client *cl)
+{
+	HTTPResponse cgiResponse;
+
+	cgiResponse.setCgiStatus(false);
+	cgiResponse.geterrorResource(500);
+	cl->setMessage(Message(cgiResponse));
+	sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+	sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+}
+
 bool Cgi::CgiWriteHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 {
+	RECORD("WRITING");
 	int bytes_sent;
 	if (cl == NULL)
 		return false;

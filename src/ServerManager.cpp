@@ -592,7 +592,7 @@ int ServerManager::handleReadEvent(Client *cl, struct kevent event)
 void ServerManager::ns_addDirectives(ConfigParser &src)
 {
    // std::cout << "ServerManager: printDirectives called." << std::endl;
-    size_t i = 0;
+    // size_t i = 0;
     static size_t server_id = 0;
 
     if (src.getName() == "server")
@@ -626,11 +626,11 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
               }
               newServ.addDirective(it->first, it->second);
             }
-            i++;
+            // i++;
         }
 
       //adding contexts/locations to the current Server block
-      size_t i = 0;
+      // size_t i = 0;
       std::vector< ConfigParser > src_contexts = src.get_contexts();
       if (temp.empty())
       {
@@ -654,7 +654,7 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
             newServ.acceptNewLocation(newLocation);
           }
           ns_addContexts(*it);
-        i++;
+        // i++;
       }
       //starting the server now that the required fields have been populated.
       //newServ.startServer();
@@ -675,7 +675,7 @@ void    ServerManager::printAllServers()
 
 void    ServerManager::ns_addContexts(ConfigParser &src)
 {
-    size_t i = 0;
+    // size_t i = 0;
 
     std::vector< ConfigParser > temp = src.get_contexts();
     ns_addDirectives(src);
@@ -691,7 +691,7 @@ void    ServerManager::ns_addContexts(ConfigParser &src)
         << ">" << RESET << std::endl;
       #endif
         ns_addContexts(*it);
-        i++;
+        // i++;
     }
 }
 

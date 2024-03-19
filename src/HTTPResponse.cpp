@@ -416,7 +416,7 @@ bool HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 	}
 	else
 	{
-		WARN("We have NOT configured settings for this location. Deferring to server rules.");
+		// WARN("We have NOT configured settings for this location. Deferring to server rules.");
 		return false;
 		//std::cout << "We have NOT configured settings for this location...deferring to Server rules." << std::endl;
 	}

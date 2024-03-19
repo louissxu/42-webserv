@@ -168,18 +168,26 @@ void ServerManager::closeConnection(Client *cl)
   }
 }
 
-void ServerManager::handleEOF(Client *cl, int fd, bool &isCgiRead, bool &isCgiWrite)
+void ServerManager::handleEOF(Client *cl, struct kevent const &ev, bool &isCgiRead, bool &isCgiWrite)
 {
+  
   if (isCgiRead)
   {
+    WARN("Closing Connection with cgi %lu: ", ev.ident);
+    if (cl->getMessage().getMessage() == "")
+    {
+      Cgi cgi;
+
+      cgi.CgiReadHandler(*this, cl, ev);
+    }
     updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
     updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-    deleteCgi(_cgiRead, fd, EVFILT_READ);
+    deleteCgi(_cgiRead, ev.ident, EVFILT_READ);
     isCgiRead = false;
   }
   else if (isCgiWrite)
   {
-    deleteCgi(_cgiRead, fd, EVFILT_READ);
+    deleteCgi(_cgiRead, ev.ident, EVFILT_READ);
     isCgiWrite = false;
   }
   else
@@ -457,7 +465,7 @@ void ServerManager::handleEvent(struct kevent const &ev)
   }
   if (ev.flags & EV_EOF)
   {
-    handleEOF(cl, ev.ident, isCgiRead, isCgiWrite);
+    handleEOF(cl, ev, isCgiRead, isCgiWrite);
     return;
   }
   if (isCgiWrite || isCgiRead)
@@ -486,36 +494,14 @@ void ServerManager::handleEvent(struct kevent const &ev)
         ERR("Failed to parse request from %d: ", cl->getSockFD());
         closeConnection(cl);
       }
-      int len = (_req->getHeader("Content-Length").empty()) ? 0 : std::stoi(_req->getHeader("Content-Length"));
-      // if (std::stoi(_req->getHeader("Content-Length")) == static_cast<int>(_req->getBody().size()))
-      if (len == static_cast<int>(_req->getBody().size()))
+      size_t len = (_req->getHeader("Content-Length").empty()) ? 0 : std::stoi(_req->getHeader("Content-Length"));
+      if (len == _req->getBody().size())
       {
-        //this->_resp = HTTPResponse(*_req);
-         this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
         checkCgi(*_req);
-        if (_req->getCGIStatus() == true)
-        {
-          Cgi *cgi = new Cgi();
-          cgi->launchCgi(*_req, cl);
-          _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
-          _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
-
-          updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
-          updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
-
-          Message message(_req->getBody());
-          cl->setMessage(message);
-          cl->setBufferRead(0);
-          cl->resetRecvMessage();
-
-          updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-          updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-        }
-        else if (_req->getHeader("Content-Length").empty())
+        if (len == 0 && _req->getCGIStatus() == false)
         {
           RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
-           this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
-          //this->_resp = HTTPResponse(*_req);
+          this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
           Message message(_resp);
           cl->setMessage(message);
           cl->setBufferRead(0);
@@ -524,7 +510,30 @@ void ServerManager::handleEvent(struct kevent const &ev)
           updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
           updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
         }
-        RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
+        else 
+        {
+          RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
+          // this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
+          
+          if (_req->getCGIStatus() == true)
+          {
+            Cgi *cgi = new Cgi();
+            cgi->launchCgi(*_req, cl);
+            _cgiWrite.insert(std::pair<int, Client *>(cl->pipe_in[1], cl));
+            _cgiRead.insert(std::pair<int, Client *>(cl->pipe_out[0], cl));
+
+            updateEvent(cl->pipe_in[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+            updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, NULL);
+
+            Message message(_req->getBody());
+            cl->setMessage(message);
+            cl->setBufferRead(0);
+            cl->resetRecvMessage();
+
+            updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+            updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+          }
+        }
       }
       delete _req;
     }
@@ -727,27 +736,20 @@ bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
   Message message = cl->getMessage();
 
   int attempSend = message.size();
+  std::string status = message.getMessage().substr(0, message.getMessage().find('\n'));
   if (message.getBufferSent() == attempSend)
   {
-    std::string status = message.getMessage().substr(0, message.getMessage().find('\n'));
-    // if (status == "")
-    // {
-    //   DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
-    // }
+    cl->setMessage(Message());
     RECORD("SENT TO: %d\t\t STATUS: %s", cl->getSockFD(), status.c_str());
-    // closeConnection(cl); might need to close connection here.
     return false;
   }
-  std::string status = message.getMessage().substr(0, message.getMessage().find('\n'));
-    DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
+  DEBUG("SENT TO: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
   int actualSend = send(cl->getSockFD(), (message.getMessage()).c_str(), attempSend, 0);
   if (actualSend < 0)
   {
     ERR("Send: unable to send");
     return false;
   }
-  // int actualSend = send(cl->getSockFD(), (message.getMessage()).c_str() + message.getBufferSent(), attempSend, 0);
-  // DEBUG("sent to: %d: \n%s%s%s", cl->getSockFD(), GREEN, message.getMessage().c_str(), RESET);
   if (actualSend >= attempSend)
     message.addBufferSent(actualSend);
   cl->setMessage(message);

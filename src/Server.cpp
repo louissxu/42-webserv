@@ -187,21 +187,22 @@ std::map<enum e_HRM, bool> Server::getMethodPermissions(void) const
 
 void Server::initialiseErrorPages(void)
 {
-	_err_pages[301] = "";
-	_err_pages[302] = "";
-	_err_pages[400] = "";
-	_err_pages[401] = "";
-	_err_pages[402] = "";
-	_err_pages[403] = "";
-	_err_pages[404] = "";
-	_err_pages[405] = "";
-	_err_pages[406] = "";
-	_err_pages[500] = "";
-	_err_pages[501] = "";
-	_err_pages[502] = "";
-	_err_pages[503] = "";
-	_err_pages[505] = "";
-	_err_pages[505] = "";
+  //
+  _err_pages[204] = "E204.html";
+	_err_pages[301] = "E301.html";
+	_err_pages[302] = "E302.html";
+	_err_pages[400] = "E400.html";
+	_err_pages[401] = "E401.html";
+	_err_pages[402] = "E402.html";
+	_err_pages[403] = "E403.html";
+	_err_pages[404] = "E404.html";
+	_err_pages[405] = "E405.html";
+	_err_pages[406] = "E406.html";
+	_err_pages[500] = "E500.html";
+	_err_pages[501] = "E501.html";
+	_err_pages[502] = "E502.html";
+	_err_pages[503] = "E503.html";
+	_err_pages[505] = "E505.html";
 }
 
 void Server::setMethodPermission(enum e_HRM test, bool permissionState)

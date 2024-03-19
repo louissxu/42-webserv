@@ -128,6 +128,7 @@ size_t Location::getClientMaxBodySize()
 bool Location::getMethodPermission(enum e_HRM method) const {
     std::map<enum e_HRM, bool>::const_iterator it = _methodPermissions.find(method);
     if (it != _methodPermissions.end()) {
+        DEBUG("\t\tCan use that method at that location: %s", it->second ? "TRUE" : "FALSE");
         return it->second;
     }
     return false; // Default if not set
@@ -259,27 +260,60 @@ void Location::setDirective(const std::string& name, const std::string& value) {
 |                 TODO                       |
 \*------------------------------------------*/
 
+// void Location::setAllowMethods(const std::string& methods) {
+//     std::map<std::string, e_HRM> methodMap;
+//     methodMap["GET"] = r_GET;
+//     methodMap["POST"] = r_POST;
+//     methodMap["DELETE"] = r_DELETE;
+
+//     std::istringstream iss(methods);
+//     std::string method;
+//     while (iss >> method) {
+//         std::map<std::string, e_HRM>::iterator it = methodMap.find(method);
+//         if (it != methodMap.end()) {
+//             #ifdef _PRINT_
+//             std::cout << GREEN <<  "Location: "<< getPath() <<" setting "
+//             <<it->first<<" to true." << RESET << std::endl;
+//             #endif
+//             _methodPermissions[it->second] = true;
+//         } else {
+//             std::cout << "Unknown method: " << method << std::endl;
+//         }
+//     }
+// }
+
+
+/*
+ * After a bit of discussion and review, for now we have decided if the allow methods directive is 
+ * defined at a given location, "Clean slate" the allowed methods to false before then
+ * defining what is allowed.
+ *
+ * If allow_methods directive isnt defined in the location's scope, it keeps the default server 
+ * permissions it received when it was created.
+ */
+
 void Location::setAllowMethods(const std::string& methods) {
-    std::map<std::string, e_HRM> methodMap;
-    methodMap["GET"] = r_GET;
-    methodMap["POST"] = r_POST;
-    methodMap["DELETE"] = r_DELETE;
+    // Reset permissions to a clean slate.
+    _methodPermissions[r_GET] = false;
+    _methodPermissions[r_POST] = false;
+    _methodPermissions[r_DELETE] = false;
 
     std::istringstream iss(methods);
     std::string method;
     while (iss >> method) {
-        std::map<std::string, e_HRM>::iterator it = methodMap.find(method);
-        if (it != methodMap.end()) {
-            #ifdef _PRINT_
-            std::cout << GREEN <<  "Location: "<< getPath() <<" setting "
-            <<it->first<<" to true." << RESET << std::endl;
-            #endif
-            _methodPermissions[it->second] = true;
+        if (method == "GET") {
+            _methodPermissions[r_GET] = true;
+        } else if (method == "POST") {
+            _methodPermissions[r_POST] = true;
+        } else if (method == "DELETE") {
+            _methodPermissions[r_DELETE] = true;
         } else {
-            std::cout << "Unknown method: " << method << std::endl;
+            // Log or handle the unrecognized method name
+            DEBUG("Invalid method name: %s", method.c_str());
         }
-    }
+    } 
 }
+
 
 void Location::setAutoIndex(std::string stateString)
 {

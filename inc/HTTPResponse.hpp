@@ -83,7 +83,8 @@ public:
 	void setDefaultBody();
 
 	//Method-Route Verification.
-	bool methodPermittedAtRoute(HTTPRequest const &req);
+	int methodPermittedAtRoute(HTTPRequest const &req);
+	//bool methodPermittedAtRoute(HTTPRequest const &req);
 	std::string stripFileName(std::string const &reqUri);
 	bool getMethodPermission(enum e_HRM method, Location *myLocation);
 	bool getMethodPermission(enum e_HRM method, Location &myLocation);
@@ -91,7 +92,8 @@ public:
 private:
 	bool getResource(std::string const &path, int const &len);
 	void getErrorResource(int errCode); //retrieves our servers error file first.
-	void GETHandler(std::string const &uri);
+	//void GETHandler(std::string const &uri);
+	void GETHandler(HTTPRequest const &_req);
 	// int const &POSTHandler(HTTPRequest const &request);
 	void DELETEHandler();
 };

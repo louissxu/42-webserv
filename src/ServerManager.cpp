@@ -170,7 +170,7 @@ void ServerManager::closeConnection(Client *cl)
 
 void ServerManager::handleEOF(Client *cl, struct kevent const &ev, bool &isCgiRead, bool &isCgiWrite)
 {
-  
+
   if (isCgiRead)
   {
     WARN("Closing Connection with cgi %lu: ", ev.ident);
@@ -500,21 +500,23 @@ void ServerManager::handleEvent(struct kevent const &ev)
         checkCgi(*_req);
         if (len == 0 && _req->getCGIStatus() == false)
         {
-          RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
+          RECORD("first RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
           this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
           Message message(_resp);
           cl->setMessage(message);
           cl->setBufferRead(0);
-          cl->resetRecvMessage();
+          // cl->resetRecvMessage();
 
           updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
           updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+          // cl->resetRecvMessage();
+          // std::cout << BOLDRED << cl->getRecvMessage() << RESET;
         }
-        else 
+        else
         {
-          RECORD("RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
+          RECORD("second RECIEVED FROM: %lu, METHOD: %s, URI: %s, BODY: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str(), _req->getBody().c_str());
           // this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
-          
+
           if (_req->getCGIStatus() == true)
           {
             Cgi *cgi = new Cgi();
@@ -528,12 +530,16 @@ void ServerManager::handleEvent(struct kevent const &ev)
             Message message(_req->getBody());
             cl->setMessage(message);
             cl->setBufferRead(0);
-            cl->resetRecvMessage();
+            // cl->resetRecvMessage();
 
             updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
             updateEvent(ev.ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+
           }
         }
+        std::cout << BOLDRED << "before: " << cl->getSockFD() << "\n" << cl->getRecvMessage() << RESET;
+        cl->resetRecvMessage();
+        std::cout << BOLDRED << "after: " << cl->getSockFD() << "\n" << cl->getRecvMessage() << RESET;
       }
       delete _req;
     }
@@ -569,6 +575,7 @@ int ServerManager::handleReadEvent(Client *cl, struct kevent event)
     closeConnection(cl);
     return ERRORDATA;
   }
+  std::cout << BOLDRED << "apppending to: " << cl->getSockFD() << "\n" << cl->getRecvMessage() << RESET;
   cl->appendRecvMessage(ClientMessage, readLen);
   cl->setBufferRead(readLen);
   ClientMessage[readLen] = '\0';
@@ -739,7 +746,8 @@ bool ServerManager::handleWriteEvent(Client *cl, int dataLen)
   std::string status = message.getMessage().substr(0, message.getMessage().find('\n'));
   if (message.getBufferSent() == attempSend)
   {
-    cl->setMessage(Message());
+    // cl->setMessage(Message());
+    cl->resetRecvMessage();
     RECORD("SENT TO: %d\t\t STATUS: %s", cl->getSockFD(), status.c_str());
     return false;
   }

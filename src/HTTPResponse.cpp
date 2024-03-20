@@ -38,8 +38,8 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 		GETHandler(_req.getUri());
 		return;
 	case Method(POST):
-		if (_req.getHeader("Set-Cookie") != std::string())
-			headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
+		// if (_req.getHeader("Set-Cookie") != std::string())
+		// 	headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
 		return;
 	case Method(DELETE):
 		DELETEHandler();

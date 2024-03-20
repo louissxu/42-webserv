@@ -8,7 +8,6 @@
 #include "ServerManager.hpp"
 #include "HTTPRequest.hpp"
 #include "Client.hpp"
-#include "base64.hpp"
 
 // #define LOG_LEVEL 4
 #include "log.hpp"

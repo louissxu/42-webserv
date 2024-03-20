@@ -43,7 +43,6 @@ SRC_FILES = \
 	Location.cpp \
 	Utils.cpp \
 	MIME.cpp \
-	base64.cpp \
 	main.cpp
 
 SRC_DIR = src

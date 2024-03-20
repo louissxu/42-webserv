@@ -18,14 +18,6 @@ print("<h1> File Upload </h1>")
 
 print(f"<!-- {os.getenv('Content-Type')}-->")
 
-# html_print("start of query string is: ", os.getenv("QUERY_STRING")[:10])
-# if (os.getenv("Content-Type")[0:9] == "multipart"):
-#     body = base64.b64decode(os.getenv("QUERY_STRING").encode())
-# else:
-#     body = os.getenv("QUERY_STRING").encode()
-
-# html_print("start of body is: ", body[:10])
-
 # Check if form was submitted
 form = cgi.FieldStorage(
     headers={"content-type": os.getenv("Content-Type"), "content-length": os.getenv("Content-Length")},

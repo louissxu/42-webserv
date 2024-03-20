@@ -401,11 +401,6 @@ void ServerManager::startServer(Server &mServer) {
   freeaddrinfo(servinfo);
 }
 
-HTTPResponse &ServerManager::getResponse()
-{
-  return this->_resp;
-}
-
 /*------------------------------------------*\
 |          CONFIG READING METHODS            |
 \*------------------------------------------*/
@@ -501,8 +496,8 @@ void ServerManager::handleEvent(struct kevent const &ev)
         if (len == 0 && _req->getCGIStatus() == false)
         {
           RECORD("first RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
-          this->_resp = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
-          Message message(_resp);
+          HTTPResponse response = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
+          Message message(response);
           cl->setMessage(message);
           cl->setBufferRead(0);
           // cl->resetRecvMessage();

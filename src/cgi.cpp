@@ -140,7 +140,6 @@ void Cgi::handleSuccessfulTermination(ServerManager &sm, Client *cl)
 {
 	HTTPResponse cgiResponse;
 
-	cgiResponse = sm.getResponse();
 	cgiResponse.setBody(cl->getRecvMessage());
 	cgiResponse.setVersion("HTTP/1.1");
 	cgiResponse.addHeader("Content-Type", "text/HTML");

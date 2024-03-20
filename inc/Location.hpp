@@ -33,17 +33,19 @@ class Location
         std::map<enum e_HRM, bool>  getMethodPermissions();
         bool                        getAutoIndex();
         size_t                      getClientMaxBodySize();
+        std::string const &         getReturn() const;
 
     // Setters
         void setPath(std::string newPath);
-        void setRoot(std::string newRoot);       
-        void setIndex(std::string newIndex);  
-        void setFilePathPost(std::string newFilePathPost);  
+        void setRoot(std::string newRoot);
+        void setIndex(std::string newIndex);
+        void setFilePathPost(std::string newFilePathPost);
         void setMethodPermissions(std::map<enum e_HRM, bool> newPermissions);
         void setMethodPermission(enum e_HRM, bool permissionState);
         void setAutoIndex(bool indexState);
         void setClientMaxBodySize(std::string size_str);
         void setClientMaxBodySize(size_t newClientMaxBodySize);
+        void setReturn(std::string const &path);
 
     //state printers:
         void printMethodPermissions() const;

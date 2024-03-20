@@ -147,6 +147,18 @@ void Server::initMethodPermissions()
       }
   }
 
+  std::string Server::getReturnPath(const std::string &reqPath) const
+  {
+    for (size_t i = 0; i < _locations.size(); ++i)
+    {
+      if (_locations[i].getPath() == reqPath)
+      {
+        return _locations[i].getReturn();
+      }
+    }
+    return std::string();
+  }
+
 /*------------------------------------------*\
 |                 SETTERS                    |
 \*------------------------------------------*/

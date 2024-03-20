@@ -138,6 +138,8 @@ std::string HTTPResponse::getStatus() const
 		return "ACCEPTED";
 	case NO_CONTENT:
 		return "NO_CONTENT";
+	case MOVED_PERMANENTLY:
+		return "MOVED_PERMANENTLY";
 	case BAD_REQUEST:
 		return "BAD_REQUEST";
 	case FORBIDDEN:
@@ -153,9 +155,9 @@ std::string HTTPResponse::getStatus() const
 	case SERVICE_UNAVAILABLE:
 		return "SERVICE_UNAVAILABLE";
 		// TODO throw error when code is not valid
-		// default:
-		// 	throw;
-		// 	break;
+	default:
+		return "SERVICE_UNAVAILABLE";
+		break;
 	}
 }
 
@@ -219,6 +221,23 @@ bool isValidURI(const std::string &uri) {
 |             METHOD HANDLERS                 |
 \*------------------------------------------*/
 
+// std::string const &HTTPResponse::isRedirect(std::string const &uri)
+// {
+// 	return (_server.getReturnPath(uri) == std::string() ? std::string() : )
+// 	// if (_server.getReturnPath(uri) != std::string())
+// 	// {
+
+// 	// }
+// }
+
+void HTTPResponse::buildRedirectResponse(std::string const &redirectPath)
+{
+	this->version = "HTTP/1.1";
+	this->status = Status(301);
+	this->reason = getStatus();
+	addHeader("Location", redirectPath);
+}
+
 void HTTPResponse::GETHandler(std::string const &uri)
 {
 	DEBUG("went in GETHandler");
@@ -230,6 +249,14 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	{
 		this->geterrorResource(403);
 		return;
+	}
+
+	// check for redirect path
+	std::string redirectPath = _server.getReturnPath(uri);
+	if (redirectPath != std::string())
+	{
+		buildRedirectResponse(redirectPath);
+		return ;
 	}
 
 	if (uri == "/")

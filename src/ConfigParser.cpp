@@ -14,7 +14,7 @@ ConfigParser::ConfigParser() {
 }
 
 // change your constructors and assignment operator
-ConfigParser::ConfigParser(const ConfigParser & src) : 
+ConfigParser::ConfigParser(const ConfigParser & src) :
     _name(src._name), _contextLvl(src._contextLvl) {
     _directives = src._directives;
     _contexts = src._contexts;
@@ -41,7 +41,7 @@ std::vector< std::pair <std::string, std::string> > ConfigParser::get_directives
     return _directives;
 }
 
-std::vector < ConfigParser > ConfigParser::get_contexts() const 
+std::vector < ConfigParser > ConfigParser::get_contexts() const
 {
     return _contexts;
 }
@@ -60,8 +60,8 @@ size_t	ConfigParser::get_contextLvl() const
 // Find the first non-whitespace character
 char getFnwc(std::string& str) {
     std::string::const_iterator it = std::find_if(
-        str.begin(), 
-        str.end(), 
+        str.begin(),
+        str.end(),
         std::not1(std::ptr_fun<int, int>(std::isspace))
     );
 
@@ -88,7 +88,7 @@ std::string ConfigParser::getContextName(std::string line)
 
 e_lineType ConfigParser::getLineType(std::string line)
 {
-    
+
     if (isOnlyWhitespace(line))
 	{
         return OTHER;
@@ -155,7 +155,7 @@ int ConfigParser::setContent(std::string fileName)
     }
     std::ifstream  config_file(fileName.c_str());
     if (!config_file || !config_file.is_open())
-    {    
+    {
         return (1);
     }
     // size_t i = 0;
@@ -179,7 +179,7 @@ int ConfigParser::setContent(std::string fileName)
         else
         {
             statement = line;
-        }   
+        }
         if (!statement.empty())
         {
             _contents += statement + "\n";
@@ -200,7 +200,7 @@ void    ConfigParser::setContextConfig()
     }
     std::ifstream  config_file(_contents);
    	if (!config_file || !config_file.is_open())
-    {    
+    {
         return ;
     }
     size_t lineNumber = 0;
@@ -225,7 +225,7 @@ void    ConfigParser::setContextConfig()
                 std::cout << "Context End." << std::endl;
                 break;
             }
-            case OTHER : 
+            case OTHER :
             {
                 std::cout << "Other!" << std::endl;
                 break;
@@ -255,6 +255,10 @@ bool ConfigParser::setDirectiveInit(std::string line)
        {
            ++it;
        }
+    //    if (*it == '}')
+    //     {
+    //         break;
+    //     }
         if (*it == '\n')
         {
             return  false;
@@ -305,7 +309,7 @@ bool ConfigParser::setDirectiveInit(std::string line)
        }
    }
    //_directives.insert(std::make_pair(key, value));
-   _directives.push_back(std::make_pair(key, value)); 
+   _directives.push_back(std::make_pair(key, value));
    return true;
 }
 
@@ -408,7 +412,7 @@ void ConfigParser::setStateFromContent(size_t myContextLvl, bool print)
                 _contextLvl--;
                 break;
            }
-           case OTHER : 
+           case OTHER :
            {
                 if (print)
                     std::cout << "Other!" << std::endl;

@@ -537,9 +537,7 @@ void ServerManager::handleEvent(struct kevent const &ev)
 
           }
         }
-        std::cout << BOLDRED << "before: " << cl->getSockFD() << "\n" << cl->getRecvMessage() << RESET;
         cl->resetRecvMessage();
-        std::cout << BOLDRED << "after: " << cl->getSockFD() << "\n" << cl->getRecvMessage() << RESET;
       }
       delete _req;
     }
@@ -575,7 +573,6 @@ int ServerManager::handleReadEvent(Client *cl, struct kevent event)
     closeConnection(cl);
     return ERRORDATA;
   }
-  std::cout << BOLDRED << "apppending to: " << cl->getSockFD() << "\n" << cl->getRecvMessage() << RESET;
   cl->appendRecvMessage(ClientMessage, readLen);
   cl->setBufferRead(readLen);
   ClientMessage[readLen] = '\0';

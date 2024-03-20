@@ -14,7 +14,7 @@ void Location::initMethodPermissions()
 Location::Location()
 {
     DEBUG("\t\tDefault constructor called.");
-    
+
     //std::cout << RED << "Location\t\t: " << RESET
     //<<"Default constructor called." << std::endl;
 	this->_path = "";
@@ -36,6 +36,7 @@ Location::Location(const std::string & path)
 	this->_path = path;
 	this->_root = "";
 	this->_index = "";
+    this->_return = "";
 	this->_filePathPost = "";
     this->_autoIndex = false;
 	this->_clientMaxBodySize = MAX_CONTENT_LENGTH;
@@ -48,6 +49,7 @@ Location::Location(const Location& other)
 	this->_path = other._path;
 	this->_root = other._root;
 	this->_index = other._index;
+    this->_return = other._return;
 	this->_filePathPost = other._filePathPost;
     this->_autoIndex = other._autoIndex;
 	this->_clientMaxBodySize = other._clientMaxBodySize;
@@ -63,6 +65,7 @@ Location &Location::operator=(const Location &rhs)
 	    this->_path = rhs._path;
 	    this->_root = rhs._root;
 	    this->_index = rhs._index;
+        this->_return = rhs._return;
 	    this->_filePathPost = rhs._filePathPost;
         this->_autoIndex = rhs._autoIndex;
 	    this->_clientMaxBodySize = rhs._clientMaxBodySize;
@@ -114,9 +117,19 @@ size_t Location::getClientMaxBodySize()
     return _clientMaxBodySize;
 }
 
+std::string const &Location::getReturn() const
+{
+    return this->_return;
+}
+
 /*------------------------------------------*\
 |                 SETTERS                    |
 \*------------------------------------------*/
+
+void Location::setReturn(std::string const &path)
+{
+    _return = path;
+}
 
 void Location::setPath(std::string newPath)
 {
@@ -180,19 +193,19 @@ void Location::setClientMaxBodySize(size_t newClientMaxBodySize)
 }
 
 void Location::setDirective(const std::string& name, const std::string& value) {
-  
-  if (name == "root") 
+
+  if (name == "root")
   {
     _root = value;
-  } 
+  }
   else if (name == "allow_methods")
   {
     setAllowMethods(value);
-  } 
+  }
   else if (name == "index")
   {
     _index = value;
-  } 
+  }
   else if (name == "autoindex")
   {
     setAutoIndex(value);
@@ -210,8 +223,8 @@ void Location::setDirective(const std::string& name, const std::string& value) {
     _return = value;
   }
   #ifdef _PRINT_
-  std::cout << YELLOW << "Location " << this->getPath() 
-  << ": added: <" << value <<"> to <" << name 
+  std::cout << YELLOW << "Location " << this->getPath()
+  << ": added: <" << value <<"> to <" << name
   << ">" << RESET << std::endl;
   #endif
 }
@@ -313,7 +326,7 @@ void Location::initLocationDirectives(ConfigParser &src)
         else
         {
             #ifdef _PRINT_
-            std::cout << MAGENTA << it->first << "is not a Location directive I am aware of.." 
+            std::cout << MAGENTA << it->first << "is not a Location directive I am aware of.."
             << RESET << std::endl;
             #endif
         }

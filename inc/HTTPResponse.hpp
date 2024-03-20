@@ -25,6 +25,7 @@ enum Status
 	CREATED = 201,
 	ACCEPTED = 202,
 	NO_CONTENT = 203,
+	MOVED_PERMANENTLY = 301,
 	BAD_REQUEST = 400,
 	FORBIDDEN = 403,
 	NOT_FOUND = 404,
@@ -86,6 +87,8 @@ public:
 	void geterrorResource(int errCode); //retrieves our servers error file first.
 
 private:
+	void buildRedirectResponse(std::string const &redirectPath);
+	// void isRedirect(std::string const &uri);
 	bool getResource(std::string const &path, int const &len);
 	void GETHandler(std::string const &uri);
 	// int const &POSTHandler(HTTPRequest const &request);

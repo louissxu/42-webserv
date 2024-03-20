@@ -91,6 +91,8 @@ class Server {
     int                   getSockFd(void) const;
     std::string           getErrorPage(const int errorCode) const;
 
+    std::string           getReturnPath(const std::string &reqPath) const;
+
     //Setters:
     void setListen(std::string listen);
     void setHost(std::string host);

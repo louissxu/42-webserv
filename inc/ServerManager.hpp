@@ -50,7 +50,6 @@ class ServerManager
   		std::map<int, Client *> _clients;
   		std::map<int, Client *> _cgiRead;
   		std::map<int, Client *> _cgiWrite;
-  		HTTPResponse _resp;
 
 		std::vector<Server> _servers;
   		//std::vector< std::pair <std::string, std::string> > _directives;

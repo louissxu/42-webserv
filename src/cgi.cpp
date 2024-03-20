@@ -22,12 +22,17 @@ void Cgi::setEnv(HTTPRequest &req)
 	_envVec.push_back("Method=" + req.getMethodString());
 	
 	std::string content_type = req.getHeader("Content-Type");
+	
+	// TODO: This should be a check for the method
+	// It should only encode the query string if it is a get request (and not a post request)
+	// This has been left as some legacy code expects a short post body to be encoded as a query string
 	if (content_type.size() >= 9 && content_type.substr(0, 9) == "multipart") {
-		std::string encoded_string = base64_encode(req.getBody());
-		_envVec.push_back("QUERY_STRING=" + encoded_string);
+		// Do nothing
 	} else {
 		_envVec.push_back("QUERY_STRING=" + req.getBody());
 	}
+
+
 	// _envVec.push_back("REQUEST_METHOD=" + req.getMethodString());
 	// _envVec.push_back("PATH_INFO=" + req.getUri());
 	// _envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");

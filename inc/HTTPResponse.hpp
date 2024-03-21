@@ -73,7 +73,7 @@ public:
 	// getters
 	std::string const &getVersion() const;
 	Status const &getStatusCode() const;
-	std::string getStatus() const;
+	std::string getStatus();
 	std::string const &getReason() const;
 	std::map<std::string, std::string> const &getHeaders() const;
 	std::string const &getBody() const;

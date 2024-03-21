@@ -127,7 +127,7 @@ std::string const &HTTPResponse::getBody() const
 	return this->body;
 }
 
-std::string HTTPResponse::getStatus() const
+std::string HTTPResponse::getStatus()
 {
 	switch (status)
 	{
@@ -161,7 +161,8 @@ std::string HTTPResponse::getStatus() const
 		return "Service Unavailable";
 		// TODO throw error when code is not valid
 	default:
-		return "Service Unavailable";
+		this->status = INTERNAL_SERVER_ERROR;
+		return "Internal Server Error";
 		break;
 	}
 }

@@ -113,5 +113,5 @@ private:
 
 
 	// int const &POSTHandler(HTTPRequest const &request);
-	void DELETEHandler();
+	void DELETEHandler(HTTPRequest const &_req);
 };

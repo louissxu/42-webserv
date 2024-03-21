@@ -42,7 +42,7 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 		// 	headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
 		return;
 	case Method(DELETE):
-		DELETEHandler();
+		DELETEHandler(_req);
 	default:
 		return;
 	}
@@ -66,7 +66,12 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 	// 	this->getErrorResource(403);
 	// 	//Throw forbidden.
 	// }
-
+	int methodState = methodPermittedAtRoute(_req);
+	if (methodState) // meaning the method is not allowed
+	{
+		this->getErrorResource(methodState);
+		return;
+	}
 
 	buildDefaultResponse();
 	switch (_req.getMethod())
@@ -84,7 +89,7 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 		}
 		case Method(DELETE):
 		{
-			DELETEHandler();
+			DELETEHandler(_req);
 		}
 		default:
 			return;
@@ -346,9 +351,12 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 
 }
 
-void HTTPResponse::DELETEHandler()
+void HTTPResponse::DELETEHandler(HTTPRequest const &_req)
 {
-	body = "<html><head><title>Ha Ha</title></head><body>Sorry Bud, Delete is not allowed on this server :(\n Go hack some other Server!<br /></body></html>";
+
+	// int result = remove(_req.getUri().c_str());
+	body = "<html><head><title>Ha Ha</title></head><body>deleted " + _req.getUri() + " <br /></body></html>";
+	// body = "<html><head><title>Ha Ha</title></head><body>Sorry Bud, Delete is not allowed on this server :(\n Go hack some other Server!<br /></body></html>";
 	addHeader("Content-Length", std::to_string(body.size()));
 }
 

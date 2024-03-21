@@ -1,14 +1,26 @@
 #include "Location.hpp"
-
+Location Location::NullLocation;
 /*------------------------------------------*\
 |              CONSTRUCTORS                  |
 \*------------------------------------------*/
+
 
 void Location::initMethodPermissions()
 {
     _methodPermissions[r_GET] = false;
     _methodPermissions[r_POST] = false;
     _methodPermissions[r_DELETE] = false;
+}
+
+void Location::initMethodPermissions(std::map<enum e_HRM, bool> srcPermissions)
+{
+    _methodPermissions[r_GET] = false;
+    _methodPermissions[r_POST] = false;
+    _methodPermissions[r_DELETE] = false;
+
+    for (std::map<enum e_HRM, bool>::const_iterator it = srcPermissions.begin(); it != srcPermissions.end(); ++it) {
+        _methodPermissions[it->first] = it->second;
+    }
 }
 
 Location::Location()
@@ -26,10 +38,10 @@ Location::Location()
     initMethodPermissions();
 }
 
-//PARAMETERISED CONSTRUCTOR: USING THE PATH.
-Location::Location(const std::string & path)
+//PARAMETERISED CONSTRUCTOR: USING THE PATH AND SERVER PERMISSIONS.
+Location::Location(const std::string & path, std::map<enum e_HRM, bool> srcPermissions)
 {
-    DEBUG("\t\tPath param constructor called.");
+    DEBUG("\t\tParam constructor called.");
     // std::cout << RED << "Location: " << RESET
     // <<"path constructor called: "<< path << std::endl;
 
@@ -40,7 +52,7 @@ Location::Location(const std::string & path)
 	this->_filePathPost = "";
     this->_autoIndex = false;
 	this->_clientMaxBodySize = MAX_CONTENT_LENGTH;
-    initMethodPermissions();
+    initMethodPermissions(srcPermissions);
 }
 
 Location::Location(const Location& other)
@@ -54,7 +66,6 @@ Location::Location(const Location& other)
     this->_autoIndex = other._autoIndex;
 	this->_clientMaxBodySize = other._clientMaxBodySize;
     this->_methodPermissions = other._methodPermissions;
-    initMethodPermissions();
 }
 
 Location &Location::operator=(const Location &rhs)
@@ -121,6 +132,16 @@ std::string const &Location::getReturn() const
 {
     return this->_return;
 }
+
+bool Location::getMethodPermission(enum e_HRM method) const {
+    std::map<enum e_HRM, bool>::const_iterator it = _methodPermissions.find(method);
+    if (it != _methodPermissions.end()) {
+        DEBUG("\t\tCan use that method at that location: %s", it->second ? "TRUE" : "FALSE");
+        return it->second;
+    }
+    return false; // Default if not set
+}
+
 
 /*------------------------------------------*\
 |                 SETTERS                    |
@@ -252,27 +273,60 @@ void Location::setDirective(const std::string& name, const std::string& value) {
 |                 TODO                       |
 \*------------------------------------------*/
 
+// void Location::setAllowMethods(const std::string& methods) {
+//     std::map<std::string, e_HRM> methodMap;
+//     methodMap["GET"] = r_GET;
+//     methodMap["POST"] = r_POST;
+//     methodMap["DELETE"] = r_DELETE;
+
+//     std::istringstream iss(methods);
+//     std::string method;
+//     while (iss >> method) {
+//         std::map<std::string, e_HRM>::iterator it = methodMap.find(method);
+//         if (it != methodMap.end()) {
+//             #ifdef _PRINT_
+//             std::cout << GREEN <<  "Location: "<< getPath() <<" setting "
+//             <<it->first<<" to true." << RESET << std::endl;
+//             #endif
+//             _methodPermissions[it->second] = true;
+//         } else {
+//             std::cout << "Unknown method: " << method << std::endl;
+//         }
+//     }
+// }
+
+
+/*
+ * After a bit of discussion and review, for now we have decided if the allow methods directive is 
+ * defined at a given location, "Clean slate" the allowed methods to false before then
+ * defining what is allowed.
+ *
+ * If allow_methods directive isnt defined in the location's scope, it keeps the default server 
+ * permissions it received when it was created.
+ */
+
 void Location::setAllowMethods(const std::string& methods) {
-    std::map<std::string, e_HRM> methodMap;
-    methodMap["GET"] = r_GET;
-    methodMap["POST"] = r_POST;
-    methodMap["DELETE"] = r_DELETE;
+    // Reset permissions to a clean slate.
+    _methodPermissions[r_GET] = false;
+    _methodPermissions[r_POST] = false;
+    _methodPermissions[r_DELETE] = false;
 
     std::istringstream iss(methods);
     std::string method;
     while (iss >> method) {
-        std::map<std::string, e_HRM>::iterator it = methodMap.find(method);
-        if (it != methodMap.end()) {
-            #ifdef _PRINT_
-            std::cout << GREEN <<  "Location: "<< getPath() <<" setting "
-            <<it->first<<" to true." << RESET << std::endl;
-            #endif
-            _methodPermissions[it->second] = true;
+        if (method == "GET") {
+            _methodPermissions[r_GET] = true;
+        } else if (method == "POST") {
+            _methodPermissions[r_POST] = true;
+        } else if (method == "DELETE") {
+            _methodPermissions[r_DELETE] = true;
         } else {
-            std::cout << "Unknown method: " << method << std::endl;
+            // Log or handle the unrecognized method name
+            DEBUG("Invalid method name: %s", method.c_str());
         }
-    }
+    } 
 }
+
 
 void Location::setAutoIndex(std::string stateString)
 {
@@ -289,6 +343,11 @@ void Location::setAutoIndex(std::string stateString)
 /*------------------------------------------*\
 |                 OTHER                      |
 \*------------------------------------------*/
+
+bool Location::isNull()
+{ 
+    return this == &NullLocation;
+}
 
 bool Location::isValidLocationDirective(const std::string &src) {
     static const std::string validDirectiveNames[] = {

@@ -35,7 +35,7 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 	switch (_req.getMethod())
 	{
 	case Method(GET):
-		GETHandler(_req.getUri());
+		GETHandler(_req);
 		return;
 	case Method(POST):
 		// if (_req.getHeader("Set-Cookie") != std::string())
@@ -60,11 +60,12 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 	//_myServer.printState();
 
 	//Check if we can call the current request in the requested location.
-	if (!methodPermittedAtRoute(_req))
-	{
-		//Throw forbidden.
-
-	}
+	// if (!methodPermittedAtRoute(_req))
+	// {
+	// 	WARN("\tMethod not accessible at this location.");
+	// 	this->getErrorResource(403);
+	// 	//Throw forbidden.
+	// }
 
 
 	buildDefaultResponse();
@@ -72,7 +73,7 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 	{
 		case Method(GET):
 		{
-			GETHandler(_req.getUri());
+			GETHandler(_req);
 			return;
 		}
 		case Method(POST):
@@ -161,6 +162,25 @@ std::string HTTPResponse::getStatus() const
 	}
 }
 
+std::string HTTPResponse::getMethodString(enum e_HRM method) const
+{
+	switch (method)
+	{
+	case r_POST:
+		return "POST";
+		break;
+	case r_GET:
+		return "GET";
+		break;
+	case r_DELETE:
+		return "DELETE";
+		break;
+	default:
+		return std::string();
+		break;
+	}
+}
+
 /*------------------------------------------*\
 |                 SETTERS                    |
 \*------------------------------------------*/
@@ -238,16 +258,26 @@ void HTTPResponse::buildRedirectResponse(std::string const &redirectPath)
 	addHeader("Location", redirectPath);
 }
 
-void HTTPResponse::GETHandler(std::string const &uri)
+//void HTTPResponse::GETHandler(std::string const &uri)
+void HTTPResponse::GETHandler(HTTPRequest const &_req)
 {
-	DEBUG("went in GETHandler");
-//	std::string path = "application" + uri;
+	const std::string uri = _req.getUri();
+	DEBUG("\tWent in GETHandler");
+
+	int methodState = methodPermittedAtRoute(_req);
+	if (methodState)
+	{
+		this->getErrorResource(methodState);
+		return;
+	}
+
+	//	std::string path = "application" + uri;
 	std::string path = _server.getRoot() + uri;
 	struct stat s;
 
 	if (!isValidURI(uri))
 	{
-		this->geterrorResource(403);
+		this->getErrorResource(403);
 		return;
 	}
 
@@ -268,7 +298,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	{
 		path = "application/assets/images/favicon.ico";
 	}
-	DEBUG("PATH == %s", path.c_str());
+	DEBUG("\tPATH == %s", path.c_str());
 	if (uri.empty() || (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos))
 	{
 		this->body = "";
@@ -277,7 +307,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	// if (uri.compare(1, 7, "cgi-bin") == 0 && access(path.c_str(), F_OK) != -1)
 	// {
 	// 	// if (uri.compare(8, uri.size(), "loogin.py") != 0)
-	// 	// 	this->geterrorResource(403);
+	// 	// 	this->getErrorResource(403);
 	// 	return;
 	// }
 	if (stat(path.c_str(), &s) == 0)
@@ -285,7 +315,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 		if (s.st_mode & S_IFDIR)
 		{
 		  // it's a directory
-		  this->geterrorResource(403);
+		  this->getErrorResource(403);
 		  return ;
 		}
 		if (s.st_mode & S_IFREG)
@@ -293,7 +323,7 @@ void HTTPResponse::GETHandler(std::string const &uri)
 			int len = s.st_size;
 			if (!this->getResource(path, len))
 			{
-				this->geterrorResource(404);
+				this->getErrorResource(404);
 			}
 		}
 		else
@@ -301,11 +331,12 @@ void HTTPResponse::GETHandler(std::string const &uri)
 	}
 	else
 	{
-		this->geterrorResource(404);
+		this->getErrorResource(404);
 		// this->GETHandler("error404/errorPage.html");
 	}
 	//   return "";
 	// this->body = "";
+
 }
 
 void HTTPResponse::DELETEHandler()
@@ -361,7 +392,7 @@ bool HTTPResponse::getResource(std::string const &path, int const &len)
 	return true;
 }
 
-void HTTPResponse::geterrorResource(int errCode)
+void HTTPResponse::getErrorResource(int errCode)
 {
 	DEBUG("went in getErrorResource attempting code: %d", errCode);
 	struct stat s;
@@ -411,43 +442,67 @@ std::string HTTPResponse::stripFileName(std::string const &reqUri)
     }
 }
 
-bool HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
+bool HTTPResponse::getMethodPermission(enum e_HRM method, Location &Location) const {
+    
+	if (Location.getMethodPermission(method))
+	{
+		DEBUG("Method is allowed at location: %s", Location.getPath().c_str());
+		return true;
+	}
+	else
+	{
+		DEBUG("Method is NOT allowed at location: %s", Location.getPath().c_str());
+		return false;
+	}
+}
+
+int HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 {
+	e_HRM		myMethod;
+
 	switch (req.getMethod())
 	{
 		case Method(GET):
 		{
-			DEBUG("This HTTPRequest is trying to make a GET request..");
+			myMethod = r_GET;
+			DEBUG("\tThis HTTPRequest is trying to make a GET request..");
 			break;
 		}
 		case Method(POST):
 		{
-			DEBUG("This HTTPRequest is trying to make a POST request..");
+			myMethod = r_POST;
+			DEBUG("\tThis HTTPRequest is trying to make a POST request..");
 			break;
 		}
 		case Method(DELETE):
 		{
-			DEBUG("This HTTPRequest is trying to make a DELETE request..");
+			myMethod = r_DELETE;
+			DEBUG("\tThis HTTPRequest is trying to make a DELETE request..");
 			break;
 		}
 		default:
-			return false;
+			return 403;
 	}
-	//std::cout << "Prestrip: " << req.getUri() << std::endl;
-	//std::cout << "At location: " << stripFileName(req.getUri()) << std::endl;
-	DEBUG("At Location: %s", stripFileName(req.getUri()).c_str());
+	std::string strippedUri = stripFileName(req.getUri().c_str());
+	DEBUG("\tAt location: %s", strippedUri.c_str());
 
-	if (_server.hasLocation(req.getUri()))
-	{
-		DEBUG("We have configured settings for this location...");
-		//std::cout << "We have configured settings for this location..." << std::endl;
+	Location	&myLocation = _server.getLocationByPath(strippedUri);
+	if (myLocation.isNull()) {
+		DEBUG("\tNo settings for this location. Defaulting to server default permissions.");
+		if (!_server.getMethodPermission(myMethod))
+		{
+			return 405;
+		}
+		else
+		{
+			return 0;
+		}
 	}
-	else
+	else if (!myLocation.getMethodPermission(myMethod))
 	{
-		// WARN("We have NOT configured settings for this location. Deferring to server rules.");
-		return false;
-		//std::cout << "We have NOT configured settings for this location...deferring to Server rules." << std::endl;
+		DEBUG("\tWe have configured settings for this location...not allowed");
+		return 405;
 	}
-	//if (_req.getLocation().methodIsAllowed())
-	return (true);
+	//Successful request, return 0.
+	return 0;
 }

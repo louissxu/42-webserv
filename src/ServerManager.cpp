@@ -571,12 +571,12 @@ int ServerManager::handleReadEvent(Client *cl, struct kevent event)
   cl->appendRecvMessage(ClientMessage, readLen);
   cl->setBufferRead(readLen);
   ClientMessage[readLen] = '\0';
-  DEBUG("Recived from: %d\n%s%s%s", cl->getSockFD(), BLUE, ClientMessage, RESET);
+  DEBUG("\tReceived from: %d\n%s%s%s", cl->getSockFD(), BLUE, ClientMessage, RESET);
 
   unsigned int left = (unsigned)event.data;
   if (left <= (unsigned)readLen)
   {
-    DEBUG("no more data");
+    DEBUG("\tNo more data");
     return NOMOREDATA;
   }
   return true;
@@ -647,7 +647,7 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
             #ifdef _PRINT_
             std::cout << RED << "Adding Location: " << Utils::getSecond(it->getName()) << RESET << std::endl;
             #endif
-            Location newLocation = Location(Utils::getSecond(it->getName()));
+            Location newLocation = Location(Utils::getSecond(it->getName()), newServ.getMethodPermissions());
             newLocation.initLocationDirectives(*it);
             //newLocation.printMethodPermissions();
             newServ.acceptNewLocation(newLocation);
@@ -762,10 +762,10 @@ void ServerManager::checkCgi(HTTPRequest &_req)
   std::string path = defaultPath + uri;
   bool isCgi = 0;
 
-  DEBUG("path was: %s", path.c_str());
+  DEBUG("\tpath was: %s", path.c_str());
   if (access(path.c_str(), F_OK) < 0)
   {
-    DEBUG("file does satisfy F_OK");
+    DEBUG("\tfile does satisfy F_OK");
     return ;
   }
   // if (access(path.c_str(), X_OK) < 0)

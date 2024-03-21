@@ -162,7 +162,7 @@ void Cgi::handleTerminatedWithError(ServerManager &sm, Client *cl)
 	HTTPResponse cgiResponse;
 
 	cgiResponse.setCgiStatus(false);
-	cgiResponse.geterrorResource(500);
+	cgiResponse.getErrorResource(500);
 	cl->setMessage(Message(cgiResponse));
 	sm.updateEvent(cl->getSockFD(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
 	sm.updateEvent(cl->getSockFD(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);

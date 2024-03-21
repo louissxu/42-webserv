@@ -56,19 +56,15 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 {
 	_server = _myServer;
-	//std::cout << "HTTPResponse: Using server: " << std::endl;
-	//_myServer.printState();
-
-	//Check if we can call the current request in the requested location.
-	// if (!methodPermittedAtRoute(_req))
-	// {
-	// 	WARN("\tMethod not accessible at this location.");
-	// 	this->getErrorResource(403);
-	// 	//Throw forbidden.
-	// }
-
-
 	buildDefaultResponse();
+
+	int methodState = methodPermittedAtRoute(_req);
+	if (methodState) // meaning the method is not allowed
+	{
+		this->getErrorResource(methodState);
+		return;
+	}
+
 	switch (_req.getMethod())
 	{
 		case Method(GET):
@@ -271,12 +267,12 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 	const std::string uri = _req.getUri();
 	DEBUG("\tWent in GETHandler");
 
-	int methodState = methodPermittedAtRoute(_req);
-	if (methodState) // meaning the method is not allowed
-	{
-		this->getErrorResource(methodState);
-		return;
-	}
+	// int methodState = methodPermittedAtRoute(_req);
+	// if (methodState) // meaning the method is not allowed
+	// {
+	// 	this->getErrorResource(methodState);
+	// 	return;
+	// }
 
 	//	std::string path = "application" + uri;
 	std::string path = _server.getRoot() + uri;
@@ -348,7 +344,14 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 
 void HTTPResponse::DELETEHandler()
 {
-	body = "<html><head><title>Ha Ha</title></head><body>Sorry Bud, Delete is not allowed on this server :(\n Go hack some other Server!<br /></body></html>";
+	std::string path = _server.getRoot() + _req.getUri();
+	if (remove(path.c_str()) < 0)
+	{
+		body = "<html><head><title>Deleting file</title></head><body>unable to delete " + _req.getUri() + " <br /></body></html>";
+	}
+	else
+		body = "<html><head><title>Deleting file</title></head><body>deleted " + _req.getUri() + " <br /></body></html>";
+	// body = "<html><head><title>Ha Ha</title></head><body>Sorry Bud, Delete is not allowed on this server :(\n Go hack some other Server!<br /></body></html>";
 	addHeader("Content-Length", std::to_string(body.size()));
 }
 

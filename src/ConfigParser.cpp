@@ -597,7 +597,7 @@ void ConfigParser::printContents2()
 void ConfigParser::printDirectives()
 {
     //std::cout << "ConfigParser: printDirectives called." << std::endl;
-    size_t i = 0;
+    // size_t i = 0;
     size_t j;
 
     for(std::vector< std::pair < std::string, std::string> >::iterator it = this->_directives.begin(); it != this->_directives.end(); ++it)
@@ -609,13 +609,13 @@ void ConfigParser::printDirectives()
             j++;
         }
         //std::cout << "Directive [" << i << "]: Key: <" << it->first << "> Value: <" << it->second << ">." << std::endl;
-        i++;
+        // i++;
     }
 }
 
 void    ConfigParser::printContexts( void )
 {
-    size_t i = 0;
+    // size_t i = 0;
     size_t j; // = 0;
 
     this->printDirectives();
@@ -630,7 +630,7 @@ void    ConfigParser::printContexts( void )
         //std::cout << "context["<<i<<"]: name : <" << (*it).getName() << ">" << std::endl;
         //(*it).printDirectives();
         (*it).printContexts();
-        i++;
+        // i++;
     }
 }
 

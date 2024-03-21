@@ -158,7 +158,7 @@ void Server::initMethodPermissions()
     }
     return std::string();
   }
-  
+
 bool Server::getMethodPermission(enum e_HRM method) const {
     std::map<enum e_HRM, bool>::const_iterator it = _defaultPermissions.find(method);
     if (it != _defaultPermissions.end()) {

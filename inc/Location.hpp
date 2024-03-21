@@ -37,9 +37,10 @@ class Location
         bool                        getAutoIndex();
         size_t                      getClientMaxBodySize();
         std::string const &         getReturn() const;
-    
+
         //Incoming change.
-       bool                        getMethodPermission(enum e_HRM method) const;
+       bool                         getMethodPermission(enum e_HRM method) const;
+       std::string                  getAllowedMethods() const;
 
     // Setters
         void setPath(std::string newPath);

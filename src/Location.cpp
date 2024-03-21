@@ -142,6 +142,26 @@ bool Location::getMethodPermission(enum e_HRM method) const {
     return false; // Default if not set
 }
 
+std::string Location::getAllowedMethods() const {
+    std::string locs = "";
+
+    std::map<enum e_HRM, bool>::const_iterator it;
+    for (it = _methodPermissions.begin(); it != _methodPermissions.end(); ++it) {
+        std::string method;
+        if (it->second)
+        {
+            switch (it->first) {
+                case r_GET: method = "GET"; break;
+                case r_POST: method = "POST"; break;
+                case r_DELETE: method = "DELETE"; break;
+                continue;
+            }
+        }
+        locs += method + " ";
+        // std::cout << method << ": " << (it->second ? "true" : "false") << "\n";
+    }
+    return locs;
+}
 
 /*------------------------------------------*\
 |                 SETTERS                    |
@@ -297,11 +317,11 @@ void Location::setDirective(const std::string& name, const std::string& value) {
 
 
 /*
- * After a bit of discussion and review, for now we have decided if the allow methods directive is 
+ * After a bit of discussion and review, for now we have decided if the allow methods directive is
  * defined at a given location, "Clean slate" the allowed methods to false before then
  * defining what is allowed.
  *
- * If allow_methods directive isnt defined in the location's scope, it keeps the default server 
+ * If allow_methods directive isnt defined in the location's scope, it keeps the default server
  * permissions it received when it was created.
  */
 
@@ -324,7 +344,7 @@ void Location::setAllowMethods(const std::string& methods) {
             // Log or handle the unrecognized method name
             DEBUG("Invalid method name: %s", method.c_str());
         }
-    } 
+    }
 }
 
 
@@ -345,7 +365,7 @@ void Location::setAutoIndex(std::string stateString)
 \*------------------------------------------*/
 
 bool Location::isNull()
-{ 
+{
     return this == &NullLocation;
 }
 

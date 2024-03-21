@@ -151,6 +151,8 @@ std::string HTTPResponse::getStatus()
 		return "Forbidden";
 	case NOT_FOUND:
 		return "Not Found";
+	case METHOD_NOT_ALLOWED:
+		return "Method Not Allowed";
 	case REQUEST_TIMEOUT:
 		return "Request Timeout";
 	case INTERNAL_SERVER_ERROR:
@@ -270,7 +272,7 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 	DEBUG("\tWent in GETHandler");
 
 	int methodState = methodPermittedAtRoute(_req);
-	if (methodState)
+	if (methodState) // meaning the method is not allowed
 	{
 		this->getErrorResource(methodState);
 		return;
@@ -496,6 +498,8 @@ int HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 		DEBUG("\tNo settings for this location. Defaulting to server default permissions.");
 		if (!_server.getMethodPermission(myMethod))
 		{
+			// setAllowedPermissions()
+			addHeader("Allow", ""); // since the default permissions are NONE
 			return 405;
 		}
 		else
@@ -506,6 +510,7 @@ int HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 	else if (!myLocation.getMethodPermission(myMethod))
 	{
 		DEBUG("\tWe have configured settings for this location...not allowed");
+		addHeader("Allow", myLocation.getAllowedMethods());
 		return 405;
 	}
 	//Successful request, return 0.

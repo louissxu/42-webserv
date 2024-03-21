@@ -47,6 +47,8 @@ def print_page_with_content(content):
     <body>
         <h1>File Upload</h1>
         <p>{content}</p>
+        <p><a href="/cgi-bin/upload_file.py">Upload a new file</a></p>
+        <p><a href="/cgi-bin/all_files.py">View all uploaded files</a></p>
     </body>
 </html>
 ''')

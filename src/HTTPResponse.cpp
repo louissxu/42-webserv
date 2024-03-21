@@ -134,30 +134,34 @@ std::string HTTPResponse::getStatus() const
 	case OK:
 		return "OK";
 	case CREATED:
-		return "CREATED";
+		return "Created";
 	case ACCEPTED:
-		return "ACCEPTED";
+		return "Accepted";
+	case NON_AUTHORITATIVE_INFORMATION:
+		return "Non-Authoritative Information";
 	case NO_CONTENT:
-		return "NO_CONTENT";
+		return "No Content";
 	case MOVED_PERMANENTLY:
-		return "MOVED_PERMANENTLY";
+		return "Moved Permanently";
+	case FOUND:
+		return "Found";
 	case BAD_REQUEST:
-		return "BAD_REQUEST";
+		return "Bad Request";
 	case FORBIDDEN:
-		return "FORBIDDEN";
+		return "Forbidden";
 	case NOT_FOUND:
-		return "NOT_FOUND";
+		return "Not Found";
 	case REQUEST_TIMEOUT:
-		return "REQUEST_TIMEOUT";
+		return "Request Timeout";
 	case INTERNAL_SERVER_ERROR:
-		return "INTERNAL_SERVER_ERROR";
+		return "Internal Server Error";
 	case BAD_GATEWAY:
-		return "BAD_GATEWAY";
+		return "Bad Gateway";
 	case SERVICE_UNAVAILABLE:
-		return "SERVICE_UNAVAILABLE";
+		return "Service Unavailable";
 		// TODO throw error when code is not valid
 	default:
-		return "SERVICE_UNAVAILABLE";
+		return "Service Unavailable";
 		break;
 	}
 }
@@ -443,7 +447,7 @@ std::string HTTPResponse::stripFileName(std::string const &reqUri)
 }
 
 bool HTTPResponse::getMethodPermission(enum e_HRM method, Location &Location) const {
-    
+
 	if (Location.getMethodPermission(method))
 	{
 		DEBUG("Method is allowed at location: %s", Location.getPath().c_str());

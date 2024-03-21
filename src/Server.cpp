@@ -209,6 +209,7 @@ void Server::initialiseErrorPages(void)
 	_err_pages[404] = "E404.html";
 	_err_pages[405] = "E405.html";
 	_err_pages[406] = "E406.html";
+  _err_pages[413] = "E413.html";
 	_err_pages[500] = "E500.html";
 	_err_pages[501] = "E501.html";
 	_err_pages[502] = "E502.html";

@@ -489,11 +489,27 @@ void ServerManager::handleEvent(struct kevent const &ev)
         ERR("Failed to parse request from %d: ", cl->getSockFD());
         closeConnection(cl);
       }
-      size_t len = (_req->getHeader("Content-Length").empty()) ? 0 : std::stoi(_req->getHeader("Content-Length"));
-      if (len == _req->getBody().size())
+
+      size_t content_length =  0;
+      if (_req->getHeader("Content-Length").empty() == false) {
+        content_length = std::stoi(_req->getHeader("Content-Length"));
+      }
+
+      if (content_length == _req->getBody().size())
       {
         checkCgi(*_req);
-        if (len == 0 && _req->getCGIStatus() == false)
+        if (content_length > 100000) {
+          HTTPResponse response(*_req, getRelevantServer(*_req, _servers));
+          response.getErrorResource(413);
+          Message message(response);
+          cl->setMessage(message);
+          cl->setBufferRead(0);
+
+          updateEvent(ev.ident, EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+          updateEvent(ev.ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+
+        }
+        else if (content_length == 0 && _req->getCGIStatus() == false)
         {
           RECORD("first RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
           HTTPResponse response = HTTPResponse(*_req, getRelevantServer(*_req, _servers));

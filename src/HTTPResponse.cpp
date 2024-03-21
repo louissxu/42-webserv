@@ -149,6 +149,8 @@ std::string HTTPResponse::getStatus()
 		return "Not Found";
 	case METHOD_NOT_ALLOWED:
 		return "Method Not Allowed";
+	case CONTENT_TOO_LARGE:
+		return "Content Too Large";
 	case REQUEST_TIMEOUT:
 		return "Request Timeout";
 	case INTERNAL_SERVER_ERROR:

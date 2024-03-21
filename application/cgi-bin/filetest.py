@@ -2,58 +2,56 @@
 import cgi
 import os
 from io import BytesIO as IO
-import base64
-
-def html_print(key, val):
-    print(f"<!-- key: {key}    val: {val}-->")
 
 # Set target directory for uploads
 application_directory = "application"
 save_folder_name = "uploaded-files"
 
-# Create HTML header
-print("Content-type: text/html\n")
-print("<html><body>")
-print("<h1> File Upload </h1>")
+def html_print(key, val):
+    print(f"<!-- key: {key}    val: {val}-->")
 
-print(f"<!-- {os.getenv('Content-Type')}-->")
+def handle_get():
+    print_page_with_content('Please go to <a href=uploadFile.py>this page</a> to upload a file')
 
-# Check if form was submitted
-form = cgi.FieldStorage(
-    headers={"content-type": os.getenv("Content-Type"), "content-length": os.getenv("Content-Length")},
-    environ={"REQUEST_METHOD": os.getenv("Method")}
-)
+def handle_post():
+    form = cgi.FieldStorage(
+        headers={"content-type": os.getenv("Content-Type"), "content-length": os.getenv("Content-Length")},
+        environ={"REQUEST_METHOD": os.getenv("Method")}
+    )
+    item = form.value[0]
+    field_name = item.name
+    file_name = item.filename
+    binary_data = item.value
 
-item = form.value[0]
-print(f"<!-- name is: {item.name}, filename is: {item.filename}, value is: {item.value[:10]} -->")
+    current_pwd = os.getcwd()
+    upload_directory = os.path.join(os.getcwd(), application_directory, save_folder_name)
+    if not os.path.exists(upload_directory):
+        os.makedirs(upload_directory)
 
-field_name = item.name
-file_name = item.filename
-binary_data = item.value
+    file_path = os.path.join(upload_directory, os.path.basename(file_name)) 
 
-html_print("type of binary_data", type(binary_data))
-
-current_pwd = os.getcwd()
-print(f"<!- current pwd is {current_pwd}-->")
-upload_directory = os.path.join(os.getcwd(), application_directory, save_folder_name)
-if not os.path.exists(upload_directory):
-    os.makedirs(upload_directory)
-
-file_path = os.path.join(upload_directory, os.path.basename(file_name)) 
-print(f"<!-- file path is {file_path}-->")
-
-if os.path.exists(file_path):
-    print("<p>Sorry, file already exists.</p>")
-else:
+    if os.path.exists(file_path):
+        print_page_with_content("Sorry, file already exists.")
+    else:
         # Try to upload file
-    try:
-        with open(file_path, "wb") as f:
-            f.write(binary_data)
-        print(f"<p>The file {file_name} has been uploaded.</p>")
-    except IOError as e:
-        print(f"<!-- {e.errno} -->")
-        print(f"<!-- {e} -->")
-        print(f"<p>Sorry there was an error uploading your file</p>")
+        try:
+            with open(file_path, "wb") as f:
+                f.write(binary_data)
+            print_page_with_content(f"The file {file_name} has been uploaded.")
+        except IOError as e:
+            print_page_with_content(f"Sorry there was an error uploading your file")
 
-# Close HTML body and footer
-print("</body></html>")
+def print_page_with_content(content):
+    print(f'''
+<html>
+    <body>
+        <h1>File Upload</h1>
+        <p>{content}</p>
+    </body>
+</html>
+''')
+    
+if os.getenv("Method") == "POST":
+    handle_post()
+else:
+    handle_get()

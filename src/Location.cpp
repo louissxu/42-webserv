@@ -39,14 +39,14 @@ Location::Location()
 }
 
 //PARAMETERISED CONSTRUCTOR: USING THE PATH AND SERVER PERMISSIONS.
-Location::Location(const std::string & path, std::map<enum e_HRM, bool> srcPermissions)
+Location::Location(const std::string & path, std::map<enum e_HRM, bool> srcPermissions, std::string root)
 {
     DEBUG("\t\tParam constructor called.");
     // std::cout << RED << "Location: " << RESET
     // <<"path constructor called: "<< path << std::endl;
 
 	this->_path = path;
-	this->_root = "";
+	this->_root = root;
 	this->_index = "";
     this->_return = "";
 	this->_filePathPost = "";
@@ -275,7 +275,7 @@ void Location::setDirective(const std::string& name, const std::string& value) {
 \*------------------------------------------*/
 
  void Location::printMethodPermissions() const {
-        std::cout << BLUE << "Method Permissions:\n";
+        std::cout << "_methodPermissions:\n";
         std::map<enum e_HRM, bool>::const_iterator it;
         for (it = _methodPermissions.begin(); it != _methodPermissions.end(); ++it) {
             const char* method;
@@ -285,10 +285,41 @@ void Location::setDirective(const std::string& name, const std::string& value) {
                 case r_DELETE: method = "DELETE"; break;
                 default: method = "Unknown"; break;
             }
-            std::cout << method << ": " << (it->second ? "true" : "false") << "\n";
+            std::cout << "\t" << method << ": " << (it->second ? "true" : "false") << "\n";
         }
-        std::cout << RESET << std::endl;
     }
+
+        // std::string                 _path;
+        // std::string                 _root;
+        // std::string                 _index;
+        // std::string                 _filePathPost;
+        // std::string                 _return;
+        // std::string                 _cgi_path;
+        // std::string                 _cgi_ext;
+        // std::map<enum e_HRM, bool>  _methodPermissions;
+        // bool                        _autoIndex;
+        // size_t                      _clientMaxBodySize;
+
+
+void Location::printState(void) const
+{
+  std::cout << YELLOW;
+  std::cout << "Location state: " << std::endl;
+  std::cout << "_path = <" << _path << ">" <<std::endl;
+  std::cout << "_root = <" << _root << ">" <<std::endl;
+  std::cout << "_index = <" << _index << ">" << std::endl;
+  std::cout << "_cgi_path = <" << _cgi_path << ">" << std::endl;
+  std::cout << "_cgi_ext = <" << _cgi_ext << ">" << std::endl;
+  printMethodPermissions();
+  if (_autoIndex)
+    std::cout << "_autoindex = true" << std::endl;
+  else
+    std::cout << "_autoindex = false" << std::endl;
+  std::cout << "client_max_body_size = " << _clientMaxBodySize << std::endl;
+  std::cout << RESET;
+}
+
+
 /*------------------------------------------*\
 |                 TODO                       |
 \*------------------------------------------*/
@@ -404,10 +435,7 @@ void Location::initLocationDirectives(ConfigParser &src)
         }
         else
         {
-            #ifdef _PRINT_
-            std::cout << MAGENTA << it->first << "is not a Location directive I am aware of.."
-            << RESET << std::endl;
-            #endif
+            DEBUG("%s is not a valid location directive..", it->first.c_str());
         }
         // i++;
     }

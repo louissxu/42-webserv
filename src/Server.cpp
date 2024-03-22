@@ -270,6 +270,8 @@ void Server::printState(void)
   for (std::vector<Location>::iterator it = _locations.begin(); it != _locations.end(); ++it)
   {
     std::cout << it->getPath() << std::endl;
+    it->printState();
+
   }
   std::cout << RESET;
 }

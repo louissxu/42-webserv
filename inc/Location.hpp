@@ -22,7 +22,8 @@ class Location
     // Constructors
 
         //Location(const std::string &path);
-        Location(const std::string & path, std::map<enum e_HRM, bool> srcPermissions);
+        Location(const std::string & path, std::map<enum e_HRM, bool> srcPermissions, std::string root);
+        //Location(const std::string & path, std::map<enum e_HRM, bool> srcPermissions);
         Location(const Location& other);
         Location& operator=(const Location& other);
         ~Location();
@@ -56,6 +57,7 @@ class Location
 
     //state printers:
         void printMethodPermissions() const;
+        void printState(void) const;
 
     //wip
         void setAllowMethods(const std::string &methods);
@@ -93,7 +95,7 @@ class Location
         std::string                 _path;
         std::string                 _root;
         std::string                 _index;
-        std::string                 _filePathPost;
+        std::string                 _filePathPost; // Not sure I am going to use this.
         std::string                 _return;
         std::string                 _cgi_path;
         std::string                 _cgi_ext;

@@ -663,9 +663,10 @@ void ServerManager::ns_addDirectives(ConfigParser &src)
             #ifdef _PRINT_
             std::cout << RED << "Adding Location: " << Utils::getSecond(it->getName()) << RESET << std::endl;
             #endif
-            Location newLocation = Location(Utils::getSecond(it->getName()), newServ.getMethodPermissions());
+            Location newLocation = Location(Utils::getSecond(it->getName()), newServ.getMethodPermissions(), newServ.getRoot());
             newLocation.initLocationDirectives(*it);
             //newLocation.printMethodPermissions();
+            //newLocation.printState();
             newServ.acceptNewLocation(newLocation);
           }
           ns_addContexts(*it);

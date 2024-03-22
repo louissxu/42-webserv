@@ -66,7 +66,8 @@ Server::Server(const Server& other) :
     _index(other._index),
     _sockfd(other._sockfd),
     _client_max_body_size(other._client_max_body_size),
-    _autoindex(other._autoindex)
+    _autoindex(other._autoindex),
+    _err_pages(other._err_pages)
 {
     DEBUG("\t\tCopy constructor called.");
     _locations = other._locations;
@@ -84,6 +85,7 @@ Server& Server::operator=(const Server& other) {
     _sockfd = other._sockfd;
     _client_max_body_size = other._client_max_body_size;
     _autoindex = other._autoindex;
+    _err_pages = other._err_pages;
     _locations = other._locations;
     _defaultPermissions = other._defaultPermissions;
   return *this;

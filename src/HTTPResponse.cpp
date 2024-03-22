@@ -320,8 +320,14 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 		if (s.st_mode & S_IFDIR)
 		{
 		  // it's a directory
-		  this->getErrorResource(403);
-		  return ;
+			bool is_auto_index = false; // TODO: Actually check config directive to see if it an auto index location
+			if (is_auto_index) {
+				this->makeDirectoryPage(_req);
+				return;
+			} else {
+				this->getErrorResource(403);
+				return;
+			}
 		}
 		if (s.st_mode & S_IFREG)
 		{
@@ -425,6 +431,22 @@ void HTTPResponse::getErrorResource(int errCode)
 	this->reason = getStatus();
 	// else
 	// 	this->status = NOT_FOUND;
+}
+
+void HTTPResponse::makeDirectoryPage(const HTTPRequest &req) {
+	(void)req;
+
+	std::string body =
+	"<html>"
+	"<body>"
+	"<h1>Directory</h1>"
+	"</body>"
+	"</html>";
+
+	this->body = body;
+	this->status = Status(200);
+	addHeader("Content-Length", std::to_string(body.size()));
+	std::cout << "Directory page made" << std::endl;
 }
 
 bool const &HTTPResponse::getCgiStatus() const

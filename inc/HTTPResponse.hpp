@@ -96,6 +96,7 @@ public:
 	std::string stripFileName(std::string const &reqUri);
 
 	void getErrorResource(int errCode); //retrieves our servers error file first.
+	void makeDirectoryPage(const HTTPRequest &req);
 
 	//Incoming change.
 	// bool getMethodPermission(enum e_HRM method, Location *myLocation);

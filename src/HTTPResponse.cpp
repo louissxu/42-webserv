@@ -322,7 +322,7 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 		  // it's a directory
 			bool is_auto_index = false; // TODO: Actually check config directive to see if it an auto index location
 			if (is_auto_index) {
-				this->makeDirectoryPage(_req);
+				this->makeDirectoryPage(path);
 				return;
 			} else {
 				this->getErrorResource(403);
@@ -433,15 +433,45 @@ void HTTPResponse::getErrorResource(int errCode)
 	// 	this->status = NOT_FOUND;
 }
 
-void HTTPResponse::makeDirectoryPage(const HTTPRequest &req) {
-	(void)req;
+void HTTPResponse::makeDirectoryPage(std::string path) {
 
+	std::string server_root = "application";
+	
 	std::string body =
 	"<html>"
 	"<body>"
 	"<h1>Directory</h1>"
+	"<h2>Path: " + path + "</h2>"
+	"<h2>Files:</h2>"
+	"<ul>";
+
+	DIR *d;
+	struct dirent *dir;
+	d = opendir(path.c_str());
+	if (d) {
+		size_t file_count = 0;
+		while ((dir = readdir(d)) != NULL) {
+			std::string file_name = dir->d_name;
+			if (file_name[file_name.size() - 1] == '.') {
+				continue;
+			}
+			std::string link = path.substr(server_root.size()) + "/" + file_name;
+			body.append("<li><a href='" + link + "'>" + file_name + "</a></li>");
+			file_count++;
+		}
+		if (file_count <= 0) {
+			body.append("<li>Empty directory</li>");
+		}
+		closedir(d);
+	} else {
+		body.append("<li>No items</li>");
+	}
+
+	body.append(
+	"</ul>"
 	"</body>"
-	"</html>";
+	"</html>"
+	);
 
 	this->body = body;
 	this->status = Status(200);

@@ -94,6 +94,7 @@ class Server {
     std::map<enum e_HRM, bool> getMethodPermissions(void) const;
 
     std::string           getReturnPath(const std::string &reqPath) const;
+    size_t                getMaxBodySize() const;
 
     //Setters:
     void setListen(std::string listen);

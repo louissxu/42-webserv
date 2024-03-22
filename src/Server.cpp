@@ -174,6 +174,10 @@ std::map<enum e_HRM, bool> Server::getMethodPermissions(void) const
   return _defaultPermissions;
 }
 
+size_t Server::getMaxBodySize() const
+{
+  return this->_client_max_body_size;
+}
 
 /*------------------------------------------*\
 |                 SETTERS                    |
@@ -407,6 +411,10 @@ void Server::addDirective(const std::string& name, const std::string& value) {
   {
     //DEBUG("\t\tServer default method set: %s", value.c_str());
     setAllowedMethods(value);
+  }
+  else if (name == "body_size")
+  {
+    _client_max_body_size = std::stoi(value);
   }
 }
 

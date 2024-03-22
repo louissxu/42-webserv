@@ -434,6 +434,7 @@ bool ServerManager::isValidDirectiveName(const std::string &src) {
         "return",
         "cgi_path",
         "cgi_ext",
+        "body_size",
     };
 
     static const size_t numDirectives = sizeof(validDirectiveNames) / sizeof(validDirectiveNames[0]);
@@ -494,13 +495,15 @@ void ServerManager::handleEvent(struct kevent const &ev)
       if (_req->getHeader("Content-Length").empty() == false) {
         content_length = std::stoi(_req->getHeader("Content-Length"));
       }
-
+      Server server = getRelevantServer(*_req, _servers);
       if (content_length == _req->getBody().size())
       {
         checkCgi(*_req);
-        if (content_length > 100000) {
-          HTTPResponse response(*_req, getRelevantServer(*_req, _servers));
+
+        if (content_length > server.getMaxBodySize()) {
+          HTTPResponse response(*_req, server);
           response.getErrorResource(413);
+          _req->setIsCgi(false);
           Message message(response);
           cl->setMessage(message);
           cl->setBufferRead(0);
@@ -512,7 +515,7 @@ void ServerManager::handleEvent(struct kevent const &ev)
         else if (content_length == 0 && _req->getCGIStatus() == false)
         {
           RECORD("first RECIEVED FROM: %lu, METHOD: %s, URI: %s", ev.ident, _req->getMethodString().c_str(), _req->getUri().c_str());
-          HTTPResponse response = HTTPResponse(*_req, getRelevantServer(*_req, _servers));
+          HTTPResponse response = HTTPResponse(*_req, server);
           Message message(response);
           cl->setMessage(message);
           cl->setBufferRead(0);

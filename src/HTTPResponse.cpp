@@ -320,10 +320,12 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 		if (s.st_mode & S_IFDIR)
 		{
 		  // it's a directory
-			if (_server.isAutoIndex() || autoIndexPermittedAtRoute(_req)) {
+			if (isAutoIndexOn(_req))
+			{
 				this->makeDirectoryPage(path);
 				return;
-			} else {
+			}
+			else {
 				this->getErrorResource(403);
 				return;
 			}
@@ -347,6 +349,30 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 	//   return "";
 	// this->body = "";
 
+}
+
+bool HTTPResponse::isAutoIndexOn(HTTPRequest const &req)
+{
+	bool isOn = true;
+	bool haveLocation = false;
+	Location	&myLocation = _server.getLocationByPath(req.getUri());
+
+	if (!myLocation.isNull())
+	{
+		haveLocation = true;
+	}
+	if (_server.isAutoIndex())
+	{
+		if (haveLocation && !(myLocation.getAutoIndex()))
+			isOn = false;
+	}
+	else if (!_server.isAutoIndex())
+	{
+		if (haveLocation && myLocation.getAutoIndex())
+			isOn = true;
+	}
+	// std::cout << BOLDRED << "AUTO INDEX IS: " << isOn << RESET;
+	return isOn;
 }
 
 void HTTPResponse::DELETEHandler(const HTTPRequest &req)
@@ -519,15 +545,20 @@ bool HTTPResponse::getMethodPermission(enum e_HRM method, Location &Location) co
 	}
 }
 
-bool HTTPResponse::autoIndexPermittedAtRoute(HTTPRequest const &req)
-{
-	Location	&myLocation = _server.getLocationByPath(req.getUri());
-	if (myLocation.isNull())
-		return false;
-	else if (myLocation.getAutoIndex())
-		return true;
-	return false;
-}
+// bool HTTPResponse::autoIndexPermittedAtRoute(HTTPRequest const &req)
+// {
+// 	Location	&myLocation = _server.getLocationByPath(req.getUri());
+// 	if (!myLocation.isNull())
+// 	{
+// 		if (myLocation.getAutoIndex())	
+// 			return true;
+// 	}
+// 	return false;
+// 	// 	return false;
+// 	// else if (myLocation.getAutoIndex())
+// 	// 	return true;
+// 	// return false;
+// }
 
 int HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 {

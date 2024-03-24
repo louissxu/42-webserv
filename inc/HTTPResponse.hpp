@@ -82,7 +82,8 @@ public:
 	std::string const &getBody() const;
 	std::string getMethodString(enum e_HRM method) const;
 	bool getMethodPermission(enum e_HRM method, Location &Location) const;
-	bool autoIndexPermittedAtRoute(HTTPRequest const &req);
+	// bool autoIndexPermittedAtRoute(HTTPRequest const &req);
+	bool isAutoIndexOn(HTTPRequest const &req);
 
 	//CGI
 	bool const &getCgiStatus() const;

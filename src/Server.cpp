@@ -416,6 +416,17 @@ void Server::addDirective(const std::string& name, const std::string& value) {
   {
     _client_max_body_size = std::stoi(value);
   }
+  else if (name == "autoindex")
+  {
+    if (value == "true")
+    {
+      _autoindex = true;
+    }
+    else
+    {
+      _autoindex = false;
+    }
+  }
 }
 
 bool Server::hasLocation(const std::string &reqPath) {
@@ -451,3 +462,6 @@ Location& Server::getLocationByPath(const std::string& reqPath) {
     return Location::NullLocation;
 }
 
+bool Server::isAutoIndex() const {
+  return _autoindex;
+}

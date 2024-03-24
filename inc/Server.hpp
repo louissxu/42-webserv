@@ -95,6 +95,7 @@ class Server {
 
     std::string           getReturnPath(const std::string &reqPath) const;
     size_t                getMaxBodySize() const;
+    bool                  isAutoIndex() const;
 
     //Setters:
     void setListen(std::string listen);

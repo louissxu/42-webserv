@@ -381,7 +381,7 @@ void Location::setAllowMethods(const std::string& methods) {
 
 void Location::setAutoIndex(std::string stateString)
 {
-    if (stateString == "on")
+    if (stateString == "true")
     {
         _autoIndex = true;
     }

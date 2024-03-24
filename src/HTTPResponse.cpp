@@ -320,8 +320,7 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 		if (s.st_mode & S_IFDIR)
 		{
 		  // it's a directory
-			bool is_auto_index = false; // TODO: Actually check config directive to see if it an auto index location
-			if (is_auto_index) {
+			if (_server.isAutoIndex()) {
 				this->makeDirectoryPage(path);
 				return;
 			} else {

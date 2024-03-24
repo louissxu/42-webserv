@@ -58,17 +58,35 @@ void Cgi::setArgv(HTTPRequest const &req)
 {
 	_argv = std::vector<char *>(3);
 	// std::string pythonPath = "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3";
-	std::string pythonPath = "/usr/local/bin/python3";
-	if (req.getUri() == "/cgi-bin/cgi_tester")
+	std::string python_path = "/usr/local/bin/python3";
+	std::string perl_path = "/usr/bin/perl";
+	std::string exec_path = "";
+
+	std::string uri = req.getUri();
+
+	if (uri == "/cgi-bin/cgi_tester")
 	{
-		pythonPath = "application/cgi-bin/cgi_tester";
+		exec_path = "application/cgi-bin/cgi_tester";
 	}
+	else if (uri.size() >= 3 && uri.substr(uri.size() - 3, uri.size()) == ".py")
+	{
+		exec_path = python_path;
+	}
+	else if (uri.size() >= 3 && uri.substr(uri.size() - 3, uri.size()) == ".pl")
+	{
+		exec_path = perl_path;
+	}
+	else
+	{
+		//TODO probably should throw or return 403 or something here
+	}
+
 	std::string cgiScript = "application" + req.getUri();
 
-	_argv[0] = new char[pythonPath.size() + 1];
+	_argv[0] = new char[exec_path.size() + 1];
 	_argv[1] = new char[cgiScript.size() + 1];
 
-	strcpy(_argv[0], const_cast<char *>(pythonPath.c_str()));
+	strcpy(_argv[0], const_cast<char *>(exec_path.c_str()));
 	strcpy(_argv[1], const_cast<char *>(cgiScript.c_str()));
 	_argv[2] = nullptr;
 }

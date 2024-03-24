@@ -353,26 +353,16 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 
 bool HTTPResponse::isAutoIndexOn(HTTPRequest const &req)
 {
-	bool isOn = true;
-	bool haveLocation = false;
 	Location	&myLocation = _server.getLocationByPath(req.getUri());
 
-	if (!myLocation.isNull())
+	if (myLocation.isNull())
 	{
-		haveLocation = true;
+		return _server.isAutoIndex();
 	}
-	if (_server.isAutoIndex())
+	else
 	{
-		if (haveLocation && !(myLocation.getAutoIndex()))
-			isOn = false;
+		return myLocation.getAutoIndex();
 	}
-	else if (!_server.isAutoIndex())
-	{
-		if (haveLocation && myLocation.getAutoIndex())
-			isOn = true;
-	}
-	// std::cout << BOLDRED << "AUTO INDEX IS: " << isOn << RESET;
-	return isOn;
 }
 
 void HTTPResponse::DELETEHandler(const HTTPRequest &req)

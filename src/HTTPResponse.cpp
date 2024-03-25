@@ -71,14 +71,6 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 	WARN("FULL PATH SET TO: %s", _path.c_str());
 
 
-
-
-
-	// _req.createPath()
-
-
-
-
 	switch (_req.getMethod())
 	{
 		case Method(GET):
@@ -337,85 +329,11 @@ void HTTPResponse::buildRedirectResponse(std::string const &redirectPath)
 void HTTPResponse::GETHandler(HTTPRequest const &_req)
 {
 	const std::string uri = _req.getUri();
-	DEBUG("\tWent in GETHandler");
-
-
-	// int methodState = methodPermittedAtRoute(_req);
-	// if (methodState) // meaning the method is not allowed
-	// {
-	// 	this->getErrorResource(methodState);
-	// 	return;
-	// }
-	//Checking if the uri is a directory?
-	
-
-	/*
-	if (isDirectory(uri))
-	{
-		DEBUG("IS A DIRECTORY: %s", uri.c_str());
-		Location	&myLocation = _server.getLocationByPath(_req.getUri());
-		
-		//Is this a location context within our server?
-		if (myLocation != Location::NullLocation)
-		{
-			//DEBUG("LOCATION IS SET: %s", myLocation.getPath().c_str());
-			//std::cout << YELLOW << "LOCATION IS SET: " << myLocation.getPath() << RESET << std::endl;
-			//Is the index directive defined within said Location?
-			//std::cout << YELLOW << "LOCATION:INDEX IS: " << myLocation.getIndex() << RESET << std::endl;
-			//std::cout << YELLOW << "SERVER:INDEX IS: " << _server.getIndex() << RESET << std::endl;
-
-			if (myLocation.getIndex() != "" && myLocation.getIndex() != _server.getIndex())
-			{
-				std::cout << GREEN << "LOCATION:INDEX HAS BEEN SET! " << RESET << std::endl;
-			}
-
-
-
-		}
-		else
-		{
-			std::cout << RED << "LOCATION NOT SET: " << myLocation.getPath() << RESET << std::endl;
-			//DEBUG("LOCATION NOT SET: %s", myLocation.getPath().c_str());
-		}
-		
-	}
-	*/	
-		
-		//  && myLocation.indexIsDefined())
-		// {
-		// 	DEBUG("INDEX DIRECTIVE IS DEFINED AT LOCATION: %s", myLocation.getPath().c_str());
-		// }
-		// else
-		// {
-		// 	DEBUG("INDEX DIRECTIVE IS DEFINED AT LOCATION: %s", myLocation.getPath().c_str());
-		// }
-		/*
-		//If index is defined.
-		if (indexIsDefined)
-		{
-			//return the index page that has been defined.
-		}
-		// if auto index is on.
-		else if (autoIndex == on)
-		{
-			//Call auto index shit. (Louis pls).
-		}
-		else
-		{
-			//Throw some error page 404?
-		}
-		*/
-
-
-
-
-
-	//	std::string path = "application" + uri;
-	std::string path = _server.getRoot() + uri;
-	struct stat s;
+	DEBUG("\tWent in GETHandler: URI = %s, PATH = %s", uri.c_str(), _path.c_str());
 
 	if (!isValidURI(uri))
 	{
+		WARN("INVALID URI, RETURNING 403.");
 		this->getErrorResource(403);
 		return;
 	}
@@ -424,59 +342,71 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 	std::string redirectPath = _server.getReturnPath(uri);
 	if (redirectPath != std::string())
 	{
+		WARN("BUILDING REDIRECTPATH.");
 		buildRedirectResponse(redirectPath);
 		return ;
 	}
 
-	if (uri == "/")
-	{
-		path = _server.getRoot() + _server.getIndex();
-		//path = "application/src/index.html";
-	}
-	else if (uri == "/favicon.ico")
-	{
-		path = "application/assets/images/favicon.ico";
-	}
-	DEBUG("\tPATH == %s", path.c_str());
 	if (uri.empty() || (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos))
 	{
+		WARN("URI EMPTY/INVALID?");
 		this->body = "";
 		return;
 	}
-	// if (uri.compare(1, 7, "cgi-bin") == 0 && access(path.c_str(), F_OK) != -1)
-	// {
-	// 	// if (uri.compare(8, uri.size(), "loogin.py") != 0)
-	// 	// 	this->getErrorResource(403);
-	// 	return;
-	// }
-	if (stat(path.c_str(), &s) == 0)
+
+	struct stat s;
+	if (stat(_path.c_str(), &s) == 0)
 	{
-		if (s.st_mode & S_IFDIR)
-		{
-		  // it's a directory
-			if (isAutoIndexOn(_req))
-			{
-				this->makeDirectoryPage(path);
-				return;
-			}
-			else {
-				this->getErrorResource(403);
-				return;
-			}
-		}
+		//If its a file.
 		if (s.st_mode & S_IFREG)
 		{
 			int len = s.st_size;
-			if (!this->getResource(path, len))
+			//Try to serve the file. If fail, serve 404.
+			if (!this->getResource(_path, len))
 			{
+				WARN("FAILED TO GET RESOURCE AT %s, returning 404.", _path.c_str());
 				this->getErrorResource(404);
 			}
 		}
+		// If it's a directory
+		else if (s.st_mode & S_IFDIR)
+		{
+			Location	&myLocation = _server.getLocationByPath(uri);
+			if (myLocation.isNull())
+			{
+				WARN("No location settings, returning 505: Location: %s", myLocation.getPath().c_str());
+				this->getErrorResource(505);
+			}
+
+			//If index is set, serve it!
+			if (!(myLocation.getIndex() == ""))
+			{
+				_path = _path + myLocation.getIndex();
+				WARN("_path Location + Index (is set!): Path = %s", _path.c_str());
+			} 
+			else
+			{
+				if (isAutoIndexOn(_req))
+				{
+					this->makeDirectoryPage(_path);
+					return;
+				}
+				else {
+
+					this->getErrorResource(403);
+					return;
+				}
+			}
+		}
 		else
-		{}
+		{
+			this->getErrorResource(505);
+		}
+
 	}
 	else
 	{
+		DEBUG("SOMETHING WENT WRONGG! VEEEENASAUURRR!");
 		this->getErrorResource(404);
 		// this->GETHandler("error404/errorPage.html");
 	}
@@ -770,24 +700,24 @@ int HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 
 std::string HTTPResponse::createFullPath(HTTPRequest const &req)
 {
-	DEBUG("Enter create Full path..");
+	DEBUG("\tEnter create Full path..");
 	Location	&myLocation = _server.getLocationByPath(req.getUri());
 	
 	if (myLocation.isNull())
 	{
-		DEBUG("Null location.. returning: (_server.getRoot() (%s) + req.getUri()) (%s)\n", _server.getRoot().c_str(), req.getUri().c_str());
+		DEBUG("\tNull location.. returning: (_server.getRoot() (%s) + req.getUri()) (%s)\n", _server.getRoot().c_str(), req.getUri().c_str());
 		return (_server.getRoot() + req.getUri());
 	}
 	else
 	{
 		if (myLocation.getRoot() != "" )
 		{
-			DEBUG("Location set, root set in. Returning: myLocation.getRoot() (%s) + req.getUri() (%s)\n", myLocation.getRoot().c_str(), req.getUri().c_str());
+			DEBUG("\tLocation set, root set in. Returning: myLocation.getRoot() (%s) + req.getUri() (%s)\n", myLocation.getRoot().c_str(), req.getUri().c_str());
 			return myLocation.getRoot() + req.getUri();
 		}
 		else
 		{
-			DEBUG("Location set, root not set. Returning (_server.getRoot() (%s) + req.getUri()) (%s)\n", _server.getRoot().c_str(), req.getUri().c_str());
+			DEBUG("\tLocation set, root not set. Returning (_server.getRoot() (%s) + req.getUri()) (%s)\n", _server.getRoot().c_str(), req.getUri().c_str());
 			return (_server.getRoot() + req.getUri());
 		}
 	}

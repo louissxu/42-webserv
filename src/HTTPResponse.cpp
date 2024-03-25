@@ -315,8 +315,6 @@ bool HTTPResponse::isDirectory(std::string const &uri) {
     }
 }
 
-
-
 void HTTPResponse::buildRedirectResponse(std::string const &redirectPath)
 {
 	this->version = "HTTP/1.1";
@@ -354,6 +352,8 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 		return;
 	}
 
+	WARN("RUNNING STAT WITH PATH: %s", _path.c_str());
+	
 	struct stat s;
 	if (stat(_path.c_str(), &s) == 0)
 	{
@@ -374,8 +374,8 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 			Location	&myLocation = _server.getLocationByPath(uri);
 			if (myLocation.isNull())
 			{
-				WARN("No location settings, returning 505: Location: %s", myLocation.getPath().c_str());
-				this->getErrorResource(505);
+				WARN("No location settings, returning 404: Location: %s", myLocation.getPath().c_str());
+				this->getErrorResource(404);
 			}
 
 			//If index is set, serve it!

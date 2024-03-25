@@ -26,6 +26,7 @@ HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
  * @brief: HTTPResponse(HTTPRequest const &_req)
  * Creates an appropriate HTTPResponse from a given HTTPRequest.
 */
+/*
 HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 {
 	//std::cout << "HTTPResponse: Using server: " << std::endl;
@@ -47,7 +48,7 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 		return;
 	}
 }
-
+*/
 
 /*
  * @brief: HTTPResponse(HTTPRequest const &_req)
@@ -64,6 +65,19 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 		this->getErrorResource(methodState);
 		return;
 	}
+
+	const std::string uri = _req.getUri();
+	_path = createFullPath(_req);
+	WARN("FULL PATH SET TO: %s", _path.c_str());
+
+
+
+
+
+	// _req.createPath()
+
+
+
 
 	switch (_req.getMethod())
 	{
@@ -255,6 +269,62 @@ bool isValidURI(const std::string &uri) {
 // 	// }
 // }
 
+// bool HTTPResponse::isDirectory(std::string const &uri) {
+//     // If the last character is "/", it's definitely a directory
+//     if (!uri.empty() && uri.back() == '/') {
+//         return true;
+//     }
+
+//     // Find the last occurrence of "/"
+//     size_t lastSlashPos = uri.find_last_of("/");
+
+//     // Now, let's find if there's a "." after the last "/"
+//     size_t dotPos = uri.find_last_of(".");
+
+//     // If there's no ".", or the last "." is before the last "/"
+//     if (dotPos == std::string::npos || dotPos < lastSlashPos) {
+//         // It's intended to be a directory (no file extension present in the last segment)
+//         return true;
+//     } else {
+//         // There's a dot after the last slash, implying a file, not a directory
+//         return false;
+//     }
+// }
+
+
+bool HTTPResponse::isDirectory(std::string const &uri) {
+    // Directly return true if the URI ends with a "/"
+    if (!uri.empty() && uri.back() == '/') {
+        return true;
+    }
+
+    // Find the last occurrence of "/"
+    size_t lastSlashPos = uri.find_last_of("/");
+
+    // If there's no "/", it can't be a directory as per our current logic
+    if (lastSlashPos == std::string::npos) {
+        return false; // It might be just a plain string without any path
+    }
+
+    // Now, let's find if there's a "." after the last "/"
+    size_t dotPos = uri.find_last_of(".");
+
+    // If there's no ".", it's intended to be a directory
+    if (dotPos == std::string::npos) {
+        return true;
+    }
+
+    // If the last "." is before the last "/", it's also a directory
+    if (dotPos < lastSlashPos) {
+        return true;
+    } else {
+        // There's a dot after the last slash, implying a file, not a directory
+        return false;
+    }
+}
+
+
+
 void HTTPResponse::buildRedirectResponse(std::string const &redirectPath)
 {
 	this->version = "HTTP/1.1";
@@ -269,12 +339,76 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 	const std::string uri = _req.getUri();
 	DEBUG("\tWent in GETHandler");
 
+
 	// int methodState = methodPermittedAtRoute(_req);
 	// if (methodState) // meaning the method is not allowed
 	// {
 	// 	this->getErrorResource(methodState);
 	// 	return;
 	// }
+	//Checking if the uri is a directory?
+	
+
+	/*
+	if (isDirectory(uri))
+	{
+		DEBUG("IS A DIRECTORY: %s", uri.c_str());
+		Location	&myLocation = _server.getLocationByPath(_req.getUri());
+		
+		//Is this a location context within our server?
+		if (myLocation != Location::NullLocation)
+		{
+			//DEBUG("LOCATION IS SET: %s", myLocation.getPath().c_str());
+			//std::cout << YELLOW << "LOCATION IS SET: " << myLocation.getPath() << RESET << std::endl;
+			//Is the index directive defined within said Location?
+			//std::cout << YELLOW << "LOCATION:INDEX IS: " << myLocation.getIndex() << RESET << std::endl;
+			//std::cout << YELLOW << "SERVER:INDEX IS: " << _server.getIndex() << RESET << std::endl;
+
+			if (myLocation.getIndex() != "" && myLocation.getIndex() != _server.getIndex())
+			{
+				std::cout << GREEN << "LOCATION:INDEX HAS BEEN SET! " << RESET << std::endl;
+			}
+
+
+
+		}
+		else
+		{
+			std::cout << RED << "LOCATION NOT SET: " << myLocation.getPath() << RESET << std::endl;
+			//DEBUG("LOCATION NOT SET: %s", myLocation.getPath().c_str());
+		}
+		
+	}
+	*/	
+		
+		//  && myLocation.indexIsDefined())
+		// {
+		// 	DEBUG("INDEX DIRECTIVE IS DEFINED AT LOCATION: %s", myLocation.getPath().c_str());
+		// }
+		// else
+		// {
+		// 	DEBUG("INDEX DIRECTIVE IS DEFINED AT LOCATION: %s", myLocation.getPath().c_str());
+		// }
+		/*
+		//If index is defined.
+		if (indexIsDefined)
+		{
+			//return the index page that has been defined.
+		}
+		// if auto index is on.
+		else if (autoIndex == on)
+		{
+			//Call auto index shit. (Louis pls).
+		}
+		else
+		{
+			//Throw some error page 404?
+		}
+		*/
+
+
+
+
 
 	//	std::string path = "application" + uri;
 	std::string path = _server.getRoot() + uri;
@@ -508,6 +642,25 @@ void HTTPResponse::setCgiStatus(bool _status)
 |        METHOD-ROUTE VERIFICATION           |
 \*------------------------------------------*/
 
+// bool HTTPResponse::isDirectory(std::string const &uri) {
+//     // Find the last occurrence of "/"
+//     size_t lastSlashPos = uri.find_last_of("/");
+
+//     // Now, let's find if there's a "." after the last "/"
+//     size_t dotPos = uri.find_last_of(".");
+
+//     // If there's no ".", or the last "." is before the last "/"
+//     if (dotPos == std::string::npos || dotPos < lastSlashPos) {
+// 		DEBUG("IS A DIRECTORY!!------------------------------------------------");
+//         // It's intended to be a directory (no file extension present in the last segment)
+//         return true;
+//     } else {
+//         // There's a dot after the last slash, implying a file, not a directory
+// 		DEBUG("IS NOT A DIRECTORY!!------------------------------------------------");
+//         return false;
+//     }
+// }
+
 std::string HTTPResponse::stripFileName(std::string const &reqUri)
 {
     std::size_t found = reqUri.find_last_of("/");
@@ -602,4 +755,40 @@ int HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 	}
 	//Successful request, return 0.
 	return 0;
+}
+
+/*------------------------------------------*\
+|               ROOT SETTING                 |
+\*------------------------------------------*/
+
+
+/*
+ * @brief: createFullPath
+ * Takes a string and a server and creates a file path. If the request does not correspond to a known location,
+ * or _root has not been set in said location, use default/server _root instead.
+*/
+
+std::string HTTPResponse::createFullPath(HTTPRequest const &req)
+{
+	DEBUG("Enter create Full path..");
+	Location	&myLocation = _server.getLocationByPath(req.getUri());
+	
+	if (myLocation.isNull())
+	{
+		DEBUG("Null location.. returning: (_server.getRoot() (%s) + req.getUri()) (%s)\n", _server.getRoot().c_str(), req.getUri().c_str());
+		return (_server.getRoot() + req.getUri());
+	}
+	else
+	{
+		if (myLocation.getRoot() != "" )
+		{
+			DEBUG("Location set, root set in. Returning: myLocation.getRoot() (%s) + req.getUri() (%s)\n", myLocation.getRoot().c_str(), req.getUri().c_str());
+			return myLocation.getRoot() + req.getUri();
+		}
+		else
+		{
+			DEBUG("Location set, root not set. Returning (_server.getRoot() (%s) + req.getUri()) (%s)\n", _server.getRoot().c_str(), req.getUri().c_str());
+			return (_server.getRoot() + req.getUri());
+		}
+	}
 }

@@ -395,6 +395,16 @@ void Location::setAutoIndex(std::string stateString)
 |                 OTHER                      |
 \*------------------------------------------*/
 
+bool Location::indexIsDefined()
+{
+    if (_index != "")
+    {
+        DEBUG("INDEXISDEFINED: %s", _index.c_str());
+        return true;
+    }
+    return false;
+}
+
 bool Location::isNull()
 {
     return this == &NullLocation;

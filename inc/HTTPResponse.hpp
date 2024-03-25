@@ -55,6 +55,9 @@ private:
 	bool cgiStatus;
 	Server _server;
 
+	//Optional additions..
+	std::string _path;
+
 public:
 	HTTPResponse();
 	HTTPResponse(std::string const &_version, Status const &_status, std::string const &_reason, std::map<std::string, std::string> const &_headers, std::string const &_body);
@@ -62,7 +65,7 @@ public:
 	HTTPResponse &operator=(HTTPResponse const &src);
 
 	//HTTPResponse(HTTPRequest const &request);
-	HTTPResponse(HTTPRequest const &_req);
+	//HTTPResponse(HTTPRequest const &_req);
 	HTTPResponse(HTTPRequest const &_req, Server &_myServer);
 
 	// setters
@@ -104,6 +107,8 @@ public:
 	//Incoming change.
 	// bool getMethodPermission(enum e_HRM method, Location *myLocation);
 	// bool getMethodPermission(enum e_HRM method, Location &myLocation);
+	std::string createFullPath(HTTPRequest const &_req);
+	bool isDirectory(std::string const &uri);
 
 private:
 	void buildRedirectResponse(std::string const &redirectPath);

@@ -65,6 +65,7 @@ class Location
         void setDirective(const std::string& name, const std::string& value);
 
     // Other
+        bool indexIsDefined();
         bool isValidLocationDirective(const std::string &src);
         //void initMethodPermissions();
 
@@ -88,6 +89,11 @@ class Location
 				}
 				virtual ~ErrorException() throw() {}
 		};
+
+        bool operator!=(const Location& other) const {
+        return this->getPath() != other.getPath();
+        }
+
 
     private:
         Location();

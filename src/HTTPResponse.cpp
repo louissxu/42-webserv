@@ -382,6 +382,7 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 			if (!(myLocation.getIndex() == ""))
 			{
 				_path = _path + myLocation.getIndex();
+				this->getResource(_path, 0);
 				WARN("_path Location + Index (is set!): Path = %s", _path.c_str());
 			} 
 			else
@@ -514,7 +515,7 @@ void HTTPResponse::getErrorResource(int errCode)
 
 void HTTPResponse::makeDirectoryPage(std::string path) {
 
-	std::string server_root = "application";
+	std::string server_root = _server.getRoot();
 	
 	std::string body =
 	"<html>"
@@ -571,25 +572,6 @@ void HTTPResponse::setCgiStatus(bool _status)
 /*------------------------------------------*\
 |        METHOD-ROUTE VERIFICATION           |
 \*------------------------------------------*/
-
-// bool HTTPResponse::isDirectory(std::string const &uri) {
-//     // Find the last occurrence of "/"
-//     size_t lastSlashPos = uri.find_last_of("/");
-
-//     // Now, let's find if there's a "." after the last "/"
-//     size_t dotPos = uri.find_last_of(".");
-
-//     // If there's no ".", or the last "." is before the last "/"
-//     if (dotPos == std::string::npos || dotPos < lastSlashPos) {
-// 		DEBUG("IS A DIRECTORY!!------------------------------------------------");
-//         // It's intended to be a directory (no file extension present in the last segment)
-//         return true;
-//     } else {
-//         // There's a dot after the last slash, implying a file, not a directory
-// 		DEBUG("IS NOT A DIRECTORY!!------------------------------------------------");
-//         return false;
-//     }
-// }
 
 std::string HTTPResponse::stripFileName(std::string const &reqUri)
 {

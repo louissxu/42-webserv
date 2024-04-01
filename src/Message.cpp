@@ -1,6 +1,6 @@
 #include "Message.hpp"
 
-Message::Message() : message(""), bufferSent(0) {}
+Message::Message(): message(""), bufferSent(0) {}
 
 Message::Message(const std::string &_message) : message(_message), bufferSent(0) {}
 

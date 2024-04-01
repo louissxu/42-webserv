@@ -12,7 +12,6 @@
 # include <vector>
 # include <map>
 
-# include "Connection.hpp"
 # include "Definitions.hpp"
 # include "Location.hpp"
 # include "log.hpp"

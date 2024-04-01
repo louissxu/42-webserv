@@ -85,7 +85,7 @@ class User:
 			data = (sessionID, self.userName)
 			cursor.execute(sql_update_query, data)
 			sqliteConnection.commit()
-			print("Record Updated successfully", file=sys.stderr)
+			# print("Record Updated successfully", file=sys.stderr)
 			cursor.close()
 			self.sessionID = sessionID
 

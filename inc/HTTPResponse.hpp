@@ -47,49 +47,42 @@ enum Status
 class HTTPResponse
 {
 private:
-	std::string version;
-	Status status;
-	std::string reason;
-	std::map<std::string, std::string> headers;
-	std::string body;
-	bool cgiStatus;
+	std::string _version;
+	Status _status;
+	std::string _reason;
+	std::map<std::string, std::string> _headers;
+	std::string _body;
+	bool _cgiStatus;
 	Server _server;
-
-	//Optional additions..
 	std::string _path;
 
 public:
 	HTTPResponse();
-	HTTPResponse(std::string const &_version, Status const &_status, std::string const &_reason, std::map<std::string, std::string> const &_headers, std::string const &_body);
+	HTTPResponse(std::string const &version, Status const &status, std::string const &reason, std::map<std::string, std::string> const &_headers, std::string const &body);
 	HTTPResponse(HTTPResponse const &src);
+	HTTPResponse(HTTPRequest const &req, Server &myServer);
 	HTTPResponse &operator=(HTTPResponse const &src);
 
-	//HTTPResponse(HTTPRequest const &request);
-	//HTTPResponse(HTTPRequest const &_req);
-	HTTPResponse(HTTPRequest const &_req, Server &_myServer);
-
 	// setters
-	void setVersion(std::string const &_version);
-	// void setReason(std::string const &_version);
-	void setStatus(Status const &_status);
-	void setReason(std::string const &_reason);
-	void addHeader(std::string const &_key, std::string const &_value);
-	void setBody(std::string const &_body);
+	void setVersion(std::string const &version);
+	void setStatus(Status const &status);
+	void setReason(std::string const &reason);
+	void addHeader(std::string const &key, std::string const &value);
+	void setBody(std::string const &body);
 
 	// getters
-	std::string const &getVersion() const;
-	Status const &getStatusCode() const;
+	std::string getVersion() const;
+	Status getStatusCode() const;
 	std::string getStatus();
-	std::string const &getReason() const;
-	std::map<std::string, std::string> const &getHeaders() const;
-	std::string const &getBody() const;
+	std::string getReason() const;
+	std::map<std::string, std::string> getHeaders() const;
+	std::string getBody() const;
 	std::string getMethodString(enum e_HRM method) const;
 	bool getMethodPermission(enum e_HRM method, Location &Location) const;
-	// bool autoIndexPermittedAtRoute(HTTPRequest const &req);
 	bool isAutoIndexOn(HTTPRequest const &req);
 
 	//CGI
-	bool const &getCgiStatus() const;
+	bool getCgiStatus() const;
 	void setCgiStatus(bool _status);
 
 	void buildDefaultResponse();
@@ -98,30 +91,20 @@ public:
 
 	//Method-Route Verification.
 	int methodPermittedAtRoute(HTTPRequest const &req);
-	//bool methodPermittedAtRoute(HTTPRequest const &req);
 	std::string stripFileName(std::string const &reqUri);
 
 	void getErrorResource(int errCode); //retrieves our servers error file first.
 	void makeDirectoryPage(std::string path);
 
 	//Incoming change.
-	// bool getMethodPermission(enum e_HRM method, Location *myLocation);
-	// bool getMethodPermission(enum e_HRM method, Location &myLocation);
 	std::string createFullPath(HTTPRequest const &_req);
 	bool isDirectory(std::string const &uri);
 
 private:
 	void buildRedirectResponse(std::string const &redirectPath);
-	// void isRedirect(std::string const &uri);
 	bool getResource(std::string const &path, int const &len);
-	//void GETHandler(std::string const &uri);
 
 	//Incoming change
-	//void getErrorResource(int errCode); //retrieves our servers error file first.
-	// //void GETHandler(std::string const &uri);
 	void GETHandler(HTTPRequest const &_req);
-
-
-	// int const &POSTHandler(HTTPRequest const &request);
 	void DELETEHandler(HTTPRequest const &req);
 };

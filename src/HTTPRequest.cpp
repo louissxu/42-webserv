@@ -6,13 +6,13 @@
 
 HTTPRequest::HTTPRequest()
 {
-	method = GET;
-	version = HTTP_1_1;
-	uri = "/";
+	_method = NOTFOUND;
+	_version = HTTP_1_1;
+	_uri = "/";
 }
 
-HTTPRequest::HTTPRequest(std::map<std::string, std::string> const &_headers, std::string const &_body, Method const &_method, std::string const &_uri, Version const &_version, bool _isCGI)
-	: headers(_headers), body(_body), method(_method), uri(_uri), version(_version), isCGI(_isCGI)
+HTTPRequest::HTTPRequest(std::map<std::string, std::string> const &_headers, std::string const &_body, Method const &_method, std::string const &_uri, Version const &_version, std::string const &qString, bool _isCGI)
+	: _headers(_headers), _body(_body), _method(_method), _uri(_uri), _version(_version), _qString(qString), _isCGI(_isCGI)
 {
 	// (void)isCGI;
 }
@@ -23,37 +23,37 @@ HTTPRequest::~HTTPRequest() {}
 |                 GETTERS                    |
 \*------------------------------------------*/
 
-std::map<std::string, std::string> const &HTTPRequest::getHeaders() const
+std::map<std::string, std::string> HTTPRequest::getHeaders() const
 {
-	return this->headers;
+	return this->_headers;
 }
 
-std::string const &HTTPRequest::getHeader(std::string const &key) const
+std::string HTTPRequest::getHeader(std::string const &key) const
 {
 	static std::string emptystring;
-	std::map<std::string, std::string>::const_iterator it = headers.find(key);
-	if (it != headers.end())
+	std::map<std::string, std::string>::const_iterator it = _headers.find(key);
+	if (it != _headers.end())
 		return it->second;
 	return emptystring;
 }
 
-std::string const &HTTPRequest::getBody() const
+std::string HTTPRequest::getBody() const
 {
-	return this->body;
+	return this->_body;
 }
-std::string const &HTTPRequest::getUri() const
+std::string HTTPRequest::getUri() const
 {
-	return this->uri;
+	return this->_uri;
 }
 
-Method const &HTTPRequest::getMethod() const
+Method HTTPRequest::getMethod() const
 {
-	return this->method;
+	return this->_method;
 }
 
 std::string HTTPRequest::getMethodString() const
 {
-	switch (this->method)
+	switch (this->_method)
 	{
 	case POST:
 		return "POST";
@@ -70,14 +70,19 @@ std::string HTTPRequest::getMethodString() const
 	}
 }
 
-Version const &HTTPRequest::getVersion() const
+Version HTTPRequest::getVersion() const
 {
-	return this->version;
+	return this->_version;
 }
 
-bool const &HTTPRequest::getCGIStatus() const
+bool HTTPRequest::getCGIStatus() const
 {
-	return this->isCGI;
+	return this->_isCGI;
+}
+
+std::string HTTPRequest::getQString() const
+{
+	return this->_qString;
 }
 
 /*------------------------------------------*\
@@ -86,35 +91,35 @@ bool const &HTTPRequest::getCGIStatus() const
 
 void HTTPRequest::setHeader(std::string const &key, std::string const &value)
 {
-	std::map<std::string, std::string>::iterator it = headers.find(key);
-	if (it == headers.end())
-		headers.insert(std::pair<std::string, std::string>(key, value));
+	std::map<std::string, std::string>::iterator it = _headers.find(key);
+	if (it == _headers.end())
+		_headers.insert(std::pair<std::string, std::string>(key, value));
 	else
 		it->second = value;
 }
 
 void HTTPRequest::setBody(std::string const &body)
 {
-	this->body = body;
+	this->_body = body;
 }
 
 void HTTPRequest::setMethod(Method const &method)
 {
-	this->method = method;
+	this->_method = method;
 }
 
-void HTTPRequest::setUri(std::string const &_uri)
+void HTTPRequest::setUri(std::string const &uri)
 {
-	this->uri = _uri;
+	this->_uri = uri;
 }
 
 void HTTPRequest::setVersion(Version const &version)
 {
-	this->version = version;
+	this->_version = version;
 }
 
 void HTTPRequest::setIsCgi(bool const &isCgi)
 {
-	this->isCGI = isCgi;
+	this->_isCGI = isCgi;
 }
 

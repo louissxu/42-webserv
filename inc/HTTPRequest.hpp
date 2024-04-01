@@ -13,7 +13,8 @@ enum Method
 	TRACE,
 	OPTIONS,
 	CONNECT,
-	PATCH
+	PATCH,
+	NOTFOUND
 };
 
 enum Version
@@ -26,20 +27,22 @@ enum Version
 class HTTPRequest
 {
 private:
-	std::map<std::string, std::string> headers;
-	std::string body;
-	Method method;
-	std::string uri;
-	Version version;
-	bool isCGI;
+	std::map<std::string, std::string> _headers;
+	std::string _body;
+	Method _method;
+	std::string _uri;
+	Version _version;
+	std::string _qString;
+	bool _isCGI;
 
 public:
-	HTTPRequest(std::map<std::string, std::string> const &_headers,
-				std::string const &_body,
-				Method const &_method,
-				std::string const &_uri,
-				Version const &_version,
-				bool _isCGI);
+	HTTPRequest(std::map<std::string, std::string> const &headers,
+				std::string const &body,
+				Method const &method,
+				std::string const &uri,
+				Version const &version,
+				std::string const &qString,
+				bool isCGI);
 	HTTPRequest();
 	~HTTPRequest();
 
@@ -47,17 +50,18 @@ public:
 	void setHeader(std::string const &key, std::string const &value);
 	void setBody(std::string const &body);
 	void setMethod(Method const &method);
-	void setUri(std::string const &_uri);
+	void setUri(std::string const &uri);
 	void setVersion(Version const &version);
 	void setIsCgi(bool const &isCgi);
 
 	// getters
-	std::map<std::string, std::string> const &getHeaders() const;
-	std::string const &getHeader(std::string const &key) const;
-	std::string const &getBody() const;
-	std::string const &getUri() const;
-	Method const &getMethod() const;
+	std::map<std::string, std::string> getHeaders() const;
+	std::string getHeader(std::string const &key) const;
+	std::string getBody() const;
+	std::string getUri() const;
+	std::string getQString() const;
+	Method getMethod() const;
 	std::string getMethodString() const;
-	Version const &getVersion() const;
-	bool const &getCGIStatus() const;
+	Version getVersion() const;
+	bool getCGIStatus() const;
 };

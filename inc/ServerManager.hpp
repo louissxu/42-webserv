@@ -36,89 +36,57 @@ class Server;
 #define MOREDATA 1
 #define ERRORDATA 2
 
-#define MAX_EVENTS 200 // random value
+#define MAX_EVENTS 500 // random value
 #define BUFFER_SIZE 3000
 #define BUFFERSIZE 10000
 #define CLIENT_TIMEOUT 10 //time in seconds before a client times out.
 #define LOCALHOST "127.0.0.1"
-
-
+#define TIMEOUT_SEC 60
 class ServerManager
 {
-
-	private:
-  		std::map<int, Client *> _clients;
-  		std::map<int, Client *> _cgiRead;
-  		std::map<int, Client *> _cgiWrite;
-
-		std::vector<Server> _servers;
-  		//std::vector< std::pair <std::string, std::string> > _directives;
-		//std::vector < ConfigParser >  _contexts;
-		std::vector <std::string> _portsActive;
-
-  		int kq;
-  		bool accepting;
-  		struct kevent *ev_set;
-  		struct kevent ev_list[MAX_EVENTS];
-  		int ev_set_count;
-  		std::string defaultPath;
-
-  		ServerManager(ServerManager &other);
-  		ServerManager &operator=(ServerManager &other);
-
-  		// void launchCgi(HTTPRequest const &request, Client *cl);
-		void deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter);
-  		void deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter);
-  		void checkCgi(HTTPRequest &_req);
-
-
 	public:
   		ServerManager();
   		~ServerManager();
+		
+		// getters
+		bool	getMinimimumRunState(void) const;
+  		Client	*getClient(int fd);
+  		Client	*getCgiClient(int fd, bool &isRead, bool &isWrite);
+  		Client	*getCgiRead(int fd);
+  		int		getCgiReadFd(Client *cl);
+  		Client	*getCgiWrite(int fd);
 
-  		void addServer(const Server &server);
-  		// void addConnection(Connection& connection);
-
-  		void runKQ();
-  		void createQ();
-
-  		void acceptClient(int ListenSocket);
-  		Client *getClient(int fd);
-  		Client *getCgiClient(int fd, bool &isRead, bool &isWrite);
-  		Client *getCgiRead(int fd);
-  		int getCgiReadFd(Client *cl);
-  		Client *getCgiWrite(int fd);
+		// kqueue
+		void	addServer(const Server &server);
+  		void	createQ();
+  		void	acceptClient(int ListenSocket);
+  		void	runKQ();
 
   		// io handlers
-  		void handleEvent(struct kevent const &ev);
-  		int handleReadEvent(Client *cl, struct kevent event);
-  		bool handleWriteEvent(Client *cl, int dataLen);
-  		void handleEOF(Client *cl, struct kevent const &ev, bool &isRead, bool &isWrite);
-
-  		HTTPRequest *parseRequest(Client *cl, std::string const &message);
-
-  		void updateEvent(int ident, short filter, u_short flags, u_int fflags, int data, void *udata);
-  		void closeConnection(Client *cl);
-  		bool isListeningSocket(int socket_fd);
-
-  		HTTPResponse &getResponse();
+  		void	handleEvent(struct kevent const &ev);
+  		int		handleReadEvent(Client *cl, struct kevent event);
+  		void	handleWriteEvent(Client *cl);
+  		void	handleEOF(Client *cl, struct kevent const &ev, bool &isRead, bool &isWrite);
+		void	updateEvent(int ident, short filter, u_short flags, u_int fflags, int data, void *udata);
+  		bool	isListeningSocket(int socket_fd);
+  		void	closeConnection(Client *cl);
+		void	errorEvent(Status code, HTTPRequest const &r, Server &s, Client *cl);
+		
+		// parser
+  		HTTPRequest parseRequest(Client *cl, std::string const &message);
 
 		//Experimental: for performing httpRequest->httpResponse within the ServerManager.
-		Server* getServerByDescriptor(int sockfd);
-		Server* getServerByPort(std::string port);
-		Server* getServerByRequestHost(HTTPRequest* _req);
-		Server &getRelevantServer(HTTPRequest &request, std::vector<Server>& servers);
-		std::string stripWhiteSpace(std::string src);
-		//void startServer(Server &mServer);
-		void printAllServers();
-		void startServer(Server &mServer);
+		Server		&getRelevantServer(HTTPRequest &request, std::vector<Server>& servers);
+		std::string	stripWhiteSpace(std::string src);
+		void		printAllServers();
+		void		startServer(Server &mServer);
 
 		//Configuration handling related:
-		bool portIsAvailable(std::string portNo);
-		bool isValidDirectiveName(const std::string &src);
-		void ns_addDirectives(ConfigParser &src);
-		void ns_addContexts(ConfigParser &src);
-		void setStateFromParser(ConfigParser &src);
+		bool	portIsAvailable(std::string portNo);
+		bool	isValidDirectiveName(const std::string &src);
+		void	ns_addDirectives(ConfigParser &src);
+		void	ns_addContexts(ConfigParser &src);
+		void	setStateFromParser(ConfigParser &src);
 
 		//Exceptions
 		class ErrorException : public std::exception
@@ -136,5 +104,28 @@ class ServerManager
 				}
 				virtual ~ErrorException() throw() {}
 		};
+
+	private:
+  		std::map<int, Client *> _clients;
+  		std::map<int, Client *> _cgiRead;
+  		std::map<int, Client *> _cgiWrite;
+
+		std::vector<Server> _servers;
+		std::vector <std::string> _portsActive;
+
+  		int _kq;
+  		bool _accepting;
+  		struct kevent *_ev_set;
+		struct kevent _sigEvent;
+  		struct kevent _ev_list[MAX_EVENTS];
+  		int _ev_set_count;
+		bool _serverMinimumRequirements;
+
+  		ServerManager(ServerManager &other);
+  		ServerManager &operator=(ServerManager &other);
+
+		void deleteCgi(std::map<int, Client *> &fdmap, Client *cl, short filter);
+  		void deleteCgi(std::map<int, Client *> &fdmap, int fd, short filter);
+  		void checkCgi(HTTPRequest &req, Server const &s);
 };
 #endif

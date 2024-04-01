@@ -1,9 +1,10 @@
 #include "Webserver.hpp"
 
 int main(int argc, char **argv) {
+  ServerManager sm;
   try
   {
-    ServerManager sm;
+    
     ConfigParser parser;
 
     if (argc == 1)
@@ -18,7 +19,12 @@ int main(int argc, char **argv) {
     }
     parser.setStateFromContent(0, false);
     sm.setStateFromParser(parser);
-    //sm.printAllServers();
+    if (sm.getMinimimumRunState() == false)
+    {
+      WARN("Failed to initialise server: minimum requirements not met.");
+      return (1);
+    }
+
     DEBUG("\t\tSite ready...");
     sm.runKQ();
     DEBUG("\t\tAll done!");
@@ -29,5 +35,6 @@ int main(int argc, char **argv) {
     std::cerr << e.what() << std::endl;
     return (1);
   }
+  std::cout << "\nDONE WITH THE WEB!\n";
   return(0);
 }

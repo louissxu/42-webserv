@@ -11,7 +11,18 @@ static int calcContentLength(std::string const &message)
 
 Cgi::Cgi() {}
 
-Cgi::~Cgi() {}
+Cgi::~Cgi()
+{
+	std::vector<char *>::iterator it;
+	for (it = _argv.begin(); it != _argv.end(); ++it)
+	{
+		free(*it);
+	}
+	for (it = _env.begin(); it != _env.end(); ++it)
+	{
+		free(*it);
+	}
+}
 
 void Cgi::setEnv(HTTPRequest &req)
 {
@@ -19,27 +30,32 @@ void Cgi::setEnv(HTTPRequest &req)
 	_envVec.push_back("User-Agent=" + req.getHeader("User-Agent"));
 	_envVec.push_back("Content-Type=" + req.getHeader("Content-Type"));
 	_envVec.push_back("User-Agent=" + req.getHeader("User-Agent"));
-	_envVec.push_back("Method=" + req.getMethodString());
-	
+	_envVec.push_back("REQUEST_METHOD=" + req.getMethodString());
+
 	std::string content_type = req.getHeader("Content-Type");
-	
+
+	if (!req.getQString().empty())
+	{
+		_envVec.push_back("QUERY_STRING=" + req.getQString());
+	}
+
 	// TODO: This should be a check for the method
 	// It should only encode the query string if it is a get request (and not a post request)
 	// This has been left as some legacy code expects a short post body to be encoded as a query string
-	if (content_type.size() >= 9 && content_type.substr(0, 9) == "multipart") {
-		// Do nothing
-	} else {
-		_envVec.push_back("QUERY_STRING=" + req.getBody());
-	}
+	// if (content_type.size() >= 9 && content_type.substr(0, 9) == "multipart") {
+	// 	// Do nothing
+	// } else {
+	// 	_envVec.push_back("QUERY_STRING=" + req.getBody());
+	// }
 
 
 	// _envVec.push_back("REQUEST_METHOD=" + req.getMethodString());
-	// _envVec.push_back("PATH_INFO=" + req.getUri());
-	// _envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
+	_envVec.push_back("PATH_INFO=" + req.getUri());
+	_envVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
 
 	if (!req.getHeader("Cookie").empty())
 	{
-		// req.setHeader("Cookie", req.getHeader("Cookie"));
+		std::cout << req.getHeader("Cookie") << std::endl;
 		_envVec.push_back("Cookie=" + req.getHeader("Cookie"));
 	}
 	// _env = (char **)malloc(sizeof(char *) * (_envVec.size() + 1));
@@ -57,7 +73,6 @@ void Cgi::setEnv(HTTPRequest &req)
 void Cgi::setArgv(HTTPRequest const &req)
 {
 	_argv = std::vector<char *>(3);
-	// std::string pythonPath = "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3";
 	std::string python_path = "/usr/local/bin/python3";
 	std::string perl_path = "/usr/bin/perl";
 	std::string exec_path = "";
@@ -100,23 +115,23 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 
 	memset(buffer, 0, ev_list.data + 1);
 	bytesRead = read(ev_list.ident, buffer, ev_list.data);
-	// RECORD("cgiReadHandler: Read:\n %s", buffer);
+	RECORD("cgiReadHandler: Read: %s", buffer);
 	if (bytesRead < 0)
 	{
 		ERR("cgiReadHandler: %s", strerror(errno));
 		sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		close(cl->pipe_in[0]);
-		close(cl->pipe_out[0]);
+		close(cl->_pipe_in[0]);
+		close(cl->_pipe_out[0]);
 		DEBUG("PIPES ends closing: %d %d", cl->pipe_in[0], cl->pipe_out[0]);
 	}
 	else if (bytesRead == 0)
 	{
 		DEBUG("cgiReadHandler: Bytes Read = 0");
 		sm.updateEvent(ev_list.ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		close(cl->pipe_in[0]);
-		close(cl->pipe_out[0]);
+		close(cl->_pipe_in[0]);
+		close(cl->_pipe_out[0]);
 
-		waitpid(cl->Cgipid, &status, WCONTINUED);
+		waitpid(cl->_Cgipid, &status, WCONTINUED);
 		if (WIFEXITED(status))
 		{
 			DEBUG("cgi exit status = %d", WEXITSTATUS(status));
@@ -134,17 +149,17 @@ void Cgi::CgiReadHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 	{
 		DEBUG("Bytes Read: %d", bytesRead);
 		cl->appendRecvMessage(buffer, bytesRead);
-		if (waitpid(cl->Cgipid, &status, WNOHANG) == 0)
+		if (waitpid(cl->_Cgipid, &status, WNOHANG) == 0)
 		{
 			if (cl->getRecvMessage().size() >= MAX_CONTENT_LENGTH)
 			{
-				kill(cl->Cgipid, SIGQUIT);
+				kill(cl->_Cgipid, SIGQUIT);
 				handleTerminatedWithError(sm, cl);
 			}
 		}
 		else
 		{
-			waitpid(cl->Cgipid, &status, WCONTINUED);
+			waitpid(cl->_Cgipid, &status, WCONTINUED);
 			RECORD("cgi exit status = %d", WEXITSTATUS(status));
 			if (WIFEXITED(status))
 			{
@@ -188,7 +203,7 @@ void Cgi::handleTerminatedWithError(ServerManager &sm, Client *cl)
 
 bool Cgi::CgiWriteHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 {
-	RECORD("WRITING");
+	// RECORD("WRITING");
 	int bytes_sent;
 	if (cl == NULL)
 		return false;
@@ -219,7 +234,7 @@ bool Cgi::CgiWriteHandler(ServerManager &sm, Client *cl, struct kevent ev_list)
 	else if (bytes_sent == 0 || bytes_sent == message.size())
 	{
 		cl->setMessage(Message());
-		sm.updateEvent(cl->pipe_out[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+		sm.updateEvent(cl->_pipe_out[0], EVFILT_READ, EV_ENABLE, 0, 0, NULL);
 		return false;
 	}
 	else
@@ -237,35 +252,35 @@ void Cgi::launchCgi(HTTPRequest &req, Client *cl)
 	setEnv(req);
 
 	DEBUG("stepping into launchCgi");
-	if (pipe(cl->pipe_out) < 0)
+	if (pipe(cl->_pipe_out) < 0)
 	{
 		ERR("Failed pipe_out cgi");
 		return;
 	}
-	if (pipe(cl->pipe_in) < 0)
+	if (pipe(cl->_pipe_in) < 0)
 	{
 		ERR("Failed pipe_in cgi");
 		return;
 	}
 	// Fork to create a child process for the CGI script
-	cl->Cgipid = fork();
-	if (cl->Cgipid == 0)
+	cl->_Cgipid = fork();
+	if (cl->_Cgipid == 0)
 	{
-		dup2(cl->pipe_in[0], STDIN_FILENO);
-		dup2(cl->pipe_out[1], STDOUT_FILENO);
-		close(cl->pipe_out[0]);
-		close(cl->pipe_out[1]);
-		close(cl->pipe_in[0]);
-		close(cl->pipe_in[1]);
+		dup2(cl->_pipe_in[0], STDIN_FILENO);
+		dup2(cl->_pipe_out[1], STDOUT_FILENO);
+		close(cl->_pipe_out[0]);
+		close(cl->_pipe_out[1]);
+		close(cl->_pipe_in[0]);
+		close(cl->_pipe_in[1]);
 		execve(_argv[0], _argv.data(), _env.data());
 		// If execl fails
 		ERR("execve: %s %s", _argv[1], strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	else if (cl->Cgipid > 0)
+	else if (cl->_Cgipid > 0)
 	{
-		close(cl->pipe_in[0]);
-		close(cl->pipe_out[1]);
+		close(cl->_pipe_in[0]);
+		close(cl->_pipe_out[1]);
 	}
 	else
 	{

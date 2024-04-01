@@ -1,80 +1,91 @@
 #include "Client.hpp"
 
-Client::Client() : sockFD(0), FDconnectedTo(-1), bufferRead(0) {}
+Client::Client() : _sockFD(0), _FDconnectedTo(-1), _bufferRead(0) {}
 
-Client::Client(int _sockFD, int _FDConnectedTo, sockaddr_in _client_addr) : sockFD(_sockFD), client_addr(_client_addr), FDconnectedTo(_FDConnectedTo)
+Client::Client(int _sockFD, int _FDConnectedTo, sockaddr_in _client_addr) : _sockFD(_sockFD), _client_addr(_client_addr), _FDconnectedTo(_FDConnectedTo)
 {
-	bufferRead = 0;
+	_bufferRead = 0;
 }
 
 Client::~Client()
 {
-	// delete client_addr;
+	// delete _req;
 }
 
 int Client::getSockFD() const
 {
-	return this->sockFD;
+	return this->_sockFD;
 }
 
 int Client::getSockFDconnectedTo() const
 {
-	return this->FDconnectedTo;
+	return this->_FDconnectedTo;
 }
 
 sockaddr_in Client::getClinetAddr() const
 {
-	return this->client_addr;
+	return this->_client_addr;
 }
 
-Message const &Client::getMessage() const
+Message Client::getMessage() const
 {
-	return this->message;
+	return this->_message;
 }
 
 void Client::setMessage(Message const &src)
 {
-	this->message = src;
+	this->_message = src;
 }
 
-int const &Client::getBufferRead() const
+int Client::getBufferRead() const
 {
-	return this->bufferRead;
+	return this->_bufferRead;
 }
 
 void Client::setBufferRead(int const &buffer)
 {
-	this->bufferRead = buffer;
+	this->_bufferRead = buffer;
 }
 
 void Client::resetRecvMessage()
 {
-	recvMessage = "";
+	_recvMessage = "";
 }
 
 void Client::appendRecvMessage(std::string const &message, int len)
 {
-	recvMessage.append(message, len);
+	_recvMessage.append(message, len);
 }
 
 void Client::appendRecvMessage(char *message, int len)
 {
-	recvMessage.append(message, len);
+	_recvMessage.append(message, len);
 }
 
 std::string const &Client::getRecvMessage() const
 {
-	return this->recvMessage;
+	return this->_recvMessage;
 }
 
 void Client::setPipeFrom(int *pipe)
 {
-	this->pipe_in[0] = pipe[0];
-	this->pipe_in[1] = pipe[1];
+	this->_pipe_in[0] = pipe[0];
+	this->_pipe_in[1] = pipe[1];
 }
 
 void Client::setPipeTo(int *pipe)
 {
-	this->pipe_out[0] = pipe[0];
-	this->pipe_out[1] = pipe[1];
+	this->_pipe_out[0] = pipe[0];
+	this->_pipe_out[1] = pipe[1];
+}
+
+
+void Client::setResquest(HTTPRequest req)
+{
+	this->_req = req;
+}
+
+HTTPRequest Client::getRequest() const
+{
+	return this->_req;
 }

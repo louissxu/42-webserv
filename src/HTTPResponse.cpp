@@ -4,51 +4,22 @@
 |               CONSTRUCTORS                 |
 \*------------------------------------------*/
 
-HTTPResponse::HTTPResponse()
+HTTPResponse::HTTPResponse(): _version("HTTP/1.1"), _status(OK), _reason("OK"), _cgiStatus(false)
 {
 	buildDefaultResponse();
 }
 
 HTTPResponse::HTTPResponse(std::string const &_version, Status const &_status, std::string const &_reason, std::map<std::string, std::string> const &_headers, std::string const &_body)
-	: version(_version), status(_status), reason(_reason), headers(_headers), body(_body){}
+	: _version(_version), _status(_status), _reason(_reason), _headers(_headers), _body(_body){}
 
 HTTPResponse &HTTPResponse::operator=(HTTPResponse const &src)
 {
-	this->status = src.getStatusCode();
-	this->reason = src.getReason();
-	this->headers = src.getHeaders();
-	this->body = src.getBody();
+	this->_status = src.getStatusCode();
+	this->_reason = src.getReason();
+	this->_headers = src.getHeaders();
+	this->_body = src.getBody();
 	return *this;
 }
-
-// ! error pages other than 404 are not loading.
-/*
- * @brief: HTTPResponse(HTTPRequest const &_req)
- * Creates an appropriate HTTPResponse from a given HTTPRequest.
-*/
-/*
-HTTPResponse::HTTPResponse(HTTPRequest const &_req)
-{
-	//std::cout << "HTTPResponse: Using server: " << std::endl;
-	//_myServer.printState();
-
-	buildDefaultResponse();
-	switch (_req.getMethod())
-	{
-	case Method(GET):
-		GETHandler(_req);
-		return;
-	case Method(POST):
-		// if (_req.getHeader("Set-Cookie") != std::string())
-		// 	headers.insert(std::pair<std::string, std::string>("Set-Cookie", _req.getHeader("Set-Cookie")));
-		return;
-	case Method(DELETE):
-		DELETEHandler(_req);
-	default:
-		return;
-	}
-}
-*/
 
 /*
  * @brief: HTTPResponse(HTTPRequest const &_req)
@@ -57,8 +28,9 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req)
 HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 {
 	_server = _myServer;
-	buildDefaultResponse();
+	const std::string uri = _req.getUri();
 
+	buildDefaultResponse();
 	int methodState = methodPermittedAtRoute(_req);
 	if (methodState) // meaning the method is not allowed
 	{
@@ -66,9 +38,9 @@ HTTPResponse::HTTPResponse(HTTPRequest const &_req, Server &_myServer)
 		return;
 	}
 
-	const std::string uri = _req.getUri();
+	// uri = _req.getUri();
 	_path = createFullPath(_req);
-	WARN("FULL PATH SET TO: %s", _path.c_str());
+	// WARN("FULL PATH SET TO: %s", _path.c_str());
 
 
 	switch (_req.getMethod())
@@ -104,34 +76,34 @@ HTTPResponse::HTTPResponse(HTTPResponse const &src)
 |                 GETTERS                    |
 \*------------------------------------------*/
 
-std::string const &HTTPResponse::getVersion() const
+std::string HTTPResponse::getVersion() const
 {
-	return this->version;
+	return this->_version;
 }
 
-Status const &HTTPResponse::getStatusCode() const
+Status HTTPResponse::getStatusCode() const
 {
-	return this->status;
+	return this->_status;
 }
 
-std::string const &HTTPResponse::getReason() const
+std::string HTTPResponse::getReason() const
 {
-	return this->reason;
+	return this->_reason;
 }
 
-std::map<std::string, std::string> const &HTTPResponse::getHeaders() const
+std::map<std::string, std::string> HTTPResponse::getHeaders() const
 {
-	return this->headers;
+	return this->_headers;
 }
 
-std::string const &HTTPResponse::getBody() const
+std::string HTTPResponse::getBody() const
 {
-	return this->body;
+	return this->_body;
 }
 
 std::string HTTPResponse::getStatus()
 {
-	switch (status)
+	switch (_status)
 	{
 	case OK:
 		return "OK";
@@ -167,7 +139,7 @@ std::string HTTPResponse::getStatus()
 		return "Service Unavailable";
 		// TODO throw error when code is not valid
 	default:
-		this->status = INTERNAL_SERVER_ERROR;
+		this->_status = INTERNAL_SERVER_ERROR;
 		return "Internal Server Error";
 		break;
 	}
@@ -198,32 +170,32 @@ std::string HTTPResponse::getMethodString(enum e_HRM method) const
 
 void HTTPResponse::setVersion(std::string const &_version)
 {
-	this->version = _version;
+	this->_version = _version;
 }
 
 void HTTPResponse::setStatus(Status const &_status)
 {
-	this->status = _status;
+	this->_status = _status;
 }
 
 void HTTPResponse::setReason(std::string const &_reason)
 {
-	this->reason = _reason;
+	this->_reason = _reason;
 }
 
 void HTTPResponse::addHeader(std::string const &_key, std::string const &_value)
 {
 	// TODO check if key is already in the map, or is the key "Cookie".
-	std::map<std::string, std::string>::iterator it = headers.find(_key);
-	if (it != headers.end())
+	std::map<std::string, std::string>::iterator it = _headers.find(_key);
+	if (it != _headers.end())
 		it->second = _value;
 	else
-		headers.insert(std::pair<std::string, std::string>(_key, _value));
+		_headers.insert(std::pair<std::string, std::string>(_key, _value));
 }
 
 void HTTPResponse::setBody(std::string const &_body)
 {
-	this->body = _body;
+	this->_body = _body;
 }
 
 /*------------------------------------------*\
@@ -251,38 +223,6 @@ bool isValidURI(const std::string &uri) {
 /*------------------------------------------*\
 |             METHOD HANDLERS                 |
 \*------------------------------------------*/
-
-// std::string const &HTTPResponse::isRedirect(std::string const &uri)
-// {
-// 	return (_server.getReturnPath(uri) == std::string() ? std::string() : )
-// 	// if (_server.getReturnPath(uri) != std::string())
-// 	// {
-
-// 	// }
-// }
-
-// bool HTTPResponse::isDirectory(std::string const &uri) {
-//     // If the last character is "/", it's definitely a directory
-//     if (!uri.empty() && uri.back() == '/') {
-//         return true;
-//     }
-
-//     // Find the last occurrence of "/"
-//     size_t lastSlashPos = uri.find_last_of("/");
-
-//     // Now, let's find if there's a "." after the last "/"
-//     size_t dotPos = uri.find_last_of(".");
-
-//     // If there's no ".", or the last "." is before the last "/"
-//     if (dotPos == std::string::npos || dotPos < lastSlashPos) {
-//         // It's intended to be a directory (no file extension present in the last segment)
-//         return true;
-//     } else {
-//         // There's a dot after the last slash, implying a file, not a directory
-//         return false;
-//     }
-// }
-
 
 bool HTTPResponse::isDirectory(std::string const &uri) {
     // Directly return true if the URI ends with a "/"
@@ -317,9 +257,9 @@ bool HTTPResponse::isDirectory(std::string const &uri) {
 
 void HTTPResponse::buildRedirectResponse(std::string const &redirectPath)
 {
-	this->version = "HTTP/1.1";
-	this->status = Status(301);
-	this->reason = getStatus();
+	this->_version = "HTTP/1.1";
+	this->_status = Status(301);
+	this->_reason = getStatus();
 	addHeader("Location", redirectPath);
 }
 
@@ -327,11 +267,8 @@ void HTTPResponse::buildRedirectResponse(std::string const &redirectPath)
 void HTTPResponse::GETHandler(HTTPRequest const &_req)
 {
 	const std::string uri = _req.getUri();
-	DEBUG("\tWent in GETHandler: URI = %s, PATH = %s", uri.c_str(), _path.c_str());
-
 	if (!isValidURI(uri))
 	{
-		WARN("INVALID URI, RETURNING 403.");
 		this->getErrorResource(403);
 		return;
 	}
@@ -340,19 +277,18 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 	std::string redirectPath = _server.getReturnPath(uri);
 	if (redirectPath != std::string())
 	{
-		WARN("BUILDING REDIRECTPATH.");
 		buildRedirectResponse(redirectPath);
 		return ;
 	}
 
 	if (uri.empty() || (uri.find("../") != std::string::npos && uri.find("/..") != std::string::npos))
 	{
-		WARN("URI EMPTY/INVALID?");
-		this->body = "";
+		// WARN("URI EMPTY/INVALID?");
+		this->_body = "";
 		return;
 	}
 
-	WARN("RUNNING STAT WITH PATH: %s", _path.c_str());
+	// WARN("RUNNING STAT WITH PATH: %s", _path.c_str());
 	
 	struct stat s;
 	if (stat(_path.c_str(), &s) == 0)
@@ -364,7 +300,7 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 			//Try to serve the file. If fail, serve 404.
 			if (!this->getResource(_path, len))
 			{
-				WARN("FAILED TO GET RESOURCE AT %s, returning 404.", _path.c_str());
+				// WARN("FAILED TO GET RESOURCE AT %s, returning 404.", _path.c_str());
 				this->getErrorResource(404);
 			}
 		}
@@ -374,7 +310,7 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 			Location	&myLocation = _server.getLocationByPath(uri);
 			if (myLocation.isNull())
 			{
-				WARN("No location settings, returning 404: Location: %s", myLocation.getPath().c_str());
+				// WARN("No location settings, returning 404: Location: %s", myLocation.getPath().c_str());
 				this->getErrorResource(404);
 			}
 
@@ -383,7 +319,7 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 			{
 				_path = _path + myLocation.getIndex();
 				this->getResource(_path, 0);
-				WARN("_path Location + Index (is set!): Path = %s", _path.c_str());
+				// WARN("_path Location + Index (is set!): Path = %s", _path.c_str());
 			} 
 			else
 			{
@@ -407,7 +343,7 @@ void HTTPResponse::GETHandler(HTTPRequest const &_req)
 	}
 	else
 	{
-		DEBUG("SOMETHING WENT WRONGG! VEEEENASAUURRR!");
+		// DEBUG("SOMETHING WENT WRONGG! VEEEENASAUURRR!");
 		this->getErrorResource(404);
 		// this->GETHandler("error404/errorPage.html");
 	}
@@ -435,26 +371,26 @@ void HTTPResponse::DELETEHandler(const HTTPRequest &req)
 	std::string path = _server.getRoot() + req.getUri();
 	if (remove(path.c_str()) < 0)
 	{
-		body = "<html><head><title>Deleting file</title></head><body>unable to delete " + req.getUri() + " <br /></body></html>";
+		_body = "<html><head><title>Deleting file</title></head><body>unable to delete " + req.getUri() + " <br /></body></html>";
 	}
 	else
-		body = "<html><head><title>Deleting file</title></head><body>deleted " + req.getUri() + " <br /></body></html>";
+		_body = "<html><head><title>Deleting file</title></head><body>deleted " + req.getUri() + " <br /></body></html>";
 	// body = "<html><head><title>Ha Ha</title></head><body>Sorry Bud, Delete is not allowed on this server :(\n Go hack some other Server!<br /></body></html>";
-	addHeader("Content-Length", std::to_string(body.size()));
+	addHeader("Content-Length", std::to_string(_body.size()));
 }
 
 void HTTPResponse::buildDefaultResponse()
 {
-	this->version = "HTTP/1.1";
-	this->status = OK;
-	this->reason = "OK";
+	this->_version = "HTTP/1.1";
+	this->_status = OK;
+	this->_reason = "OK";
 	setDefaultBody();
 	setDefaultHeaders();
 }
 
 void HTTPResponse::setDefaultHeaders()
 {
-	addHeader("Content-Length", std::to_string(body.size()));
+	addHeader("Content-Length", std::to_string(_body.size()));
 	addHeader("Content-Type", "text/html");
 	addHeader("Connection", "Keep-Alive");
 	addHeader("Server", "Webserv");
@@ -481,9 +417,9 @@ bool HTTPResponse::getResource(std::string const &path, int const &len)
 
 	std::ostringstream oss;
 	oss << file.rdbuf();
-	this->body = oss.str();
+	this->_body = oss.str();
 
-	this->addHeader("Content-Length", std::to_string(this->body.size()));
+	this->addHeader("Content-Length", std::to_string(this->_body.size()));
 
 	std::string filetype = path.substr(path.find("."), path.size());
 	this->addHeader("Content-Type", MimeTypes::getMimeType(filetype));
@@ -492,11 +428,10 @@ bool HTTPResponse::getResource(std::string const &path, int const &len)
 
 void HTTPResponse::getErrorResource(int errCode)
 {
-	DEBUG("went in getErrorResource attempting code: %d", errCode);
-	struct stat s;
 	std::string const filename = _server.getErrorPage(errCode);
-	DEBUG("HTTPResponse: getting errorResource: %s", filename.c_str());
 	std::string path = "application/src/error/" + filename;
+	struct stat s;
+
 	if (stat(path.c_str(), &s) == 0)
 	{
 		int len = s.st_size;
@@ -506,11 +441,8 @@ void HTTPResponse::getErrorResource(int errCode)
 			return;
 		}
 	}
-	// if (filename.compare(0, 2, "403"))
-	this->status = Status(errCode);
-	this->reason = getStatus();
-	// else
-	// 	this->status = NOT_FOUND;
+	this->_status = Status(errCode);
+	this->_reason = getStatus();
 }
 
 void HTTPResponse::makeDirectoryPage(std::string path) {
@@ -553,20 +485,20 @@ void HTTPResponse::makeDirectoryPage(std::string path) {
 	"</html>"
 	);
 
-	this->body = body;
-	this->status = Status(200);
+	this->_body = body;
+	this->_status = Status(200);
 	addHeader("Content-Length", std::to_string(body.size()));
 	std::cout << "Directory page made" << std::endl;
 }
 
-bool const &HTTPResponse::getCgiStatus() const
+bool HTTPResponse::getCgiStatus() const
 {
-	return cgiStatus;
+	return _cgiStatus;
 }
 
 void HTTPResponse::setCgiStatus(bool _status)
 {
-	cgiStatus = _status;
+	_cgiStatus = _status;
 }
 
 /*------------------------------------------*\
@@ -582,7 +514,7 @@ std::string HTTPResponse::stripFileName(std::string const &reqUri)
     }
     else // if we find / further in the string.
     {
-        return reqUri.substr(0, found); // Return the substring from the start of the string to the last "/"
+        return reqUri.substr(0, found + 1); // Return the substring from the start of the string to the last "/"
     }
 }
 
@@ -599,21 +531,6 @@ bool HTTPResponse::getMethodPermission(enum e_HRM method, Location &Location) co
 		return false;
 	}
 }
-
-// bool HTTPResponse::autoIndexPermittedAtRoute(HTTPRequest const &req)
-// {
-// 	Location	&myLocation = _server.getLocationByPath(req.getUri());
-// 	if (!myLocation.isNull())
-// 	{
-// 		if (myLocation.getAutoIndex())	
-// 			return true;
-// 	}
-// 	return false;
-// 	// 	return false;
-// 	// else if (myLocation.getAutoIndex())
-// 	// 	return true;
-// 	// return false;
-// }
 
 int HTTPResponse::methodPermittedAtRoute(HTTPRequest const &req)
 {

@@ -8,8 +8,6 @@
 #include "ServerManager.hpp"
 #include "HTTPRequest.hpp"
 #include "Client.hpp"
-
-// #define LOG_LEVEL 4
 #include "log.hpp"
 
 class ServerManager;
@@ -20,9 +18,6 @@ private:
 	std::vector<std::string> _envVec;
 	std::vector<char *> _argv;
 	std::vector<char *> _env;
-	// char **_argv;
-	// char **_env;
-	// char **_env;
 
 public:
 	Cgi();
@@ -38,6 +33,4 @@ public:
 
 	void handleTerminatedWithError(ServerManager &sm, Client *cl);
 	void handleSuccessfulTermination(ServerManager &sm, Client *cl);
-	// void handleReadError(ServerManager &sm, Client *cl);
-
 };

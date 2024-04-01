@@ -3,43 +3,46 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-// #include "HTTPResponse.hpp"
 #include "Message.hpp"
+#include "HTTPRequest.hpp"
 
 class Client
 {
 private:
-	int sockFD;
-	sockaddr_in client_addr;
-	int FDconnectedTo;
-	int bufferRead;
-	std::string recvMessage;
-	Message message;
+	int _sockFD;
+	sockaddr_in _client_addr;
+	int _FDconnectedTo;
+	int _bufferRead;
+	std::string _recvMessage;
+	Message _message;
+	HTTPRequest _req;
 
 public:
-	pid_t Cgipid;
-	int pipe_in[2];
-	int pipe_out[2];
+	bool _isCgi;
+	pid_t _Cgipid;
+	int _pipe_in[2];
+	int _pipe_out[2];
 	Client();
-	Client(int _sockFD, int _FDconnectedTo, sockaddr_in _client_addr);
+	Client(int sockFD, int FDconnectedTo, sockaddr_in client_addr);
 	~Client();
 
-	// void areFdsOpen(void);
-
+	// getters
 	int getSockFD() const;
 	int getSockFDconnectedTo() const;
 	sockaddr_in getClinetAddr() const;
-	Message const &getMessage() const;
+	Message getMessage() const;
+	HTTPRequest getRequest() const;
+	int getBufferRead() const;
+	std::string const &getRecvMessage() const;
 
-	void setMessage(Message const &src);
-
-	int const &getBufferRead() const;
+	// setters
 	void setBufferRead(int const &buffer);
-
+	void setResquest(HTTPRequest req);
+	void setMessage(Message const &src);
 	void resetRecvMessage();
+
 	void appendRecvMessage(std::string const &message, int len);
 	void appendRecvMessage(char *message, int len);
-	std::string const &getRecvMessage() const;
 
 	void setPipeFrom(int pipe[2]);
 	void setPipeTo(int pipe[2]);

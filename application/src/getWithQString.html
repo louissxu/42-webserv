@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>42 webserver</title>
+</head>
+<body>
+<div class="sub_div">
+    <h1 id="header"></h1>
+    <script>
+        function setAction(form, name){
+            document.cookie = "user=" + name;
+        }
+        const value = `${document.cookie}`;
+        const parts = value.split("=");
+        document.getElementById("header").innerHTML = "Welcome " + (parts[parts.indexOf("user") + 1] ? parts[parts.indexOf("user") + 1] : "to webserver");
+    </script>
+    <br>
+    <form method="get" onsubmit="return setAction(this, document.getElementById('nameForm').value)">
+        Name: <input id="nameForm" type="text" name="user">
+        <input type="submit" value="OK">
+    </form>
+
+</div>
+
+</body>
+</html>

@@ -396,12 +396,12 @@ void ConfigParser::setStateFromContent(size_t myContextLvl, bool print)
                 //     std::cout << "Context Initialization." << std::endl;
                 if (_contextLvl == myContextLvl)
                 {
-                    ConfigParser *newConfigParser = new ConfigParser();
-                    newConfigParser->setName(getContextName(line));
-                    newConfigParser->setContextContent(_contents, lineNumber);
-                    newConfigParser->setContextLvl(myContextLvl + 1);
-                    newConfigParser->setStateFromContent(myContextLvl + 1, false);
-                    _contexts.push_back(*newConfigParser);
+                    ConfigParser newConfigParser = ConfigParser();
+                    newConfigParser.setName(getContextName(line));
+                    newConfigParser.setContextContent(_contents, lineNumber);
+                    newConfigParser.setContextLvl(myContextLvl + 1);
+                    newConfigParser.setStateFromContent(myContextLvl + 1, false);
+                    _contexts.push_back(newConfigParser);
                 }
                 _contextLvl++;
                 break;

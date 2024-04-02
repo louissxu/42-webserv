@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
 	if os.getenv("REQUEST_METHOD") == "GET":
 		string = handle_get()
-	elif os.getenv("Method") == "POST":
+	elif os.getenv("REQUEST_METHOD") == "POST":
 		string = handle_post()
 	else:
 		string = "METHOD NOT ALLOWED"
